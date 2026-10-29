@@ -287,5 +287,42 @@ do
 	eq(w.Game.Cvar.FindVar("g_enableQ"), nil, "no g_enableQ")
 end
 
+-- the roster (tools/oaconv/roster.json): the host mounts the scripts and
+-- skins as the place ships them (tools/roster.py), so dropped bots are
+-- unknown, arenas name kept bots, and a dropped model becomes sarge
+do
+	local w, cs = setup(K.GT_FFA, "oa_dm1", { "Player" })
+	local G = w.G
+	-- G_AddBot prints "Bot '<name>' not defined" when this finds nothing
+	-- (tests/bots/roster.luau runs the addbot itself, with AAS loaded)
+	for _, name in { "neko", "Angelyss", "merman", "headcrash", "kyonshi", "major", "sorceress", "jenna" } do
+		eq(G.G_GetBotInfoByName(name), nil, "no bot " .. name)
+	end
+	eq(G.G_GetBotInfoByName("Sergei") ~= nil, true, "Sergei is still a bot")
+	local QS = require("../../src/shared/q_shared")
+	local bots, i = {}, 0
+	while G.G_GetBotInfoByNumber(i) do
+		table.insert(bots, string.lower(QS.Info_ValueForKey(G.G_GetBotInfoByNumber(i), "name")))
+		i += 1
+	end
+	eq(table.concat(bots, " "), "assassin ghost beret morgan gargoyle broadklin cyber-garg liz penguin sarge andriy grism sergei skelebot metalbot grunt s_marine tony", "the bots left")
+	local arena = G.G_GetArenaInfoByMap("oa_dm1")
+	eq(QS.Info_ValueForKey(arena, "bots"), "sarge", "oa_dm1's Sorceress is Sarge")
+
+	local n = cs[1].clientNum
+	local function modelAfter(model: string, head: string): string
+		local info = G.trap_GetUserinfo(n)
+		info = QS.Info_SetValueForKey(info, "model", model)
+		info = QS.Info_SetValueForKey(info, "headmodel", head)
+		G.trap_SetUserinfo(n, info)
+		G.ClientUserinfoChanged(n)
+		local cs = G.trap_GetConfigstring(K.CS_PLAYERS + n)
+		return QS.Info_ValueForKey(cs, "model") .. " " .. QS.Info_ValueForKey(cs, "hmodel")
+	end
+	eq(modelAfter("neko", "neko/red"), "sarge sarge", "model neko falls back to sarge")
+	eq(modelAfter("beret/headcrash", "merman"), "sarge sarge", "dropped skin and head fall back to sarge")
+	eq(modelAfter("tony/blue", "sergei"), "tony/blue sergei", "kept models stay")
+end
+
 print(string.format("rules: %d passed, %d failed", passes, failures))
 require("@lune/process").exit(if failures > 0 then 1 else 0)

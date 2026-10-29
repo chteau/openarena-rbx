@@ -190,16 +190,19 @@ end
 function U.ServerOptions_InitBotNames()
 	local so = U.s_serveroptions
 
+	-- Roblox port: OA seeds Kyonshi and Merman here; they are not in the
+	-- shipped roster (tools/oaconv/roster.json), so their arena substitutes
+	-- Sarge and Beret take the slots
 	if so.gametype >= C.GT_TEAM and so.gametype ~= C.GT_LMS then
 		local names = so.playerNameBuffers
 		local types = so.playerType
 		names[1] = cpy("gargoyle", 16)
-		names[2] = cpy("kyonshi", 16)
+		names[2] = cpy("sarge", 16)
 		names[3] = cpy("grism", 16)
 		if so.gametype ~= C.GT_TEAM then
 			types[3].curvalue = 2
 		end
-		names[4] = cpy("merman", 16)
+		names[4] = cpy("beret", 16)
 		types[4].curvalue = 2
 		names[5] = cpy("skelebot", 16)
 		types[5].curvalue = 2
@@ -210,7 +213,7 @@ function U.ServerOptions_InitBotNames()
 		if so.gametype ~= C.GT_TEAM then
 			types[9].curvalue = 2
 		end
-		names[10] = cpy("merman", 16)
+		names[10] = cpy("beret", 16)
 		types[10].curvalue = 2
 		names[11] = cpy("skelebot", 16)
 		types[11].curvalue = 2
@@ -245,9 +248,9 @@ function U.ServerOptions_InitBotNames()
 		if m == 0 then
 			so.playerNameBuffers[n] = "Grunt"
 		elseif m == 1 then
-			so.playerNameBuffers[n] = "Merman"
+			so.playerNameBuffers[n] = "Beret"
 		elseif m == 2 then
-			so.playerNameBuffers[n] = "Kyonshi"
+			so.playerNameBuffers[n] = "Sarge"
 		else
 			so.playerNameBuffers[n] = "Skelebot"
 		end

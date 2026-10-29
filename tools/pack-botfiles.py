@@ -7,15 +7,20 @@ build/botfiles/luau/Botfiles_NNN.luau and the index Botfiles.luau.
 Blob layout (little-endian): "OABF", u32 count, then per file
 u16 path length, path (UTF-8, e.g. "botfiles/bots/sarge_c.c"),
 u32 data length, data. Later pk3s override earlier ones, like the
-search path. Bots.MountBotfiles reads it back.
+search path. Bots.MountBotfiles reads it back. Character files only the
+bots outside the roster use (tools/oaconv/roster.json) are left out.
 
 Usage: tools/pack-botfiles.py
 """
 import base64
 import hashlib
 import struct
+import sys
 import zipfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import roster  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 PK3 = ROOT / "vendor/oa088/openarena-0.8.8/baseoa"
@@ -58,6 +63,9 @@ def main():
             for info in z.infolist():
                 if info.filename.lower().startswith("botfiles/") and not info.is_dir():
                     files[info.filename] = z.read(info)
+    # the character files of bots the roster drops stay out (tools/roster.py)
+    shipped = roster.Shipped().owner
+    files = {p: d for p, d in files.items() if p.lower() in shipped}
     blob = bytearray(b"OABF" + struct.pack("<I", len(files)))
     for path in sorted(files):
         p = path.encode()

@@ -3,30 +3,23 @@
 local fs = require("@lune/fs")
 local process = require("@lune/process")
 local stdio = require("@lune/stdio")
+local serde = require("@lune/serde")
 local BSP = require("../../src/shared/cm/bsp")
 
 local M = {}
 
-local PK3_DIR = "vendor/oa088/openarena-0.8.8/baseoa"
--- later pk3s override earlier ones, like the search path
-local PK3S = { "pak0.pk3", "pak6-misc.pk3", "pak6-patch085.pk3", "pak6-patch088.pk3" }
-local SCRIPTS = { "scripts/arenas.txt", "scripts/085p.arena", "scripts/bots.txt" }
+-- OA's scripts and player skins as the place ships them: the 0.8.8 pk3s
+-- with the roster applied (tools/roster.py, tools/oaconv/roster.json)
+local SHIPPED = { "scripts/arenas.txt", "scripts/085p.arena", "scripts/bots.txt", "models/players/" }
 
+local shipped
 local function pk3Files(): { [string]: string }
-	local files = {}
-	for _, pk3 in PK3S do
-		local p = PK3_DIR .. "/" .. pk3
-		if not fs.isFile(p) then
-			continue
-		end
-		for _, path in SCRIPTS do
-			local r = process.exec("unzip", { "-p", p, path })
-			if r.ok and #r.stdout > 0 then
-				files[path] = r.stdout
-			end
-		end
+	if shipped == nil then
+		local r = process.exec("python3", { "tools/roster.py", "files", table.unpack(SHIPPED) })
+		assert(r.ok, r.stderr)
+		shipped = serde.decode("json", r.stdout)
 	end
-	return files
+	return shipped
 end
 
 -- opts.patchEntities(mapname, entityString) -> entityString lets a test

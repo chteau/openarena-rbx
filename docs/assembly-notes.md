@@ -44,7 +44,8 @@ The editor has no save tool: `assemble.py` sends Ctrl+S to the editor window
 nor takes focus, and waits for the file's mtime.
 
 Sizes: all 72 maps with the default player list
-(`sarge,major,tony,penguin,beret,assassin,liz`) give a **92.9 MB** place
+(then `sarge,major,tony,penguin,beret,assassin,liz`; now
+`sarge,sergei,tony,penguin,beret,assassin,liz`, major being off the roster) give a **92.9 MB** place
 (72 maps, 2339 MeshParts, 2057 ModuleScripts after a lune round trip, built
 in 187 s). The playtest place (`--maps oa_dm1,oa_ctf2 --players sarge`) is
 6.1 MB, built in 32 s.

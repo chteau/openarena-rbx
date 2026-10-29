@@ -99,6 +99,57 @@ Domination, Domination, and the `g_instagib`/`g_rockets` modifiers.
    Xephyr): Play through it, screen_capture via MCP, and compare against
    `openarena.x86_64` at the same map/viewpoint. `docs/PARITY.md` tracks it.
 
+## Player roster
+
+Only the player models in `tools/oaconv/roster.json` ship. It lists every
+kept model with the reason it passed review, and every dropped one with the
+reason it was dropped:
+
+- dropped, female models: neko, angelyss (and `hnt`, her other skins'
+  textures), sorceress, major, kyonshi (and the missionpack head
+  `heads/kyonshi`), arachna and ayumi (bots, voices, shaders and sounds only:
+  their models are in the mature pk3);
+- dropped, a realistic bare human torso a nudity classifier could flag:
+  merman, and beret's Headcrash skin;
+- kept: sarge (its textures live in `grism/`), assassin, beret, gargoyle,
+  liz, penguin, sergei, skelebot, smarine, tony. Sarge's classic skins (bot
+  Grism) paint a cartoon bare abdomen under an open vest; kept, flagged for
+  review.
+
+What uses it:
+
+- `oaconv convert` drops the excluded paths from its VFS (`src/roster.rs`):
+  no texture, icon, md3, glb, sound or shader of theirs, and no upload entry;
+  `oaconv upload` also skips such entries left in an older manifest. `oaconv
+  tone` still regenerates `assets/toned/`, which now ships nothing.
+- `tools/roster.py` applies the same rules to the game's file packs
+  (`place/assemble.py`, `scripts/client-dev-assets.py`,
+  `tools/pack-botfiles.py`, the lune test hosts): `scripts/bots.txt` loses
+  the 15 bots with a dropped model (so `addbot neko` prints OA's "Bot 'neko'
+  not defined", and `bot_minplayers`, random bots and the menus only see the
+  18 kept ones), `botfiles/` loses the character files only they use, and
+  `scripts/arenas.txt` / `*.arena` name a kept substitute (`arena_bots`):
+
+  | dropped | substitute | dropped | substitute |
+  |---|---|---|---|
+  | Ayumi | Grunt | Sorceress | Sarge |
+  | Jenna | Liz | Tanisha | Ghost |
+  | Merman | Beret | Rai | Grism |
+  | Headcrash | Andriy | Angelyss | Metalbot |
+  | Major | Skelebot | Dark | Tony |
+  | Nekoyss | Broadklin | Murielle | Assassin |
+  | Arachna | Cyber-Garg | Kyonshi | Sarge |
+  | Neko | Penguin | | |
+
+  No arena names the same bot twice. q3_ui's team-game bot seeds (Kyonshi,
+  Merman) take the same substitutes. `tools/roster.py check` validates the
+  config against the pk3s and fails on a dropped name hardcoded in `src/`.
+- The server (`ClientUserinfoChanged`) turns a `model`/`headmodel` whose skin
+  file doesn't ship into `sarge`, OA's default, the model the cgame falls
+  back to. The team defaults are `sarge` in this port; `sergei` (0.8.8's) is
+  kept too.
+- `place/assemble.py --players` refuses a dropped model.
+
 ## Content notes for Roblox
 
 - OA has blood and gibs (`cg_gibs`, `com_blood`). These are kept behind
