@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/bg_misc.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/bg_misc.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,8 +22,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of bg_misc.c: the item list, trajectory evaluation, predictable
--- events, jump pads, playerState -> entityState and the map .info reader.
+-- Luau port of OpenArena 0.8.8's bg_misc.c (gamecode 9e0f0c0): the item list, trajectory evaluation, predictable
+-- events, jump pads and playerState -> entityState.
 -- Items are tables from bg_itemlist.luau; an item "pointer" is the table and
 -- ITEM_INDEX(it) is it.index.
 
@@ -85,7 +85,7 @@ function BG.BG_FindItem(pickupName: string)
 	local i = 1
 	while bg_itemlist[i].classname do
 		local it = bg_itemlist[i]
-		if QS.Q_strequal(it.pickup_name, pickupName) then
+		if QS.Q_stricmp(it.pickup_name, pickupName) == 0 then
 			return it
 		end
 		i += 1
@@ -184,11 +184,6 @@ function BG.BG_CanItemBeGrabbed(gametype: number, ent, ps): boolean
 		return true
 	elseif t == C.IT_TEAM then -- team items, such as flags
 		local tag = item.giTag
-		if gametype == C.GT_POSSESSION then
-			if tag == C.PW_NEUTRALFLAG then
-				return true
-			end
-		end
 		if gametype == C.GT_1FCTF then
 			-- neutral flag can always be picked up
 			if tag == C.PW_NEUTRALFLAG then
@@ -343,9 +338,6 @@ BG.eventnames = {
 	"EV_PROXIMITY_MINE_STICK", "EV_PROXIMITY_MINE_TRIGGER", "EV_KAMIKAZE", "EV_OBELISKEXPLODE",
 	"EV_INVUL_IMPACT", "EV_JUICED", "EV_LIGHTNINGBOLT",
 	"EV_DEBUG_LINE", "EV_STOPLOOPINGSOUND", "EV_TAUNT",
-	"EV_FOOTSTEP_WOOD", "EV_FOOTSTEP_SNOW", "EV_FOOTSTEP_SAND", "EV_FOOTSTEP_GRAVEL", "EV_FOOTSTEP_FOILAGE",
-	"EV_FOOTSTEP_ICE", "EV_FOOTSTEP_GLASS",
-	"EV_BULLET_HIT_WOOD", "EV_BULLET_HIT_SAND", "EV_BULLET_HIT_SNOW", "EV_BULLET_HIT_GLASS",
 }
 
 -- Handles the sequence numbers
@@ -501,117 +493,6 @@ function BG.BG_TeamName(team: number): string
 		return "Free For All"
 	end
 	return "<team>"
-end
-
-local GT_NAMES = {
-	[C.GT_FFA] = "dm",
-	[C.GT_TEAM] = "team",
-	[C.GT_TOURNAMENT] = "tourney",
-	[C.GT_CTF] = "ctf",
-	[C.GT_1FCTF] = "1fctf",
-	[C.GT_OBELISK] = "obelisk",
-	[C.GT_HARVESTER] = "harvester",
-	[C.GT_ELIMINATION] = "elimination",
-	[C.GT_CTF_ELIMINATION] = "ctfelim",
-	[C.GT_LMS] = "lms",
-	[C.GT_DOUBLE_D] = "dd",
-	[C.GT_DOMINATION] = "dom",
-	[C.GT_POSSESSION] = "pos",
-}
-
-function BG.MatchesGametype(gametype: number, gametypeName: string): boolean
-	local n = GT_NAMES[gametype]
-	return n ~= nil and QS.Q_strequal(gametypeName, n)
-end
-
--- Reads maps/<mapname>.info. The file system is the host's: BG.trap_FS_ReadFile
--- (path) -> string? is set by the game / cgame module (the C code goes
--- through trap_FS_FOpenFile + trap_FS_Read of up to 4 KB).
-BG.trap_FS_ReadFile = function(path: string): string?
-	return nil
-end
-
--- string fields and their C buffer sizes
-local INFO_STRS = {
-	author = 64, title = 64, description = 8192, mpBots = 1024, redBots = 512, blueBots = 512,
-}
-local INFO_INTS = {
-	"mpBotCount", "redBotCount", "blueBotCount", "captureLimit", "fragLimit", "maxPlayers", "maxTeamSize",
-	"minPlayers", "minTeamSize", "recommendedPlayers", "recommendedTeamSize", "timeLimit",
-}
-
-function BG.MapInfoGet(mapname: string, gametype: number, result)
-	-- memset(result, 0, sizeof(*result))
-	for k, v in result do
-		if type(v) == "string" then
-			result[k] = ""
-		elseif type(v) == "number" then
-			result[k] = 0
-		end
-	end
-	-- char gametypeSupported[GT_MAX_GAME_TYPE] ('y'/'n' bytes) is a 0-based
-	-- table of byte values here, since it is indexed rather than printed
-	result.gametypeSupported = {}
-	for i = 0, C.GT_MAX_GAME_TYPE - 1 do
-		result.gametypeSupported[i] = 0
-	end
-	local path = string.lower(QS.Com_sprintf(4 * 1024, "maps/%s.info", mapname))
-
-	local data = BG.trap_FS_ReadFile(path)
-	if not data then
-		QS.Com_Printf(QS.va("File %s not found\n", path))
-		return
-	end
-	data = string.sub(data, 1, 4 * 1024 - 1)
-
-	local p = QS.cursor(data)
-	local mayRead = true
-
-	while true do
-		local token = QS.COM_Parse(p)
-		if token == "" then
-			break
-		end
-		local keyBuffer = QS.Q_strncpyz(token, QS.MAX_TOKEN_CHARS)
-		token = QS.COM_Parse(p)
-
-		QS.Com_Printf(QS.va('Token "%s" found, with value: "%s"\n', keyBuffer, token))
-
-		if QS.Q_strequal(keyBuffer, "gametype") then
-			mayRead = false
-			if token == "" then
-				break
-			end
-			if QS.Q_strequal(token, "*") then
-				mayRead = true
-			else
-				mayRead = BG.MatchesGametype(gametype, token)
-			end
-		end
-		for key, size in INFO_STRS do
-			if QS.Q_strequal(keyBuffer, key) then
-				if mayRead then
-					result[key] = QS.Q_strncpyz(token, size)
-				end
-			end
-		end
-		for _, key in INFO_INTS do
-			if QS.Q_strequal(keyBuffer, key) then
-				if mayRead then
-					result[key] = QS.atoi(token)
-				end
-			end
-		end
-		local SUPPORT_GAMETYPE_PREFIX = "support_"
-		if QS.Q_strequaln(keyBuffer, SUPPORT_GAMETYPE_PREFIX, #SUPPORT_GAMETYPE_PREFIX) then
-			for i = 0, C.GT_MAX_GAME_TYPE - 1 do
-				if BG.MatchesGametype(i, string.sub(keyBuffer, #SUPPORT_GAMETYPE_PREFIX + 1)) then
-					result.gametypeSupported[i] = string.byte(token) or 0
-					break
-				end
-			end
-		end
-	end
 end
 
 return BG

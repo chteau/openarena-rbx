@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/bg_pmove.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/bg_pmove.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of bg_pmove.c: takes a playerState and a usercmd and returns a
+-- Luau port of OpenArena 0.8.8's bg_pmove.c (gamecode 9e0f0c0): takes a playerState and a usercmd and returns a
 -- modified playerState. Shared by the server (authoritative) and the client
 -- (prediction), so both must call it with identical inputs.
 --
@@ -424,13 +424,8 @@ local function PM_WaterMove()
 	VectorCopy(wishvel, wishdir)
 	local wishspeed = VectorNormalize(wishdir)
 
-	local swimScale = B.pm_swimScale
-	if band(pm.pmove_flags, C.DF_FAST_WATER_MOVE) ~= 0 then
-		swimScale = B.pm_swimFastScale
-	end
-
-	if wishspeed > f(ps.speed * swimScale) then
-		wishspeed = f(ps.speed * swimScale)
+	if wishspeed > f(ps.speed * B.pm_swimScale) then
+		wishspeed = f(ps.speed * B.pm_swimScale)
 	end
 
 	PM_Accelerate(wishdir, wishspeed, B.pm_wateraccelerate)
@@ -676,11 +671,7 @@ local function PM_NoclipMove()
 	local pm, pml = B.pm, B.pml
 	local ps = pm.ps
 
-	if B.cg_enableQ.value ~= 0 then
-		ps.viewheight = C.QUACK_VIEWHEIGHT
-	else
-		ps.viewheight = C.DEFAULT_VIEWHEIGHT
-	end
+	ps.viewheight = C.DEFAULT_VIEWHEIGHT
 
 	-- friction
 
@@ -735,28 +726,6 @@ local function PM_FootstepForSurface(): number
 	end
 	if band(sf, C.SURF_METALSTEPS) ~= 0 then
 		return C.EV_FOOTSTEP_METAL
-	end
-	-- leilei - additional footsteps
-	if band(sf, C.SURF_SNOW) ~= 0 then
-		return C.EV_FOOTSTEP_SNOW
-	end
-	if band(sf, C.SURF_WOOD) ~= 0 then
-		return C.EV_FOOTSTEP_WOOD
-	end
-	if band(sf, C.SURF_SAND) ~= 0 then
-		return C.EV_FOOTSTEP_SAND
-	end
-	if band(sf, C.SURF_GRAVEL) ~= 0 then
-		return C.EV_FOOTSTEP_GRAVEL
-	end
-	if band(sf, C.SURF_LEAVES) ~= 0 then
-		return C.EV_FOOTSTEP_FOILAGE
-	end
-	if band(sf, C.SURF_ICE) ~= 0 then
-		return C.EV_FOOTSTEP_ICE
-	end
-	if band(sf, C.SURF_GLASS) ~= 0 then
-		return C.EV_FOOTSTEP_GLASS
 	end
 	return C.EV_FOOTSTEP
 end
@@ -1077,11 +1046,7 @@ local function PM_CheckDuck()
 		ps.viewheight = C.CROUCH_VIEWHEIGHT
 	else
 		pm.maxs[2] = 32
-		if B.cg_enableQ.value ~= 0 then
-			ps.viewheight = C.QUACK_VIEWHEIGHT
-		else
-			ps.viewheight = C.DEFAULT_VIEWHEIGHT
-		end
+		ps.viewheight = C.DEFAULT_VIEWHEIGHT
 	end
 end
 
@@ -1138,11 +1103,6 @@ local function PM_Footsteps()
 			bobmove = BOB_04 -- faster speeds bob faster
 			if band(ps.pm_flags, PMF_BACKWARDS_RUN) ~= 0 then
 				PM_ContinueLegsAnim(C.LEGS_BACK)
-			-- leilei - new strafe animations for OA3
-			elseif pm.cmd.rightmove < 0 and pm.cmd.forwardmove == 0 then
-				PM_ContinueLegsAnim(C.LEGS_STRAFE_LEFT)
-			elseif pm.cmd.rightmove > 0 and pm.cmd.forwardmove == 0 then
-				PM_ContinueLegsAnim(C.LEGS_STRAFE_RIGHT)
 			else
 				PM_ContinueLegsAnim(C.LEGS_RUN)
 			end
@@ -1257,60 +1217,13 @@ local function PM_FinishWeaponChange()
 	end
 end
 
--- leilei - heavily improved version for OA3 player animations
 local function PM_TorsoAnimation()
-	local pm, pml = B.pm, B.pml
-	local ps = pm.ps
+	local ps = B.pm.ps
 	if ps.weaponstate == C.WEAPON_READY then
-		local flag = ps.powerups[C.PW_REDFLAG] ~= 0 or ps.powerups[C.PW_BLUEFLAG] ~= 0 or ps.powerups[C.PW_NEUTRALFLAG] ~= 0
-		local gauntlet = ps.weapon == C.WP_GAUNTLET
-		local walking = band(pm.cmd.buttons, C.BUTTON_WALKING) ~= 0
-		if ps.velocity[2] < 0 and not pml.groundPlane then
-			-- Falling Downward
-			if gauntlet then
-				PM_ContinueTorsoAnim(C.TORSO_FALL2)
-			elseif flag then
-				PM_ContinueTorsoAnim(C.TORSO_FALL2)
-			else
-				PM_ContinueTorsoAnim(C.TORSO_FALL)
-			end
-		elseif ps.velocity[2] > 0 and not pml.groundPlane then
-			-- Falling Upward
-			if gauntlet then
-				PM_ContinueTorsoAnim(C.TORSO_JUMP2)
-			elseif flag then
-				PM_ContinueTorsoAnim(C.TORSO_JUMP2)
-			else
-				PM_ContinueTorsoAnim(C.TORSO_JUMP)
-			end
-		elseif ps.velocity[2] < -7 and band(pml.groundTrace.surfaceFlags, SURF_SLICK) ~= 0 then
-			-- Sliding downward on a slick surface
-			if gauntlet then
-				PM_ContinueTorsoAnim(C.TORSO_FALL2)
-			elseif flag then
-				PM_ContinueTorsoAnim(C.TORSO_FALL2)
-			else
-				PM_ContinueTorsoAnim(C.TORSO_FALL)
-			end
-		elseif pm.cmd.forwardmove ~= 0 or (pm.cmd.rightmove ~= 0 and pml.groundPlane and pm.xyspeed > 200 and not walking) then
-			-- Running Forward
-			if gauntlet then
-				PM_ContinueTorsoAnim(C.TORSO_RUN2)
-			elseif flag then
-				PM_ContinueTorsoAnim(C.TORSO_RUN3)
-			elseif pm.cmd.rightmove ~= 0 and pm.cmd.forwardmove == 0 and pml.groundPlane and not walking then
-				PM_ContinueTorsoAnim(C.TORSO_STRAFE)
-			else
-				PM_ContinueTorsoAnim(C.TORSO_RUN)
-			end
+		if ps.weapon == C.WP_GAUNTLET then
+			PM_ContinueTorsoAnim(C.TORSO_STAND2)
 		else
-			if gauntlet then
-				PM_ContinueTorsoAnim(C.TORSO_STAND2)
-			elseif flag then
-				PM_ContinueTorsoAnim(C.TORSO_STAND3)
-			else
-				PM_ContinueTorsoAnim(C.TORSO_STAND)
-			end
+			PM_ContinueTorsoAnim(C.TORSO_STAND)
 		end
 		return
 	end
@@ -1724,18 +1637,18 @@ local function PmoveSingle(pmove)
 		PM_Weapon()
 	end
 
-	-- footstep events / legs animations
-	PM_Footsteps()
-
 	-- torso animation
 	PM_TorsoAnimation()
+
+	-- footstep events / legs animations
+	PM_Footsteps()
 
 	-- entering / leaving water splashes
 	PM_WaterEvents()
 
 	-- snap some parts of playerstate to save network bandwidth
-	--But only if pmove_float is not enabled. We always snap on slick surfaces to prevent acceleration.
-	if pm.pmove_float == 0 or band(pml.groundTrace.surfaceFlags, SURF_SLICK) ~= 0 then
+	--But only if pmove_float is not enabled
+	if pm.pmove_float == 0 then
 		Q.SnapVectorRint(ps.velocity) -- trap_SnapVector
 	end
 end

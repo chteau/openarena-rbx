@@ -24,7 +24,7 @@ IOQ = ROOT / "vendor/ioq3/code"
 TARGETS = [
     ("src/shared/structs.luau", [GC / "qcommon/q_shared.h", GC / "game/bg_public.h", GC / "game/bg_local.h"],
      ["cplane_t", "trace_t", "trajectory_t", "playerState_t", "entityState_t", "usercmd_t", "pmove_t",
-      "animation_t", "pml_t", "vmCvar_t", "orientation_t", "mapinfo_result_t"], None),
+      "animation_t", "pml_t", "vmCvar_t", "orientation_t"], None),
     ("src/server/g_structs.luau", [GC / "game/g_public.h", GC / "game/g_local.h", GC / "game/g_admin.h",
                                    GC / "game/g_killspree.h"],
      ["entityShared_t", "gentity_t", "playerTeamState_t", "clientSession_t", "clientPersistant_t",

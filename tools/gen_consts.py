@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-GC = ROOT / "vendor/gamecode/code"
+GC = ROOT / "vendor/gamecode-088/code"
 
 TARGETS = {
     "src/shared/consts.luau": [

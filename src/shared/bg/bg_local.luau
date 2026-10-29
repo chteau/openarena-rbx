@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/bg_local.h, game/bg_pmove.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/bg_local.h, game/bg_pmove.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -42,7 +42,6 @@ B.pm_stopspeed = 100
 B.pm_duckScale = 0.25
 B.pm_swimScale = 0.5
 B.pm_wadeScale = f(0.7)
-B.pm_swimFastScale = 5
 B.pm_accelerate = 10
 B.pm_airaccelerate = 1
 B.pm_wateraccelerate = 4
@@ -52,9 +51,6 @@ B.pm_waterfriction = 1
 B.pm_flightfriction = 3
 B.pm_spectatorfriction = 5
 
--- leilei: cg_enableQ (map scales the player for Q1 adaptations). Registered
--- by the game / cgame module; bg only reads .value.
-B.cg_enableQ = S.vmCvar_t()
 
 -- memset(&pml, 0, sizeof(pml))
 local zeroTrace = S.trace_t()

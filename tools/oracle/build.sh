@@ -1,12 +1,13 @@
 #!/bin/sh
 # Build the C oracle: ioquake3's collision model plus OpenArena's bg_pmove,
-# bg_slidemove and bg_misc, compiled natively, driven by oracle.c.
+# bg_slidemove and bg_misc as shipped in 0.8.8 (gamecode 9e0f0c0, the
+# vendor/gamecode-088 checkout), compiled natively, driven by oracle.c.
 # Output goes to build/oracle (git-ignored). Usage: tools/oracle/build.sh
 set -e
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 OUT=$ROOT/build/oracle
 IOQ=$ROOT/vendor/ioq3/code/qcommon
-OA=$ROOT/vendor/gamecode/code
+OA=$ROOT/vendor/gamecode-088/code
 SRC=$ROOT/tools/oracle
 mkdir -p "$OUT"
 cd "$OUT"

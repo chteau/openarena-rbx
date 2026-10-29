@@ -38,13 +38,9 @@ int oracle_num_patches(void);
 int oracle_patch_point(int which, vec3_t out);
 
 /* engine/game glue bg_* expects */
-vmCvar_t cg_enableQ;
 /* the engine's qsnapvectorsse: cvtps2dq + cvtdq2ps (round to nearest even
  * through an int, so -0.3 snaps to +0, not rintf's -0) */
 void trap_SnapVector(float *v) { v[0] = (float)(int)rintf(v[0]); v[1] = (float)(int)rintf(v[1]); v[2] = (float)(int)rintf(v[2]); }
-int trap_FS_FOpenFile(const char *qpath, fileHandle_t *f, fsMode_t mode) { *f = 0; return -1; }
-void trap_FS_Read(void *buffer, int len, fileHandle_t f) {}
-void trap_FS_FCloseFile(fileHandle_t f) {}
 void QDECL Com_Error(int level, const char *error, ...) {
 	va_list ap;
 	va_start(ap, error);
@@ -386,7 +382,6 @@ static void run_pmove(int scenarios, int frames) {
 		nobunny = !ir(5);
 		if (nobunny) pflags |= DF_NO_BUNNY;
 		if (!ir(4)) pflags |= DF_INSTANT_WEAPON_CHANGE;
-		if (!ir(4)) pflags |= DF_FAST_WATER_MOVE;
 		pfloat = !ir(3);
 		/* special movement states */
 		switch (ir(12)) {
