@@ -111,7 +111,7 @@ function G.BotCheckEvents(bs, state)
 		if G.gametype == C.GT_1FCTF or G.gametype == GT_POSSESSION then
 			G.BotEntityInfo(target, entinfo)
 			if bit32.band(entinfo.powerups, bit32.lshift(1, C.PW_NEUTRALFLAG)) ~= 0 then
-				if not G.BotSameTeam(bs, target) then
+				if G.BotSameTeam(bs, target) == 0 then
 					bs.neutralflagstatus = 3
 					bs.flagstatuschanged = true
 				end
@@ -253,7 +253,7 @@ function G.BotGetAlternateRouteGoal(bs, base)
 		numaltroutegoals = G.blue_numaltroutegoals
 	end
 	if numaltroutegoals == 0 then
-		return false
+		return 0
 	end
 	local rnd = Q.trunc(Q.random() * numaltroutegoals)
 	if rnd >= numaltroutegoals then
@@ -269,7 +269,7 @@ function G.BotGetAlternateRouteGoal(bs, base)
 	goal.number = 0
 	goal.flags = 0
 	bs.reachedaltroutegoal_time = 0
-	return true
+	return 1
 end
 
 function G.BotSetupAlternativeRouteGoals()
@@ -467,7 +467,7 @@ function G.BotGoalForBSPEntity(classname, goal)
 			if value == classname then
 				local vok = G.trap_AAS_VectorForBSPEpairKey(ent, "origin", origin)
 				if vok == 0 or not vok then
-					return false
+					return 0
 				end
 				Q.VectorCopy(origin, goal.origin)
 				Q.VectorCopy(origin, start)
@@ -476,15 +476,15 @@ function G.BotGoalForBSPEntity(classname, goal)
 				end_[2] += 32
 				local numareas = G.trap_AAS_TraceAreas(start, end_, areas, nil, 10)
 				if numareas == 0 then
-					return false
+					return 0
 				end
 				goal.areanum = areas[0]
-				return true
+				return 1
 			end
 		end
 		ent = G.trap_AAS_NextBSPEntity(ent)
 	end
-	return false
+	return 0
 end
 
 function G.BotSetupDeathmatchAI()

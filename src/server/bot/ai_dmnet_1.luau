@@ -93,10 +93,10 @@ function G.BotGetAirGoal(bs, goal)
 			goal.number = 0
 			goal.iteminfo = 0
 			goal.entitynum = 0
-			return true
+			return 1
 		end
 	end
-	return false
+	return 0
 end
 
 function G.BotGoForAir(bs, tfl, ltg, range)
@@ -105,28 +105,28 @@ function G.BotGoForAir(bs, tfl, ltg, range)
 	--if the bot needs air
 	if bs.lastair_time < G.floattime - 6 then
 		--if we can find an air goal
-		if G.BotGetAirGoal(bs, goal) then
+		if G.BotGetAirGoal(bs, goal) ~= 0 then
 			G.trap_BotPushGoal(bs.gs, goal)
-			return true
+			return 1
 		else
 			--get a nearby goal outside the water
 			while G.trap_BotChooseNBGItem(bs.gs, bs.origin, bs.inventory, tfl, ltg, range) ~= 0 do
 				G.trap_BotGetTopGoal(bs.gs, goal)
 				--if the goal is not in water
 				if bit32.band(G.trap_AAS_PointContents(goal.origin), bit32.bor(C.CONTENTS_WATER, C.CONTENTS_SLIME, C.CONTENTS_LAVA)) == 0 then
-					return true
+					return 1
 				end
 				G.trap_BotPopGoal(bs.gs)
 			end
 			G.trap_BotResetAvoidGoals(bs.gs)
 		end
 	end
-	return false
+	return 0
 end
 
 function G.BotNearbyGoal(bs, tfl, ltg, range)
 	--check if the bot should go for air
-	if G.BotGoForAir(bs, tfl, ltg, range) then return true end
+	if G.BotGoForAir(bs, tfl, ltg, range) ~= 0 then return 1 end
 	-- if the bot is carrying a flag or cubes
 	if G.BotCTFCarryingFlag(bs) ~= 0 or G.Bot1FCTFCarryingFlag(bs) ~= 0 or G.BotHarvesterCarryingCubes(bs) ~= 0 then
 		--if the bot is just a few secs away from the base
@@ -147,32 +147,32 @@ function G.BotReachedGoal(bs, goal)
 			if bit32.band(goal.flags, C.GFL_DROPPED) == 0 then
 				G.trap_BotSetAvoidGoalTime(bs.gs, goal.number, -1)
 			end
-			return true
+			return 1
 		end
 		--if the goal isn't there
 		if G.trap_BotItemGoalInVisButNotVisible(bs.entitynum, bs.eye, bs.viewangles, goal) ~= 0 then
-			return true
+			return 1
 		end
 		--if in the goal area and below or above the goal and not swimming
 		if bs.areanum == goal.areanum then
 			if bs.origin[0] > goal.origin[0] + goal.mins[0] and bs.origin[0] < goal.origin[0] + goal.maxs[0] then
 				if bs.origin[1] > goal.origin[1] + goal.mins[1] and bs.origin[1] < goal.origin[1] + goal.maxs[1] then
 					if G.trap_AAS_Swimming(bs.origin) == 0 then
-						return true
+						return 1
 					end
 				end
 			end
 		end
 	elseif bit32.band(goal.flags, SF.GFL_AIR) ~= 0 then
 		--if touching the goal
-		if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then return true end
+		if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then return 1 end
 		--if the bot got air
-		if bs.lastair_time > G.floattime - 1 then return true end
+		if bs.lastair_time > G.floattime - 1 then return 1 end
 	else
 		--if touching the goal
-		if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then return true end
+		if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then return 1 end
 	end
-	return false
+	return 0
 end
 
 function G.BotGetItemLongTermGoal(bs, tfl, goal)
@@ -180,7 +180,7 @@ function G.BotGetItemLongTermGoal(bs, tfl, goal)
 	if G.trap_BotGetTopGoal(bs.gs, goal) == 0 then
 		bs.ltg_time = 0
 	--if the bot touches the current goal
-	elseif G.BotReachedGoal(bs, goal) then
+	elseif G.BotReachedGoal(bs, goal) ~= 0 then
 		G.BotChooseWeapon(bs)
 		bs.ltg_time = 0
 	end
@@ -199,7 +199,7 @@ function G.BotGetItemLongTermGoal(bs, tfl, goal)
 		--get the goal at the top of the stack
 		return G.trap_BotGetTopGoal(bs.gs, goal)
 	end
-	return true
+	return 1
 end
 
 return nil

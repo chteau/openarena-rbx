@@ -37,20 +37,20 @@ function G.BotChat_Kill(bs)
 	local name
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_KILL, 0, 1)
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--if fast chat is off
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd then return false end
+		if Q.random() > rnd then return 0 end
 	end
-	if bs.lastkilledplayer == bs.client then return false end
-	if G.BotNumActivePlayers() <= 1 then return false end
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if bs.lastkilledplayer == bs.client then return 0 end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
-	if G.BotVisibleEnemies(bs) ~= 0 then return false end
+	if G.BotVisibleEnemies(bs) ~= 0 then return 0 end
 	--
 	name = G.EasyClientName(bs.lastkilledplayer, 32)
 	--
@@ -62,7 +62,7 @@ function G.BotChat_Kill(bs)
 		--don't chat in teamplay
 		if G.TeamPlayIsOn() ~= 0 then
 			G.trap_EA_Command(bs.client, "vtaunt")
-			return false -- don't wait
+			return 0 -- don't wait
 		end
 		--
 		if bs.enemydeathtype == C.MOD_GAUNTLET then
@@ -81,29 +81,29 @@ function G.BotChat_Kill(bs)
 		end
 	end
 	bs.lastchat_time = G.floattime
-	return true
+	return 1
 end
 
 function G.BotChat_EnemySuicide(bs)
 	local name
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
-	if G.BotNumActivePlayers() <= 1 then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
 	--
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_ENEMYSUICIDE, 0, 1)
 	--don't chat in teamplay
-	if G.TeamPlayIsOn() ~= 0 then return false end
+	if G.TeamPlayIsOn() ~= 0 then return 0 end
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--if fast chat is off
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd then return false end
+		if Q.random() > rnd then return 0 end
 	end
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
-	if G.BotVisibleEnemies(bs) ~= 0 then return false end
+	if G.BotVisibleEnemies(bs) ~= 0 then return 0 end
 	--
 	if bs.enemy >= 0 then
 		name = G.EasyClientName(bs.enemy, 32)
@@ -113,7 +113,7 @@ function G.BotChat_EnemySuicide(bs)
 	G.BotAI_BotInitialChat(bs, "enemy_suicide", name)
 	bs.lastchat_time = G.floattime
 	bs.chatto = C.CHAT_ALL
-	return true
+	return 1
 end
 
 function G.BotChat_HitTalking(bs)
@@ -121,25 +121,25 @@ function G.BotChat_HitTalking(bs)
 	local lasthurt_client
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
-	if G.BotNumActivePlayers() <= 1 then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
 	lasthurt_client = G.g_entities[bs.client].client.lasthurt_client
-	if lasthurt_client == 0 then return false end
-	if lasthurt_client == bs.client then return false end
+	if lasthurt_client == 0 then return 0 end
+	if lasthurt_client == bs.client then return 0 end
 	--
-	if lasthurt_client < 0 or lasthurt_client >= C.MAX_CLIENTS then return false end
+	if lasthurt_client < 0 or lasthurt_client >= C.MAX_CLIENTS then return 0 end
 	--
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_HITTALKING, 0, 1)
 	--don't chat in teamplay
-	if G.TeamPlayIsOn() ~= 0 then return false end
+	if G.TeamPlayIsOn() ~= 0 then return 0 end
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--if fast chat is off
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd * 0.5 then return false end
+		if Q.random() > rnd * 0.5 then return 0 end
 	end
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
 	name = G.ClientName(G.g_entities[bs.client].client.lasthurt_client, 32)
 	weap = G.BotWeaponNameForMeansOfDeath(G.g_entities[bs.client].client.lasthurt_mod)
@@ -147,7 +147,7 @@ function G.BotChat_HitTalking(bs)
 	G.BotAI_BotInitialChat(bs, "hit_talking", name, weap)
 	bs.lastchat_time = G.floattime
 	bs.chatto = C.CHAT_ALL
-	return true
+	return 1
 end
 
 function G.BotChat_HitNoDeath(bs)
@@ -157,29 +157,29 @@ function G.BotChat_HitNoDeath(bs)
 	local entinfo = S.aas_entityinfo_t()
 
 	lasthurt_client = G.g_entities[bs.client].client.lasthurt_client
-	if lasthurt_client == 0 then return false end
-	if lasthurt_client == bs.client then return false end
+	if lasthurt_client == 0 then return 0 end
+	if lasthurt_client == bs.client then return 0 end
 	--
-	if lasthurt_client < 0 or lasthurt_client >= C.MAX_CLIENTS then return false end
+	if lasthurt_client < 0 or lasthurt_client >= C.MAX_CLIENTS then return 0 end
 	--
-	if G.bot_nochat.integer ~= 0 then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
-	if G.BotNumActivePlayers() <= 1 then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_HITNODEATH, 0, 1)
 	--don't chat in teamplay
-	if G.TeamPlayIsOn() ~= 0 then return false end
+	if G.TeamPlayIsOn() ~= 0 then return 0 end
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--if fast chat is off
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd * 0.5 then return false end
+		if Q.random() > rnd * 0.5 then return 0 end
 	end
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
-	if G.BotVisibleEnemies(bs) ~= 0 then return false end
+	if G.BotVisibleEnemies(bs) ~= 0 then return 0 end
 	--
 	G.BotEntityInfo(bs.enemy, entinfo)
-	if G.EntityIsShooting(entinfo) then return false end
+	if G.EntityIsShooting(entinfo) then return 0 end
 	--
 	name = G.ClientName(lasthurt_client, 32)
 	weap = G.BotWeaponNameForMeansOfDeath(G.g_entities[bs.client].client.lasthurt_mod)
@@ -187,7 +187,7 @@ function G.BotChat_HitNoDeath(bs)
 	G.BotAI_BotInitialChat(bs, "hit_nodeath", name, weap)
 	bs.lastchat_time = G.floattime
 	bs.chatto = C.CHAT_ALL
-	return true
+	return 1
 end
 
 function G.BotChat_HitNoKill(bs)
@@ -195,24 +195,24 @@ function G.BotChat_HitNoKill(bs)
 	local rnd
 	local entinfo = S.aas_entityinfo_t()
 
-	if G.bot_nochat.integer ~= 0 then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
-	if G.BotNumActivePlayers() <= 1 then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_HITNOKILL, 0, 1)
 	--don't chat in teamplay
-	if G.TeamPlayIsOn() ~= 0 then return false end
+	if G.TeamPlayIsOn() ~= 0 then return 0 end
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--if fast chat is off
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd * 0.5 then return false end
+		if Q.random() > rnd * 0.5 then return 0 end
 	end
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
-	if G.BotVisibleEnemies(bs) ~= 0 then return false end
+	if G.BotVisibleEnemies(bs) ~= 0 then return 0 end
 	--
 	G.BotEntityInfo(bs.enemy, entinfo)
-	if G.EntityIsShooting(entinfo) then return false end
+	if G.EntityIsShooting(entinfo) then return 0 end
 	--
 	name = G.ClientName(bs.enemy, 32)
 	weap = G.BotWeaponNameForMeansOfDeath(G.g_entities[bs.enemy].client.lasthurt_mod)
@@ -220,34 +220,34 @@ function G.BotChat_HitNoKill(bs)
 	G.BotAI_BotInitialChat(bs, "hit_nokill", name, weap)
 	bs.lastchat_time = G.floattime
 	bs.chatto = C.CHAT_ALL
-	return true
+	return 1
 end
 
 function G.BotChat_Random(bs)
 	local rnd
 	local name
 
-	if G.bot_nochat.integer ~= 0 then return false end
-	if G.BotIsObserver(bs) then return false end
-	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return false end
+	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotIsObserver(bs) then return 0 end
+	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	-- don't chat in tournament mode
-	if G.gametype == C.GT_TOURNAMENT then return false end
+	if G.gametype == C.GT_TOURNAMENT then return 0 end
 	--don't chat when doing something important :)
 	if bs.ltgtype == C.LTG_TEAMHELP or
 		bs.ltgtype == C.LTG_TEAMACCOMPANY or
-		bs.ltgtype == C.LTG_RUSHBASE then return false end
+		bs.ltgtype == C.LTG_RUSHBASE then return 0 end
 	--
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_RANDOM, 0, 1)
-	if Q.random() > bs.thinktime * 0.1 then return false end
+	if Q.random() > bs.thinktime * 0.1 then return 0 end
 	if G.bot_fastchat.integer == 0 then
-		if Q.random() > rnd then return false end
-		if Q.random() > 0.25 then return false end
+		if Q.random() > rnd then return 0 end
+		if Q.random() > 0.25 then return 0 end
 	end
-	if G.BotNumActivePlayers() <= 1 then return false end
+	if G.BotNumActivePlayers() <= 1 then return 0 end
 	--
-	if G.BotValidChatPosition(bs) == 0 then return false end
+	if G.BotValidChatPosition(bs) == 0 then return 0 end
 	--
-	if G.BotVisibleEnemies(bs) ~= 0 then return false end
+	if G.BotVisibleEnemies(bs) ~= 0 then return 0 end
 	--
 	if bs.lastkilledplayer == bs.client then
 		name = QS.Q_strncpyz(G.BotRandomOpponentName(bs), 32)
@@ -256,7 +256,7 @@ function G.BotChat_Random(bs)
 	end
 	if G.TeamPlayIsOn() ~= 0 then
 		G.trap_EA_Command(bs.client, "vtaunt")
-		return false -- don't wait
+		return 0 -- don't wait
 	end
 	--
 	if Q.random() < G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_MISC, 0, 1) then
@@ -278,7 +278,7 @@ function G.BotChat_Random(bs)
 	end
 	bs.lastchat_time = G.floattime
 	bs.chatto = C.CHAT_ALL
-	return true
+	return 1
 end
 
 function G.BotChatTime(bs)

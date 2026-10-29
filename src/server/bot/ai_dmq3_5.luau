@@ -46,7 +46,7 @@ function G.BotTeamFlagCarrier(bs)
 		if not G.EntityCarriesFlag(entinfo) then
 			continue
 		end
-		if not G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) == 0 then
 			continue
 		end
 		return i
@@ -67,7 +67,7 @@ function G.BotEnemyFlagCarrierVisible(bs)
 		if not G.EntityCarriesFlag(entinfo) then
 			continue
 		end
-		if G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) ~= 0 then
 			continue
 		end
 		local vis = G.BotEntityVisible(bs.entitynum, bs.eye, bs.viewangles, 360, i)
@@ -104,7 +104,7 @@ function G.BotVisibleTeamMatesAndEnemies(bs, range)
 		if vis <= 0 then
 			continue
 		end
-		if G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) ~= 0 then
 			teammates += 1
 		else
 			enemies += 1
@@ -126,7 +126,7 @@ function G.BotTeamCubeCarrierVisible(bs)
 		if not G.EntityCarriesCubes(entinfo) then
 			continue
 		end
-		if not G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) == 0 then
 			continue
 		end
 		local vis = G.BotEntityVisible(bs.entitynum, bs.eye, bs.viewangles, 360, i)
@@ -151,7 +151,7 @@ function G.BotEnemyCubeCarrierVisible(bs)
 		if not G.EntityCarriesCubes(entinfo) then
 			continue
 		end
-		if G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) ~= 0 then
 			continue
 		end
 		local vis = G.BotEntityVisible(bs.entitynum, bs.eye, bs.viewangles, 360, i)

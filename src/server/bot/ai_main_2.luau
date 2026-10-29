@@ -130,9 +130,9 @@ end
 
 function G.BotTeamLeader(bs)
 	local leader = G.ClientFromName(bs.teamleader)
-	if leader < 0 then return false end
-	if G.botstates[leader] == nil or G.botstates[leader].inuse == 0 then return false end
-	return true
+	if leader < 0 then return 0 end
+	if G.botstates[leader] == nil or G.botstates[leader].inuse == 0 then return 0 end
+	return 1
 end
 
 function G.AngleDifference(ang1, ang2)
@@ -328,12 +328,12 @@ function G.BotAI(client, thinktime)
 	local bs = G.botstates[client]
 	if bs == nil or bs.inuse == 0 then
 		G.BotAI_Print(C.PRT_FATAL, "BotAI: client %d is not setup\n", client)
-		return false
+		return 0
 	end
 
 	if isFalse(G.BotAI_GetClientState(client, bs.cur_ps)) then
 		G.BotAI_Print(C.PRT_FATAL, "BotAI: failed to get player state for player %d\n", client)
-		return false
+		return 0
 	end
 
 	while true do
@@ -374,7 +374,7 @@ function G.BotAI(client, thinktime)
 	for j = 0, 2 do
 		bs.viewangles[j] = Q.AngleMod(bs.viewangles[j] - Q.SHORT2ANGLE(bs.cur_ps.delta_angles[j]))
 	end
-	return true
+	return 1
 end
 
 function G.BotScheduleBotThink()

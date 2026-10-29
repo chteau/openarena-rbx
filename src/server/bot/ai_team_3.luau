@@ -243,13 +243,13 @@ function G.FindHumanTeamLeader(bs)
 						if G.BotSetLastOrderedTask(bs) == 0 then
 							if G.bot_nochat.integer < 3 then G.BotVoiceChat_Defend(bs, i, C.SAY_TELL) end
 						end
-						return true
+						return 1
 					end
 				end
 			end
 		end
 	end
-	return false
+	return 0
 end
 
 G.lastRoundNumber = 0 -- used to give new orders every round
@@ -260,8 +260,8 @@ function G.BotTeamAI(bs)
 	if G.gametype < C.GT_TEAM or G.g_ffa_gt == 1 then
 		return
 	end
-	if not G.BotValidTeamLeader(bs) then
-		if not G.FindHumanTeamLeader(bs) then
+	if G.BotValidTeamLeader(bs) == 0 then
+		if G.FindHumanTeamLeader(bs) == 0 then
 			if bs.askteamleader_time == 0 and bs.becometeamleader_time == 0 then
 				if bs.entergame_time + 10 > G.floattime then
 					bs.askteamleader_time = G.floattime + 5 + Q.random() * 10

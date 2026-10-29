@@ -78,7 +78,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			Q.VectorSubtract(entinfo.origin, bs.origin, dir)
 			if Q.VectorLengthSquared(dir) < 100 * 100 then
 				G.trap_BotResetAvoidReach(bs.ms)
-				return false
+				return 0
 			end
 		else
 			--last time the bot was NOT visible
@@ -97,7 +97,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			end
 		end
 		S.copy_bot_goal_t(goal, bs.teamgoal)
-		return true
+		return 1
 	end
 	--if the bot accompanies someone
 	if bs.ltgtype == C.LTG_TEAMACCOMPANY and not retreat then
@@ -199,11 +199,11 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 					--time the bot gets to pick up the nearby goal item
 					bs.nbg_time = G.floattime + 8
 					G.AIEnter_Seek_NBG(bs, "BotLongTermGoal: go for air")
-					return false
+					return 0
 				end
 				--
 				G.trap_BotResetAvoidReach(bs.ms)
-				return false
+				return 0
 			end
 		end
 		--if the entity information is valid (entity in PVS)
@@ -229,7 +229,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			-- just to make sure the bot won't spam this message
 			bs.teammatevisible_time = G.floattime
 		end
-		return true
+		return 1
 	end
 	--
 	if bs.ltgtype == C.LTG_DEFENDKEYAREA then
@@ -261,7 +261,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.defendaway_range = 350
 			end
 		end
-		return true
+		return 1
 	end
 	if bs.ltgtype == C.LTG_POINTB and
 				bs.defendaway_time < G.floattime then
@@ -285,7 +285,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.defendaway_range = 350
 			end
 		end
-		return true
+		return 1
 	end
 	--if defending a key area
 	if bs.ltgtype == C.LTG_DEFENDKEYAREA and not retreat and
@@ -318,7 +318,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.defendaway_range = 350
 			end
 		end
-		return true
+		return 1
 	end
 	--going to kill someone
 	if bs.ltgtype == C.LTG_KILL and not retreat then
@@ -372,7 +372,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			G.trap_BotEnterChat(bs.cs, bs.decisionmaker, C.CHAT_TELL)
 			bs.ltgtype = 0
 		end
-		return true
+		return 1
 	end
 	--if camping somewhere
 	if (bs.ltgtype == C.LTG_CAMP or bs.ltgtype == C.LTG_CAMPORDER) and not retreat then
@@ -449,9 +449,9 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			end
 			--
 			G.trap_BotResetAvoidReach(bs.ms)
-			return false
+			return 0
 		end
-		return true
+		return 1
 	end
 	--patrolling along several waypoints
 	if bs.ltgtype == C.LTG_PATROL and not retreat then
@@ -473,7 +473,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 		--
 		if bs.curpatrolpoint == nil then
 			bs.ltgtype = 0
-			return false
+			return 0
 		end
 		--if the bot touches the current goal
 		if G.trap_BotTouchingGoal(bs.origin, bs.curpatrolpoint.goal) ~= 0 then
@@ -501,10 +501,10 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 		end
 		if bs.curpatrolpoint == nil then
 			bs.ltgtype = 0
-			return false
+			return 0
 		end
 		S.copy_bot_goal_t(goal, bs.curpatrolpoint.goal)
-		return true
+		return 1
 	end
 
 	if G.gametype == C.GT_CTF or G.gametype == C.GT_CTF_ELIMINATION then
@@ -525,7 +525,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.ctf_redflag)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--if touching the flag
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then
@@ -543,7 +543,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.ltgtype = 0
 			end
 			G.BotAlternateRoute(bs, goal)
-			return true
+			return 1
 		end
 		--if rushing to the base
 		if bs.ltgtype == C.LTG_RUSHBASE and bs.rushbaseaway_time < G.floattime then
@@ -554,7 +554,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.ctf_blueflag)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--if not carrying the flag anymore
 			if G.BotCTFCarryingFlag(bs) == 0 then bs.ltgtype = 0 end
@@ -573,7 +573,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				end
 			end
 			G.BotAlternateRoute(bs, goal)
-			return true
+			return 1
 		end
 		--returning flag
 		if bs.ltgtype == C.LTG_RETURNFLAG then
@@ -592,7 +592,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.ctf_redflag)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--if touching the flag
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then bs.ltgtype = 0 end
@@ -601,7 +601,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.ltgtype = 0
 			end
 			G.BotAlternateRoute(bs, goal)
-			return true
+			return 1
 		end
 	elseif G.gametype == C.GT_1FCTF then
 		if bs.ltgtype == C.LTG_GETFLAG then
@@ -621,7 +621,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			if bs.teamgoal_time < G.floattime then
 				bs.ltgtype = 0
 			end
-			return true
+			return 1
 		end
 		--if rushing to the base
 		if bs.ltgtype == C.LTG_RUSHBASE then
@@ -632,7 +632,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.ctf_redflag)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--if not carrying the flag anymore
 			if G.Bot1FCTFCarryingFlag(bs) == 0 then
@@ -647,7 +647,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				bs.ltgtype = 0
 			end
 			G.BotAlternateRoute(bs, goal)
-			return true
+			return 1
 		end
 		--attack the enemy base
 		if bs.ltgtype == C.LTG_ATTACKENEMYBASE and
@@ -666,7 +666,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.ctf_redflag)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--quit rushing after 2 minutes
 			if bs.teamgoal_time < G.floattime then
@@ -676,7 +676,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then
 				bs.attackaway_time = G.floattime + 2 + 5 * Q.random()
 			end
-			return true
+			return 1
 		end
 		--returning flag
 		if bs.ltgtype == C.LTG_RETURNFLAG then
@@ -711,7 +711,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.redobelisk)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--if the bot no longer wants to attack the obelisk
 			if G.BotFeelingBad(bs) > 50 then
@@ -732,7 +732,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			end
 			G.BotAlternateRoute(bs, goal)
 			--just move towards the obelisk
-			return true
+			return 1
 		end
 	elseif G.gametype == C.GT_HARVESTER then
 		--if rushing to the base
@@ -744,25 +744,25 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.redobelisk)
 			else
 				G.BotGoHarvest(bs)
-				return false
+				return 0
 			end
 			--if not carrying any cubes
 			if G.BotHarvesterCarryingCubes(bs) == 0 then
 				G.BotGoHarvest(bs)
-				return false
+				return 0
 			end
 			--quit rushing after 2 minutes
 			if bs.teamgoal_time < G.floattime then
 				G.BotGoHarvest(bs)
-				return false
+				return 0
 			end
 			--if touching the base flag the bot should loose the enemy flag
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then
 				G.BotGoHarvest(bs)
-				return false
+				return 0
 			end
 			G.BotAlternateRoute(bs, goal)
-			return true
+			return 1
 		end
 		--attack the enemy base
 		if bs.ltgtype == C.LTG_ATTACKENEMYBASE and
@@ -781,7 +781,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 				S.copy_bot_goal_t(goal, G.redobelisk)
 			else
 				bs.ltgtype = 0
-				return false
+				return 0
 			end
 			--quit rushing after 2 minutes
 			if bs.teamgoal_time < G.floattime then
@@ -791,7 +791,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then
 				bs.attackaway_time = G.floattime + 2 + 5 * Q.random()
 			end
-			return true
+			return 1
 		end
 		--harvest cubes
 		if bs.ltgtype == C.LTG_HARVEST and
@@ -812,7 +812,7 @@ function G.BotGetLongTermGoal(bs, tfl, retreat, goal)
 			if G.trap_BotTouchingGoal(bs.origin, goal) ~= 0 then
 				bs.harvestaway_time = G.floattime + 4 + 3 * Q.random()
 			end
-			return true
+			return 1
 		end
 	end
 	--normal goal stuff

@@ -97,7 +97,7 @@ end
 
 -- int trap_AAS_Initialized(void)
 function G.trap_AAS_Initialized(...)
-	return SVB.botlib_export.aas.AAS_Initialized(...)
+	return SVB.botlib_export.aas.AAS_Initialized(...) ~= 0
 end
 
 -- void trap_AAS_PresenceTypeBoundingBox(int presencetype, vec3_t mins, vec3_t maxs)

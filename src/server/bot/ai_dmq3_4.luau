@@ -45,94 +45,94 @@ function G.BotWantsToChase(bs)
 
 	if G.gametype == C.GT_CTF or G.gametype == C.GT_CTF_ELIMINATION then
 		if G.BotCTFCarryingFlag(bs) ~= 0 then
-			return false
+			return 0
 		end
 		G.BotEntityInfo(bs.enemy, entinfo)
 		if G.EntityCarriesFlag(entinfo) then
-			return true
+			return 1
 		end
 	elseif G.gametype == C.GT_1FCTF then
 		if G.Bot1FCTFCarryingFlag(bs) ~= 0 then
-			return false
+			return 0
 		end
 		G.BotEntityInfo(bs.enemy, entinfo)
 		if G.EntityCarriesFlag(entinfo) then
-			return true
+			return 1
 		end
 	elseif G.gametype == C.GT_OBELISK then
 		if bs.ltgtype == C.LTG_ATTACKENEMYBASE then
 			if bs.enemy ~= G.redobelisk.entitynum and bs.enemy ~= G.blueobelisk.entitynum then
-				return false
+				return 0
 			end
 		end
 	elseif G.gametype == C.GT_HARVESTER then
 		if G.BotHarvesterCarryingCubes(bs) ~= 0 then
-			return false
+			return 0
 		end
 
 		G.BotEntityInfo(bs.enemy, entinfo)
 		if G.EntityCarriesCubes(entinfo) then
-			return true
+			return 1
 		end
 	elseif G.gametype == GT_POSSESSION then
 		G.BotEntityInfo(bs.enemy, entinfo)
 		if G.EntityCarriesFlag(entinfo) then
-			return true
+			return 1
 		end
 	end
 	if bs.ltgtype == C.LTG_GETFLAG then
-		return false
+		return 0
 	end
 	if G.BotAggression(bs) > 50 then
-		return true
+		return 1
 	end
-	return false
+	return 0
 end
 
 function G.BotWantsToHelp(bs)
-	return true
+	return 1
 end
 
 function G.BotCanAndWantsToRocketJump(bs)
-	if G.bot_rocketjump.integer == 0 then return false end
-	if bs.inventory[C.INVENTORY_ROCKETLAUNCHER] <= 0 then return false end
-	if bs.inventory[C.INVENTORY_ROCKETS] < 3 then return false end
+	if G.bot_rocketjump.integer == 0 then return 0 end
+	if bs.inventory[C.INVENTORY_ROCKETLAUNCHER] <= 0 then return 0 end
+	if bs.inventory[C.INVENTORY_ROCKETS] < 3 then return 0 end
 	if (G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION or G.g_gametype.integer == C.GT_LMS)
 			and G.g_elimination_selfdamage.integer == 0 then
-		return true
+		return 1
 	end
-	if bs.inventory[C.INVENTORY_QUAD] ~= 0 then return false end
-	if bs.inventory[C.INVENTORY_HEALTH] < 60 then return false end
+	if bs.inventory[C.INVENTORY_QUAD] ~= 0 then return 0 end
+	if bs.inventory[C.INVENTORY_HEALTH] < 60 then return 0 end
 	if bs.inventory[C.INVENTORY_HEALTH] < 90 then
-		if bs.inventory[C.INVENTORY_ARMOR] < 40 then return false end
+		if bs.inventory[C.INVENTORY_ARMOR] < 40 then return 0 end
 	end
 	local rocketjumper = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_WEAPONJUMPING, 0, 1)
-	if rocketjumper < 0.5 then return false end
-	return true
+	if rocketjumper < 0.5 then return 0 end
+	return 1
 end
 
 function G.BotHasPersistantPowerupAndWeapon(bs)
-	if bs.inventory[C.INVENTORY_HEALTH] < 60 then return false end
+	if bs.inventory[C.INVENTORY_HEALTH] < 60 then return 0 end
 	if bs.inventory[C.INVENTORY_HEALTH] < 80 then
-		if bs.inventory[C.INVENTORY_ARMOR] < 40 then return false end
+		if bs.inventory[C.INVENTORY_ARMOR] < 40 then return 0 end
 	end
 	if bs.inventory[C.INVENTORY_BFG10K] > 0 and
-			bs.inventory[C.INVENTORY_BFGAMMO] > 7 then return true end
+			bs.inventory[C.INVENTORY_BFGAMMO] > 7 then return 1 end
 	if bs.inventory[C.INVENTORY_RAILGUN] > 0 and
-			bs.inventory[C.INVENTORY_SLUGS] > 5 then return true end
+			bs.inventory[C.INVENTORY_SLUGS] > 5 then return 1 end
 	if bs.inventory[C.INVENTORY_LIGHTNING] > 0 and
-			bs.inventory[C.INVENTORY_LIGHTNINGAMMO] > 50 then return true end
+			bs.inventory[C.INVENTORY_LIGHTNINGAMMO] > 50 then return 1 end
 	if bs.inventory[C.INVENTORY_ROCKETLAUNCHER] > 0 and
-			bs.inventory[C.INVENTORY_ROCKETS] > 5 then return true end
+			bs.inventory[C.INVENTORY_ROCKETS] > 5 then return 1 end
 	if bs.inventory[C.INVENTORY_NAILGUN] > 0 and
-			bs.inventory[C.INVENTORY_NAILS] > 5 then return true end
+			bs.inventory[C.INVENTORY_NAILS] > 5 then return 1 end
 	if bs.inventory[C.INVENTORY_PROXLAUNCHER] > 0 and
-			bs.inventory[C.INVENTORY_MINES] > 5 then return true end
+			bs.inventory[C.INVENTORY_MINES] > 5 then return 1 end
 	if bs.inventory[C.INVENTORY_CHAINGUN] > 0 and
-			bs.inventory[C.INVENTORY_BELT] > 40 then return true end
+			bs.inventory[C.INVENTORY_BELT] > 40 then return 1 end
 	if bs.inventory[C.INVENTORY_PLASMAGUN] > 0 and
-			bs.inventory[C.INVENTORY_CELLS] > 20 then return true end
-	return false
+			bs.inventory[C.INVENTORY_CELLS] > 20 then return 1 end
+	return 0
 end
 
 function G.BotGoCamp(bs, goal)
@@ -156,7 +156,7 @@ function G.BotWantsToCamp(bs)
 	local bestgoal = S.bot_goal_t()
 
 	local camper = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CAMPER, 0, 1)
-	if camper < 0.1 then return false end
+	if camper < 0.1 then return 0 end
 	if bs.ltgtype == C.LTG_TEAMHELP or
 			bs.ltgtype == C.LTG_TEAMACCOMPANY or
 			bs.ltgtype == C.LTG_DEFENDKEYAREA or
@@ -165,18 +165,18 @@ function G.BotWantsToCamp(bs)
 			bs.ltgtype == C.LTG_CAMP or
 			bs.ltgtype == C.LTG_CAMPORDER or
 			bs.ltgtype == C.LTG_PATROL then
-		return false
+		return 0
 	end
-	if bs.camp_time > G.floattime - 60 + 300 * (1 - camper) then return false end
+	if bs.camp_time > G.floattime - 60 + 300 * (1 - camper) then return 0 end
 	if Q.random() > camper then
 		bs.camp_time = G.floattime
-		return false
+		return 0
 	end
-	if G.BotAggression(bs) < 50 then return false end
+	if G.BotAggression(bs) < 50 then return 0 end
 	if (bs.inventory[C.INVENTORY_ROCKETLAUNCHER] <= 0 or bs.inventory[C.INVENTORY_ROCKETS] < 10) and
 			(bs.inventory[C.INVENTORY_RAILGUN] <= 0 or bs.inventory[C.INVENTORY_SLUGS] < 10) and
 			(bs.inventory[C.INVENTORY_BFG10K] <= 0 or bs.inventory[C.INVENTORY_BFGAMMO] < 10) then
-		return false
+		return 0
 	end
 	local besttraveltime = 99999
 	local cs = G.trap_BotGetNextCampSpotGoal(0, goal)
@@ -188,10 +188,10 @@ function G.BotWantsToCamp(bs)
 		end
 		cs = G.trap_BotGetNextCampSpotGoal(cs, goal)
 	end
-	if besttraveltime > 150 then return false end
+	if besttraveltime > 150 then return 0 end
 	G.BotGoCamp(bs, bestgoal)
 	bs.ordered = 0
-	return true
+	return 1
 end
 
 function G.BotDontAvoid(bs, itemname)
@@ -360,15 +360,15 @@ end
 
 function G.BotSameTeam(bs, entnum)
 	if bs.client < 0 or bs.client >= C.MAX_CLIENTS then
-		return false
+		return 0
 	end
 	if entnum < 0 or entnum >= C.MAX_CLIENTS then
-		return false
+		return 0
 	end
 	if G.gametype >= C.GT_TEAM and G.g_ffa_gt ~= 1 then
-		if G.level.clients[bs.client].sess.sessionTeam == G.level.clients[entnum].sess.sessionTeam then return true end
+		if G.level.clients[bs.client].sess.sessionTeam == G.level.clients[entnum].sess.sessionTeam then return 1 end
 	end
-	return false
+	return 0
 end
 
 function G.InFieldOfVision(viewangles, fov, angles)
@@ -486,7 +486,7 @@ function G.BotFindEnemy(bs, curenemy)
 	bs.lasthealth = bs.inventory[C.INVENTORY_HEALTH]
 	if curenemy >= 0 then
 		G.BotEntityInfo(curenemy, curenemyinfo)
-		if G.EntityCarriesFlag(curenemyinfo) then return false end
+		if G.EntityCarriesFlag(curenemyinfo) then return 0 end
 		Q.VectorSubtract(curenemyinfo.origin, bs.origin, dir)
 		cursquaredist = Q.VectorLengthSquared(dir)
 	else
@@ -507,14 +507,14 @@ function G.BotFindEnemy(bs, curenemy)
 		G.BotAI_Trace(trace, bs.eye, nil, nil, target, bs.client, C.CONTENTS_SOLID)
 		if trace.fraction >= 1 or trace.ent == goal.entitynum then
 			if goal.entitynum == bs.enemy then
-				return false
+				return 0
 			end
 			bs.enemy = goal.entitynum
 			bs.enemysight_time = G.floattime
 			bs.enemysuicide = 0
 			bs.enemydeath_time = 0
 			bs.enemyvisible_time = G.floattime
-			return true
+			return 1
 		end
 	end
 	for i = 0, G.level.maxclients - 1 do
@@ -541,7 +541,7 @@ function G.BotFindEnemy(bs, curenemy)
 			if curenemy >= 0 and squaredist > cursquaredist then continue end
 		end
 		if squaredist > Square(900.0 + alertness * 4000.0) then continue end
-		if G.BotSameTeam(bs, i) then continue end
+		if G.BotSameTeam(bs, i) ~= 0 then continue end
 		local f
 		if curenemy < 0 and (healthdecrease ~= 0 or G.EntityIsShooting(entinfo)) then
 			f = 360
@@ -555,7 +555,7 @@ function G.BotFindEnemy(bs, curenemy)
 			Q.vectoangles(dir, angles)
 			if not G.InFieldOfVision(entinfo.angles, 90, angles) then
 				G.BotUpdateBattleInventory(bs, i)
-				if G.BotWantsToRetreat(bs) then continue end
+				if G.BotWantsToRetreat(bs) ~= 0 then continue end
 			end
 		end
 		bs.enemy = entinfo.number
@@ -567,9 +567,9 @@ function G.BotFindEnemy(bs, curenemy)
 		bs.enemysuicide = 0
 		bs.enemydeath_time = 0
 		bs.enemyvisible_time = G.floattime
-		return true
+		return 1
 	end
-	return false
+	return 0
 end
 
 function G.BotTeamFlagCarrierVisible(bs)
@@ -586,7 +586,7 @@ function G.BotTeamFlagCarrierVisible(bs)
 		if not G.EntityCarriesFlag(entinfo) then
 			continue
 		end
-		if not G.BotSameTeam(bs, i) then
+		if G.BotSameTeam(bs, i) == 0 then
 			continue
 		end
 		local vis = G.BotEntityVisible(bs.entitynum, bs.eye, bs.viewangles, 360, i)

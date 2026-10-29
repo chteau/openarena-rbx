@@ -121,14 +121,14 @@ BotAI_GetClientState
 function G.BotAI_GetClientState(clientNum, state)
 	local ent = G.g_entities[clientNum]
 	if not ent.inuse then
-		return false
+		return 0
 	end
 	if ent.client == nil then
-		return false
+		return 0
 	end
 
 	S.copy_playerState_t(state, ent.client.ps)
-	return true
+	return 1
 end
 
 --[[
@@ -139,14 +139,14 @@ BotAI_GetEntityState
 function G.BotAI_GetEntityState(entityNum, state)
 	local ent = G.g_entities[entityNum]
 	S.copy_entityState_t(state, S.entityState_t())
-	if not ent.inuse then return false end
-	if not ent.r.linked then return false end
+	if not ent.inuse then return 0 end
+	if not ent.r.linked then return 0 end
 	if not (G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_LMS or G.g_instantgib.integer ~= 0 or G.g_rockets.integer ~= 0 or G.g_elimination_allgametypes.integer ~= 0 or G.g_gametype.integer == C.GT_CTF_ELIMINATION)
 		and bit32.band(ent.r.svFlags, C.SVF_NOCLIENT) ~= 0 then
-		return false
+		return 0
 	end
 	S.copy_entityState_t(state, ent.s)
-	return true
+	return 1
 end
 
 --[[

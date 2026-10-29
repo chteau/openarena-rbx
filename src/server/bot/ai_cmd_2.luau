@@ -36,9 +36,9 @@ local VOICECHAT_YES = "yes"
 local VOICECHAT_TAUNT = "taunt"
 
 function G.BotMatch_TakeB(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
 	local client = G.ClientFromName(netname)
@@ -63,13 +63,13 @@ function G.BotMatch_TakeB(bs, match)
 end
 
 function G.BotMatch_GetItem(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--get the match variable
 	local itemname = G.trap_BotMatchVariable(match, C.ITEM, C.MAX_MESSAGE_SIZE)
 	--
-	if not G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) then
+	if G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) == 0 then
 		return
 	end
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
@@ -91,9 +91,9 @@ end
 function G.BotMatch_Camp(bs, match)
 	local entinfo = S.aas_entityinfo_t()
 
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--asked for someone else
@@ -139,7 +139,7 @@ function G.BotMatch_Camp(bs, match)
 			G.trap_BotEnterChat(bs.cs, client, C.CHAT_TELL)
 			return
 		end
-	elseif not G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) then
+	elseif G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) == 0 then
 		return
 	end
 	--
@@ -163,9 +163,9 @@ function G.BotMatch_Camp(bs, match)
 end
 
 function G.BotMatch_Patrol(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--get the patrol waypoints
 	if G.BotGetPatrolWaypoints(bs, match) == 0 then return end
 	--
@@ -207,7 +207,7 @@ function G.BotMatch_GetFlag(bs, match)
 		return
 	end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
@@ -244,7 +244,7 @@ function G.BotMatch_AttackEnemyBase(bs, match)
 		return
 	end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
@@ -275,7 +275,7 @@ function G.BotMatch_Harvest(bs, match)
 		return
 	end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
@@ -310,7 +310,7 @@ function G.BotMatch_RushBase(bs, match)
 		return
 	end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
@@ -366,7 +366,7 @@ function G.BotMatch_ReturnFlag(bs, match)
 		return
 	end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then
+	if G.BotAddressedToBot(bs, match) == 0 then
 		return
 	end
 	--
@@ -389,9 +389,9 @@ function G.BotMatch_ReturnFlag(bs, match)
 end
 
 function G.BotMatch_JoinSubteam(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--get the sub team name
 	local teammate = G.trap_BotMatchVariable(match, C.TEAMNAME, C.MAX_MESSAGE_SIZE)
 	--set the sub team name
@@ -404,9 +404,9 @@ function G.BotMatch_JoinSubteam(bs, match)
 end
 
 function G.BotMatch_LeaveSubteam(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	if #bs.subteam ~= 0 then
 		G.BotAI_BotInitialChat(bs, "leftteam", bs.subteam, nil)
@@ -418,9 +418,9 @@ function G.BotMatch_LeaveSubteam(bs, match)
 end
 
 function G.BotMatch_WhichTeam(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 
 	--
 	if #bs.subteam ~= 0 then
@@ -434,7 +434,7 @@ end
 function G.BotMatch_CheckPoint(bs, match)
 	local position = Q.vec3()
 
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--
 	local buf = G.trap_BotMatchVariable(match, C.POSITION, C.MAX_MESSAGE_SIZE)
 	Q.VectorClear(position)
@@ -452,7 +452,7 @@ function G.BotMatch_CheckPoint(bs, match)
 	position[2] += 0.5
 	local areanum = G.BotPointAreaNum(position)
 	if areanum == 0 then
-		if G.BotAddressedToBot(bs, match) then
+		if G.BotAddressedToBot(bs, match) ~= 0 then
 			G.BotAI_BotInitialChat(bs, "checkpoint_invalid", nil)
 			G.trap_BotEnterChat(bs.cs, client, C.CHAT_TELL)
 		end
@@ -475,7 +475,7 @@ function G.BotMatch_CheckPoint(bs, match)
 	if bs.checkpoints ~= nil then bs.checkpoints.prev = cp end
 	bs.checkpoints = cp
 	--
-	if G.BotAddressedToBot(bs, match) then
+	if G.BotAddressedToBot(bs, match) ~= 0 then
 		buf = QS.Com_sprintf(C.MAX_MESSAGE_SIZE, "%1.0f %1.0f %1.0f", cp.goal.origin[0],
 													cp.goal.origin[1],
 													cp.goal.origin[2])
@@ -488,9 +488,9 @@ end
 function G.BotMatch_FormationSpace(bs, match)
 	local space
 
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local buf = G.trap_BotMatchVariable(match, C.NUMBER, C.MAX_MESSAGE_SIZE)
 	--if it's the distance in feet
@@ -503,9 +503,9 @@ function G.BotMatch_FormationSpace(bs, match)
 end
 
 function G.BotMatch_Dismiss(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	local client = G.ClientFromName(netname)
 	--
@@ -520,9 +520,9 @@ function G.BotMatch_Dismiss(bs, match)
 end
 
 function G.BotMatch_Suicide(bs, match)
-	if not G.TeamPlayIsOn() then return end
+	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	G.trap_EA_Command(bs.client, "kill")
 	--

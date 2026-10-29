@@ -92,7 +92,15 @@ function BotGame.FromEngine(m: { SV: any, W: any, Cvar: any, Fs: any, Collision:
 			return if s then buffer.fromstring(s) else nil
 		end,
 		trace_t = m.structs.trace_t,
-		SV_Trace = W.SV_Trace,
+		-- botlib traces with passent -1 ("no entity"); ioquake3's SV_Trace then
+		-- reads the owner of the slot before g_entities (undefined behaviour,
+		-- which matches no entity in practice), so -1 passes as ENTITYNUM_NONE
+		SV_Trace = function(results, start, mins, maxs, endp, passEntityNum, contentmask, capsule)
+			if passEntityNum < 0 then
+				passEntityNum = C.ENTITYNUM_NONE
+			end
+			W.SV_Trace(results, start, mins, maxs, endp, passEntityNum, contentmask, capsule)
+		end,
 		SV_ClipToEntity = W.SV_ClipToEntity,
 		SV_PointContents = W.SV_PointContents,
 		SV_inPVS = W.SV_inPVS,

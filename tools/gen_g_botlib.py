@@ -24,6 +24,9 @@ ENGINE = {  # cases the engine answers itself (sv_bot.c / sv_game.c)
     "BOTLIB_USER_COMMAND": "SVB.SV_BotUserCommand(...)",
 }
 
+# traps the game module's conventions make boolean although the export is int
+BOOL_TRAPS = {"trap_AAS_Initialized"}
+
 
 def main():
     sw = SVGAME.read_text(errors="replace")
@@ -40,6 +43,8 @@ def main():
             body = f"SVB.botlib_export.{target[case]}(...)"
         else:
             raise SystemExit(f"no engine mapping for {name} ({case})")
+        if name in BOOL_TRAPS:
+            body += " ~= 0"
         lines.append(f"-- {' '.join(m.group(0).split('{')[0].split())}\nfunction G.{name}(...)\n\treturn {body}\nend")
     head = (ROOT / "src/server/bot/botlib/b_local.luau").read_text().split("]]")[0] + "]]\n"
     head = head.replace("(botlib)", "(game/g_syscalls.c, the botlib traps)")

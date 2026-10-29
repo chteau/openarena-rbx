@@ -371,8 +371,8 @@ function G.BotMatchMessage(bs, message)
 	local match = S.bot_match_t()
 
 	match.type = 0
-	if not G.trap_BotFindMatch(message, match, bit32.bor(C.MTCONTEXT_MISC, C.MTCONTEXT_INITIALTEAMCHAT, C.MTCONTEXT_CTF, C.MTCONTEXT_DD)) then
-		return false
+	if G.trap_BotFindMatch(message, match, bit32.bor(C.MTCONTEXT_MISC, C.MTCONTEXT_INITIALTEAMCHAT, C.MTCONTEXT_CTF, C.MTCONTEXT_DD)) == 0 then
+		return 0
 	end
 	local t = match.type
 	if t == C.MSG_HELP or t == C.MSG_ACCOMPANY then
@@ -448,7 +448,7 @@ function G.BotMatchMessage(bs, message)
 	else
 		G.BotAI_Print(C.PRT_MESSAGE, "unknown match type\n")
 	end
-	return true
+	return 1
 end
 
 return nil

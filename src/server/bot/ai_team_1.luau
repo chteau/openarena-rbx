@@ -55,9 +55,9 @@ SF.BotNumTeamMates_maxclients = 0
 SF.BotSortTeamMatesByRelativeTravelTime2ddA_maxclients = 0
 
 function G.BotValidTeamLeader(bs)
-	if #bs.teamleader == 0 then return false end
-	if G.ClientFromName(bs.teamleader) == -1 then return false end
-	return true
+	if #bs.teamleader == 0 then return 0 end
+	if G.ClientFromName(bs.teamleader) == -1 then return 0 end
+	return 1
 end
 
 function G.BotNumTeamMates(bs)

@@ -385,11 +385,11 @@ end
 
 function G.BotVoiceChatCommand(bs, mode, voiceChat)
 	if G.TeamPlayIsOn() == 0 then
-		return false
+		return 0
 	end
 
 	if mode == C.SAY_ALL then
-		return false -- don't do anything with voice chats to everyone
+		return 0 -- don't do anything with voice chats to everyone
 	end
 
 	local buf = QS.Q_strncpyz(voiceChat, C.MAX_MESSAGE_SIZE)
@@ -402,16 +402,16 @@ function G.BotVoiceChatCommand(bs, mode, voiceChat)
 	local cmdStr = string.sub(buf, cmd)
 
 	if G.BotSameTeam(bs, clientNum) == 0 then
-		return false
+		return 0
 	end
 
 	for i = 1, #voiceCommands do
 		if QS.Q_strequal(cmdStr, voiceCommands[i][1]) then
 			voiceCommands[i][2](bs, clientNum, mode)
-			return true
+			return 1
 		end
 	end
-	return false
+	return 0
 end
 
 return nil

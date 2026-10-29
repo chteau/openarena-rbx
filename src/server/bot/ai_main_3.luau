@@ -100,19 +100,19 @@ function G.BotAISetupClient(client, settings, restart)
 
 	if bs ~= nil and bs.inuse ~= 0 then
 		G.BotAI_Print(C.PRT_FATAL, "BotAISetupClient: client %d already setup\n", client)
-		return false
+		return 0
 	end
 
 	if not G.trap_AAS_Initialized() then
 		G.BotAI_Print(C.PRT_FATAL, "AAS not initialized\n")
-		return false
+		return 0
 	end
 
 	--load the bot character
 	bs.character = G.trap_BotLoadCharacter(settings.characterfile, settings.skill)
 	if bs.character == 0 then
 		G.BotAI_Print(C.PRT_FATAL, "couldn't load skill %f from %s\n", settings.skill, settings.characterfile)
-		return false
+		return 0
 	end
 	--copy the settings
 	S.copy_bot_settings_t(bs.settings, settings)
@@ -123,7 +123,7 @@ function G.BotAISetupClient(client, settings, restart)
 	local errnum = G.trap_BotLoadItemWeights(bs.gs, filename)
 	if errnum ~= C.BLERR_NOERROR then
 		G.trap_BotFreeGoalState(bs.gs)
-		return false
+		return 0
 	end
 	--allocate a weapon state
 	bs.ws = G.trap_BotAllocWeaponState()
@@ -133,7 +133,7 @@ function G.BotAISetupClient(client, settings, restart)
 	if errnum ~= C.BLERR_NOERROR then
 		G.trap_BotFreeGoalState(bs.gs)
 		G.trap_BotFreeWeaponState(bs.ws)
-		return false
+		return 0
 	end
 	--allocate a chat state
 	bs.cs = G.trap_BotAllocChatState()
@@ -145,7 +145,7 @@ function G.BotAISetupClient(client, settings, restart)
 		G.trap_BotFreeChatState(bs.cs)
 		G.trap_BotFreeGoalState(bs.gs)
 		G.trap_BotFreeWeaponState(bs.ws)
-		return false
+		return 0
 	end
 	--get the gender characteristic
 	local gender = G.trap_Characteristic_String(bs.character, C.CHARACTERISTIC_GENDER, MAX_PATH)
@@ -183,7 +183,7 @@ function G.BotAISetupClient(client, settings, restart)
 		G.BotReadSessionData(bs)
 	end
 	--bot has been setup succesfully
-	return true
+	return 1
 end
 
 --[[
@@ -194,7 +194,7 @@ BotAIShutdownClient
 function G.BotAIShutdownClient(client, restart)
 	local bs = G.botstates[client]
 	if bs == nil or bs.inuse == 0 then
-		return false
+		return 0
 	end
 
 	if restart then
@@ -227,7 +227,7 @@ function G.BotAIShutdownClient(client, restart)
 	--there's one bot less
 	G.numbots = G.numbots - 1
 	--everything went ok
-	return true
+	return 1
 end
 
 --[[
@@ -300,7 +300,7 @@ function G.BotAILoadMap(restart)
 
 	G.BotSetupDeathmatchAI()
 
-	return true
+	return 1
 end
 
 --[[
@@ -343,7 +343,7 @@ function G.BotAIStartFrame(time)
 			b.lastucmd.serverTime = time
 			G.trap_BotUserCommand(b.client, b.lastucmd)
 		end
-		return true
+		return 1
 	end
 
 	if G.bot_memorydump.integer ~= 0 then
@@ -384,7 +384,7 @@ function G.BotAIStartFrame(time)
 
 		G.trap_BotLibStartFrame(time / 1000)
 
-		if not G.trap_AAS_Initialized() then return false end
+		if not G.trap_AAS_Initialized() then return 0 end
 
 		--update entities in the botlib
 		for i = 0, C.MAX_GENTITIES - 1 do
@@ -473,7 +473,7 @@ function G.BotAIStartFrame(time)
 		if b.botthink_residual >= thinktime then
 			b.botthink_residual = b.botthink_residual - thinktime
 
-			if not G.trap_AAS_Initialized() then return false end
+			if not G.trap_AAS_Initialized() then return 0 end
 
 			if G.g_entities[i].client.pers.connected == C.CON_CONNECTED then
 				G.BotAI(i, thinktime / 1000)
@@ -495,7 +495,7 @@ function G.BotAIStartFrame(time)
 		G.trap_BotUserCommand(b.client, b.lastucmd)
 	end
 
-	return true
+	return 1
 end
 
 --[[
@@ -585,7 +585,7 @@ function G.BotAISetup(restart)
 
 	--if the game is restarted for a tournament
 	if restart ~= 0 and restart ~= false then
-		return true
+		return 1
 	end
 
 	--initialize the bot states
@@ -594,8 +594,8 @@ function G.BotAISetup(restart)
 	end
 
 	local errnum = G.BotInitLibrary()
-	if errnum ~= C.BLERR_NOERROR then return false end
-	return true
+	if errnum ~= C.BLERR_NOERROR then return 0 end
+	return 1
 end
 
 --[[
@@ -617,7 +617,7 @@ function G.BotAIShutdown(restart)
 	else
 		G.trap_BotLibShutdown()
 	end
-	return true
+	return 1
 end
 
 return nil

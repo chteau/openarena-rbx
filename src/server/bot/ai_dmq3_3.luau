@@ -626,12 +626,12 @@ function G.BotCreateWayPoint(name, origin, areanum)
 		waypointmaxs[i] = 8
 	end
 
-	local wp = SF.botai_freewaypoints
+	local wp = G.botai_freewaypoints
 	if wp == nil then
 		G.BotAI_Print(C.PRT_WARNING, "BotCreateWayPoint: Out of waypoints\n")
 		return nil
 	end
-	SF.botai_freewaypoints = SF.botai_freewaypoints.next
+	G.botai_freewaypoints = G.botai_freewaypoints.next
 
 	wp.name = QS.Q_strncpyz(name, 32)
 	Q.VectorCopy(origin, wp.goal.origin)
@@ -657,17 +657,17 @@ end
 function G.BotFreeWaypoints(wp)
 	while wp ~= nil do
 		local nextwp = wp.next
-		wp.next = SF.botai_freewaypoints
-		SF.botai_freewaypoints = wp
+		wp.next = G.botai_freewaypoints
+		G.botai_freewaypoints = wp
 		wp = nextwp
 	end
 end
 
 function G.BotInitWaypoints()
-	SF.botai_freewaypoints = nil
+	G.botai_freewaypoints = nil
 	for i = 0, MAX_WAYPOINTS - 1 do
-		SF.botai_waypoints[i].next = SF.botai_freewaypoints
-		SF.botai_freewaypoints = SF.botai_waypoints[i]
+		G.botai_waypoints[i].next = G.botai_freewaypoints
+		G.botai_freewaypoints = G.botai_waypoints[i]
 	end
 end
 

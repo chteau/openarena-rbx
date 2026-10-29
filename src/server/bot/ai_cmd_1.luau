@@ -47,7 +47,7 @@ FIXME: add stuff like "upper rocket launcher"
 ==================
 ]]
 function G.BotGetItemTeamGoal(goalname, goal)
-	if #goalname == 0 then return false end
+	if #goalname == 0 then return 0 end
 	local i = -1
 	repeat
 		i = G.trap_BotGetLevelItemGoal(i, goalname, goal)
@@ -56,10 +56,10 @@ function G.BotGetItemTeamGoal(goalname, goal)
 			if bit32.band(goal.flags, C.GFL_DROPPED) ~= 0 then
 				continue
 			end
-			return true
+			return 1
 		end
 	until not (i > 0)
-	return false
+	return 0
 end
 
 --[[
@@ -68,14 +68,14 @@ BotGetMessageTeamGoal
 ==================
 ]]
 function G.BotGetMessageTeamGoal(bs, goalname, goal)
-	if G.BotGetItemTeamGoal(goalname, goal) then return true end
+	if G.BotGetItemTeamGoal(goalname, goal) ~= 0 then return 1 end
 
 	local cp = G.BotFindWayPoint(bs.checkpoints, goalname)
 	if cp then
 		S.copy_bot_goal_t(goal, cp.goal)
-		return true
+		return 1
 	end
-	return false
+	return 0
 end
 
 --[[
@@ -186,13 +186,13 @@ function G.BotGetPatrolWaypoints(bs, match)
 			G.trap_EA_SayTeam(bs.client, "what do you say?")
 			G.BotFreeWaypoints(newpatrolpoints)
 			bs.patrolpoints = nil
-			return false
+			return 0
 		end
 		keyarea = G.trap_BotMatchVariable(keyareamatch, C.KEYAREA, C.MAX_MESSAGE_SIZE)
-		if not G.BotGetMessageTeamGoal(bs, keyarea, goal) then
+		if G.BotGetMessageTeamGoal(bs, keyarea, goal) == 0 then
 			G.BotFreeWaypoints(newpatrolpoints)
 			bs.patrolpoints = nil
-			return false
+			return 0
 		end
 		--create a new waypoint
 		local newwp = G.BotCreateWayPoint(keyarea, goal.origin, goal.areanum)
@@ -230,7 +230,7 @@ function G.BotGetPatrolWaypoints(bs, match)
 		G.trap_EA_SayTeam(bs.client, "I need more key points to patrol\n")
 		G.BotFreeWaypoints(newpatrolpoints)
 		newpatrolpoints = nil
-		return false
+		return 0
 	end
 	--
 	G.BotFreeWaypoints(bs.patrolpoints)
@@ -239,7 +239,7 @@ function G.BotGetPatrolWaypoints(bs, match)
 	bs.curpatrolpoint = bs.patrolpoints
 	bs.patrolflags = patrolflags
 	--
-	return true
+	return 1
 end
 
 --[[
@@ -252,7 +252,7 @@ function G.BotAddressedToBot(bs, match)
 
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	local client = G.ClientOnSameTeamFromName(bs, netname)
-	if client < 0 then return false end
+	if client < 0 then return 0 end
 	--if the message is addressed to someone
 	if bit32.band(match.subtype, C.ST_ADDRESSED) ~= 0 then
 		local addressedto = G.trap_BotMatchVariable(match, C.ADDRESSEE, C.MAX_MESSAGE_SIZE)
@@ -261,24 +261,24 @@ function G.BotAddressedToBot(bs, match)
 		--
 		while G.trap_BotFindMatch(addressedto, addresseematch, C.MTCONTEXT_ADDRESSEE) ~= 0 do
 			if addresseematch.type == C.MSG_EVERYONE then
-				return true
+				return 1
 			elseif addresseematch.type == C.MSG_MULTIPLENAMES then
 				local name = G.trap_BotMatchVariable(addresseematch, C.TEAMMATE, C.MAX_MESSAGE_SIZE)
 				if #name ~= 0 then
-					if G.stristr(botname, name) then return true end
-					if G.stristr(bs.subteam, name) then return true end
+					if G.stristr(botname, name) then return 1 end
+					if G.stristr(bs.subteam, name) then return 1 end
 				end
 				addressedto = G.trap_BotMatchVariable(addresseematch, C.MORE, C.MAX_MESSAGE_SIZE)
 			else
 				local name = G.trap_BotMatchVariable(addresseematch, C.TEAMMATE, C.MAX_MESSAGE_SIZE)
 				if #name ~= 0 then
-					if G.stristr(botname, name) then return true end
-					if G.stristr(bs.subteam, name) then return true end
+					if G.stristr(botname, name) then return 1 end
+					if G.stristr(bs.subteam, name) then return 1 end
 				end
 				break
 			end
 		end
-		return false
+		return 0
 	else
 		local tellmatch = S.bot_match_t()
 
@@ -287,10 +287,10 @@ function G.BotAddressedToBot(bs, match)
 		if G.trap_BotFindMatch(match.string, tellmatch, C.MTCONTEXT_REPLYCHAT) == 0
 			or tellmatch.type ~= C.MSG_CHATTELL then
 			--make sure not everyone reacts to this message
-			if Q.random() > Q.f(1.0 / (G.NumPlayersOnSameTeam(bs) - 1)) then return false end
+			if Q.random() > Q.f(1.0 / (G.NumPlayersOnSameTeam(bs) - 1)) then return 0 end
 		end
 	end
-	return true
+	return 1
 end
 
 --[[
@@ -326,7 +326,7 @@ function G.BotGPSToPosition(buf, position)
 		G.BotAI_Print(C.PRT_MESSAGE, "%d\n", sign * num)
 		position[i] = sign * num
 	end
-	return true
+	return 1
 end
 
 --[[
@@ -342,7 +342,7 @@ function G.BotMatch_HelpAccompany(bs, match)
 
 	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--get the team mate name
 	local teammate = G.trap_BotMatchVariable(match, C.TEAMMATE, C.MAX_MESSAGE_SIZE)
 	--get the client to help
@@ -402,7 +402,7 @@ function G.BotMatch_HelpAccompany(bs, match)
 			--get the match variable
 			local itemname = G.trap_BotMatchVariable(match, C.ITEM, C.MAX_MESSAGE_SIZE)
 			--
-			if not G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) then
+			if G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) == 0 then
 				return
 			end
 		end
@@ -458,11 +458,11 @@ BotMatch_DefendKeyArea
 function G.BotMatch_DefendKeyArea(bs, match)
 	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--get the match variable
 	local itemname = G.trap_BotMatchVariable(match, C.KEYAREA, C.MAX_MESSAGE_SIZE)
 	--
-	if not G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) then
+	if G.BotGetMessageTeamGoal(bs, itemname, bs.teamgoal) == 0 then
 		return
 	end
 	--
@@ -498,7 +498,7 @@ For Double Domination
 function G.BotMatch_TakeA(bs, match)
 	if G.TeamPlayIsOn() == 0 then return end
 	--if not addressed to this bot
-	if not G.BotAddressedToBot(bs, match) then return end
+	if G.BotAddressedToBot(bs, match) == 0 then return end
 	--
 	local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_MESSAGE_SIZE)
 	--
