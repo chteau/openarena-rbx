@@ -23,7 +23,11 @@ replaces only that stage's entries in `build/manifest.json`.
 
 The VFS mirrors the engine search path: `baseoa/*.pk3` sorted, then
 `missionpack/*.pk3` sorted, later entries overriding earlier ones,
-case-insensitive. `pak2-players-mature.pk3` is never opened. 144 paths are
+case-insensitive. `pak2-players-mature.pk3` is never opened. Our edited
+art in `assets/toned/` (loose files at pk3 paths) is searched last, so it
+overrides every pk3; the manifest lists it as the last source. It holds the
+neko and angelyss textures and icons with the chest, midriff and hips
+covered (`assets/toned/README.md`, before/after in `docs/toned-skins.jpg`). 144 paths are
 overridden by missionpack. Images resolve like `R_FindImageFile` (name as
 given, then `.tga`, `.jpg`, `.png`). Every map found under `maps/*.bsp` is
 converted: 72 maps.
