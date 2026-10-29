@@ -10,7 +10,8 @@ const USAGE: &str = "\
 usage:
   oaconv convert [--repo DIR] [--out DIR] [--maps a,b] [--only maps,models,images,sounds,shaders] [--max-pages N]
   oaconv preview --map NAME [--spawn N | --eye \"x y z yaw\" | --top] [--out FILE.png] [--size WxH] [--repo DIR]
-  oaconv upload [--build DIR] [--dry-run] [--only Model|Image|Audio] [--limit N] [--user-id ID]";
+  oaconv upload [--build DIR] [--dry-run] [--only Model|Image|Audio] [--limit N] [--user-id ID]
+                [--hold FILE] [--pace-ms MS]";
 
 struct Args(Vec<String>);
 
@@ -132,6 +133,17 @@ fn run() -> Result<(), String> {
                 only,
                 limit: args.number("--limit")?,
                 user_id: args.number("--user-id")?,
+                hold: match args.value("--hold") {
+                    Some(f) => std::fs::read_to_string(&f)
+                        .map_err(|e| format!("--hold {f}: {e}"))?
+                        .lines()
+                        .map(str::trim)
+                        .filter(|l| !l.is_empty() && !l.starts_with('#'))
+                        .map(String::from)
+                        .collect(),
+                    None => Vec::new(),
+                },
+                pace: std::time::Duration::from_millis(args.number("--pace-ms")?.unwrap_or(1500)),
             };
             args.finish()?;
             let n = oaconv::upload::run(&build, &opts)?;

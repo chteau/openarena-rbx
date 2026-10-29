@@ -22,6 +22,10 @@ pub struct Options {
     pub limit: Option<usize>,
     /// Creator user id; default: the key's own user (introspection).
     pub user_id: Option<u64>,
+    /// Path prefixes held back from upload (moderation review pending).
+    pub hold: Vec<String>,
+    /// Pause between two creates, to stay well under the Assets API limit.
+    pub pace: Duration,
 }
 
 /// Uploads still to do: manifest order, filtered by kind, minus those the
@@ -30,6 +34,7 @@ fn pending<'a>(m: &'a Manifest, lock: &AssetLock, opts: &Options) -> Vec<&'a Upl
     m.uploads
         .iter()
         .filter(|u| opts.only.is_none_or(|k| k == u.kind))
+        .filter(|u| !opts.hold.iter().any(|h| u.path.starts_with(h.as_str())))
         .filter(|u| lock.get(&u.path).is_none_or(|l| l.sha256 != u.sha256))
         .take(opts.limit.unwrap_or(usize::MAX))
         .collect()
@@ -83,7 +88,10 @@ pub fn run(build: &Path, opts: &Options) -> Result<usize, String> {
         }
     };
     let mut done = 0;
-    for u in todo {
+    for (i, u) in todo.into_iter().enumerate() {
+        if i > 0 {
+            std::thread::sleep(opts.pace);
+        }
         let result = upload_one(build, u, &client, &key, user);
         match result {
             Ok(id) => {
@@ -341,6 +349,8 @@ mod tests {
             only,
             limit,
             user_id: None,
+            hold: vec!["images/models/gibs/".into()],
+            pace: Duration::ZERO,
         }
     }
 
