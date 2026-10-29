@@ -1,0 +1,88 @@
+{
+  "models": {
+    "sorceress": {
+      "upper": {"reference": "BOTH_DEATH1", "regions": [
+        {"note": "chest", "center": [3.5, -0.5, 6.5], "radius": [5, 9, 5.5], "axis": [1, 0, 0], "keep": 0.1, "smooth": 4, "core": 0.8}
+      ]},
+      "lower": {"reference": "LEGS_IDLE", "regions": [
+        {"note": "buttocks", "center": [-5, 0, 6], "radius": [4.5, 8, 6], "axis": [-1, 0, 0], "keep": 0.1, "smooth": 4, "core": 0.6}
+      ]}
+    },
+    "kyonshi": {
+      "upper": {"reference": "BOTH_DEATH1", "regions": [
+        {"note": "chest", "center": [3.5, 0, 2.5], "radius": [3.5, 8, 3.5], "axis": [1, 0, 0], "keep": 0.1, "smooth": 4, "core": 0.75, "surfaces": ["u_torso"]}
+      ]}
+    },
+    "major": {
+      "upper": {"reference": "BOTH_DEATH1", "regions": [
+        {"note": "chest", "center": [3, 0, 8.5], "radius": [3.5, 8, 3.5], "axis": [1, 0, 0], "keep": 0.1, "smooth": 4, "core": 0.75}
+      ]},
+      "lower": {"reference": "BOTH_DEATH1", "regions": [
+        {"note": "buttocks", "center": [-4, 0, 5], "radius": [4, 7, 5], "axis": [-1, 0, 0], "keep": 0.1, "smooth": 4, "core": 0.6}
+      ]}
+    },
+    "neko": {
+      "lower": {"reference": "LEGS_IDLE", "regions": [
+        {"note": "chest", "center": [3, 1, 20], "radius": [4.5, 8, 4.5], "axis": [1, 0, 0], "keep": 0.1, "smooth": 4, "surfaces": ["body"], "core": 0.75},
+        {"note": "buttocks", "center": [-5, 0, 10], "radius": [4, 7, 5], "axis": [-1, 0, 0], "keep": 0.1, "smooth": 4, "surfaces": ["body", "skirt"], "core": 0.6}
+      ]}
+    },
+    "angelyss": {
+      "lower": {"reference": "LEGS_IDLE", "regions": [
+        {"note": "chest", "center": [3.5, -0.5, 21], "radius": [4.5, 8, 4.5], "axis": [1, 0, 0], "keep": 0.1, "smooth": 4, "surfaces": ["l_body", "l_clothes"], "core": 0.75},
+        {"note": "buttocks", "center": [-4, 0, 6], "radius": [4, 7, 5], "axis": [-1, 0, 0], "keep": 0.1, "smooth": 4, "surfaces": ["l_body", "l_clothes"], "core": 0.6}
+      ]}
+    }
+  },
+  "textures": {
+    "suits": [
+      {
+        "mask": "models/players/angelyss/retro.tga",
+        "images": {
+          "models/players/hnt/skin.tga": [58, 58, 64],
+          "models/players/hnt/skin_red.tga": [120, 24, 28],
+          "models/players/hnt/skin_blue.tga": [34, 42, 96],
+          "models/players/hnt/drkskin_red.tga": [72, 22, 26],
+          "models/players/hnt/drkskin_blue.tga": [30, 34, 56]
+        }
+      }
+    ],
+    "spots": {
+      "models/players/sorceress/drowbody.tga": [
+        [107, 130, 6],
+        [52, 162, 6]
+      ],
+      "models/players/sorceress/reddrowbody.tga": [
+        [107, 130, 6],
+        [52, 162, 6]
+      ]
+    },
+    "smooth": [
+      {
+        "model": "neko",
+        "images": [
+          "models/players/neko/neko.tga",
+          "models/players/neko/neko_red.tga",
+          "models/players/neko/neko_blue.tga",
+          "models/players/neko/neko_old.tga"
+        ],
+        "radius": 8
+      },
+      {
+        "model": "angelyss",
+        "images": [
+          "models/players/angelyss/retro.tga",
+          "models/players/hnt/skin.tga",
+          "models/players/hnt/skin_red.tga",
+          "models/players/hnt/skin_blue.tga",
+          "models/players/hnt/drkskin_red.tga",
+          "models/players/hnt/drkskin_blue.tga"
+        ],
+        "radius": 8,
+        "surfaces": [
+          "l_body"
+        ]
+      }
+    ]
+  }
+}

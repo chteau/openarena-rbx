@@ -207,6 +207,30 @@ mod tests {
                 assert!(base.exists(key), "{key} is not in any pk3");
                 assert_eq!(vfs.read(key).unwrap(), std::fs::read(path).unwrap());
                 assert_ne!(vfs.read(key), base.read(key), "{key} is unchanged");
+                if key.ends_with(".md3") {
+                    // Reshaped models move vertices only: everything else the
+                    // game and the converter rely on stays as shipped.
+                    let a = crate::md3::parse(&base.read(key).unwrap()).unwrap();
+                    let b = crate::md3::parse(&vfs.read(key).unwrap()).unwrap();
+                    assert_eq!(a.frames.len(), b.frames.len(), "{key}");
+                    assert_eq!(a.tags, b.tags, "{key}");
+                    assert_eq!(a.surfaces.len(), b.surfaces.len(), "{key}");
+                    for (s, t) in a.surfaces.iter().zip(&b.surfaces) {
+                        assert_eq!(
+                            (&s.name, &s.shaders, &s.triangles, &s.st),
+                            (&t.name, &t.shaders, &t.triangles, &t.st),
+                            "{key}"
+                        );
+                        assert_eq!(s.xyz.len(), t.xyz.len(), "{key}");
+                    }
+                    assert!(
+                        a.surfaces
+                            .iter()
+                            .zip(&b.surfaces)
+                            .any(|(s, t)| s.xyz != t.xyz),
+                        "{key}: no vertex moved"
+                    );
+                }
                 n += 1;
             }
         }

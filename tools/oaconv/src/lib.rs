@@ -8,6 +8,7 @@ pub mod gltf;
 pub mod luau;
 pub mod manifest;
 pub mod md3;
+pub mod md3edit;
 pub mod mesh;
 pub mod preview;
 pub mod shader;
