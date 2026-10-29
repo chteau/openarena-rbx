@@ -39,7 +39,9 @@ int oracle_patch_point(int which, vec3_t out);
 
 /* engine/game glue bg_* expects */
 vmCvar_t cg_enableQ;
-void trap_SnapVector(float *v) { v[0] = rintf(v[0]); v[1] = rintf(v[1]); v[2] = rintf(v[2]); }
+/* the engine's qsnapvectorsse: cvtps2dq + cvtdq2ps (round to nearest even
+ * through an int, so -0.3 snaps to +0, not rintf's -0) */
+void trap_SnapVector(float *v) { v[0] = (float)(int)rintf(v[0]); v[1] = (float)(int)rintf(v[1]); v[2] = (float)(int)rintf(v[2]); }
 int trap_FS_FOpenFile(const char *qpath, fileHandle_t *f, fsMode_t mode) { *f = 0; return -1; }
 void trap_FS_Read(void *buffer, int len, fileHandle_t f) {}
 void trap_FS_FCloseFile(fileHandle_t f) {}
@@ -359,7 +361,7 @@ static void run_pmove(int scenarios, int frames) {
 		playerState_t ps;
 		usercmd_t cmd;
 		pmove_t pm;
-		int kind = s % 4, f, hold = 0, strafeDir = 1, stuck = 0, pflags, pfloat, nobunny;
+		int kind = s % 5, f, hold = 0, strafeDir = 1, stuck = 0, pflags, pfloat, nobunny;
 		float yaw, pitch = 0;
 		vec3_t target;
 
@@ -444,6 +446,7 @@ static void run_pmove(int scenarios, int frames) {
 				pitch = d[2] < -64 ? 40 : d[2] > 64 ? -40 : 0;
 				cmd.forwardmove = 127;
 				cmd.rightmove = kind == 3 ? (ir(2) ? 127 : -127) : 0;
+				if (kind == 4 && VectorLength(d) < 48 && numTriggers) VectorCopy(triggers[ir(numTriggers)].center, target);
 				hspeed = sqrt(ps.velocity[0] * ps.velocity[0] + ps.velocity[1] * ps.velocity[1]);
 				stuck = hspeed < 60 ? stuck + 1 : 0;
 				cmd.upmove = (stuck > 5 && !ir(3)) || (d[2] > 40 && !ir(2)) ? 127 : (ir(40) ? 0 : -127);
@@ -484,6 +487,15 @@ static void run_pmove(int scenarios, int frames) {
 			apply_triggers(&ps, &pm, &cmd);
 			fprintf(out, "A"); log_ps(&ps); fprintf(out, "\n");
 
+			/* kind 4: hop onto a jump pad / teleporter trigger every 150 frames */
+			if (kind == 4 && numTriggers && f % 150 == 0) {
+				trigger_t *t = &triggers[ir(numTriggers)];
+				VectorCopy(t->center, ps.origin);
+				VectorClear(ps.velocity);
+				ps.eFlags ^= EF_TELEPORT_BIT;
+				VectorCopy(triggers[ir(numTriggers)].center, target);
+				fprintf(out, "R"); log_ps(&ps); fprintf(out, "\n");
+			} else
 			/* respawn when stuck in the void or dead for good */
 			if (ps.origin[2] < -20000 || (ps.pm_type == PM_NORMAL && f % 600 == 599 && !ir(3))) {
 				VectorCopy(spawns[ir(nspawns)], ps.origin);
