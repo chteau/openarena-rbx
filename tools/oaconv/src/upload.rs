@@ -35,6 +35,8 @@ fn pending<'a>(m: &'a Manifest, lock: &AssetLock, opts: &Options) -> Vec<&'a Upl
         .iter()
         .filter(|u| opts.only.is_none_or(|k| k == u.kind))
         .filter(|u| !opts.hold.iter().any(|h| u.path.starts_with(h.as_str())))
+        // an older build's outputs for models the roster dropped never go up
+        .filter(|u| !crate::roster::Roster::get().excludes_output(&u.path))
         .filter(|u| lock.get(&u.path).is_none_or(|l| l.sha256 != u.sha256))
         .take(opts.limit.unwrap_or(usize::MAX))
         .collect()
@@ -384,6 +386,14 @@ mod tests {
         let p = pending(&m, &lock, &opts(None, Some(3)));
         assert_eq!(p.len(), 3);
         assert_eq!(p[2].path, "c.ogg");
+    }
+
+    #[test]
+    fn pending_skips_excluded_models() {
+        let mut m = fake();
+        m.uploads.push(up("images/models/players/neko/neko.png", UploadKind::Image, "5"));
+        let p = pending(&m, &AssetLock::new(), &opts(None, None));
+        assert!(p.iter().all(|u| !u.path.contains("neko")));
     }
 
     #[test]
