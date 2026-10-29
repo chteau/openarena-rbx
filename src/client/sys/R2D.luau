@@ -90,6 +90,12 @@ end
 -- One image, uv rectangle (u0,v0)-(u1,v1) in texture space (may leave 0..1
 -- or be reversed for a flip), onto the screen rectangle.
 local function textured(img, x, y, w, h, u0, v0, u1, v1, r, g, b, a)
+	-- an image the place knows but has no upload for yet (held for review,
+	-- or still uploading): OA's default white image
+	if img.id == nil then
+		solid(x, y, w, h, r, g, b, a)
+		return
+	end
 	local W, H = img.w, img.h
 	local ua, ub = math.min(u0, u1), math.max(u0, u1)
 	local va, vb = math.min(v0, v1), math.max(v0, v1)

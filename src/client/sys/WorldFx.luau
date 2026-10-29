@@ -66,20 +66,38 @@ local function needsMesh(def, st): boolean
 end
 
 -- Swaps `part` for an EditableMesh-backed copy so UVs/colours/positions can
--- change at runtime; returns the record or nil when the platform says no.
+-- change at runtime; returns the record or nil when the platform says no
+-- (EditableMesh is off unless the experience enables it in its Security
+-- settings: creating one works, reading it then errors). The first refusal
+-- turns the effect off for the session; the part keeps its static look.
+local editableRefused = false
 local function editable(part: MeshPart)
-	local ok, em = pcall(function()
-		return AssetService:CreateEditableMeshAsync(Content.fromUri(part.MeshId), { FixedSize = true })
-	end)
-	if not ok or em == nil then
+	if editableRefused then
 		return nil
 	end
-	local ok2, copy = pcall(function()
-		return AssetService:CreateMeshPartAsync(Content.fromObject(em))
+	local ok, rec = pcall(function()
+		local em = AssetService:CreateEditableMeshAsync(Content.fromUri(part.MeshId), { FixedSize = true })
+		local rec: any = { em = em }
+		rec.uvIds = em:GetUVs()
+		rec.baseUV = table.create(#rec.uvIds)
+		for i, id in rec.uvIds do
+			rec.baseUV[i] = em:GetUV(id)
+		end
+		rec.vertIds = em:GetVertices()
+		rec.basePos = table.create(#rec.vertIds)
+		for i, id in rec.vertIds do
+			rec.basePos[i] = em:GetPosition(id)
+		end
+		rec.colorIds = em:GetColors()
+		rec.part = AssetService:CreateMeshPartAsync(Content.fromObject(em))
+		return rec
 	end)
-	if not ok2 then
+	if not ok or rec == nil then
+		editableRefused = true
+		warn("WorldFx: no EditableMesh here, animated map shaders stay static: " .. tostring(rec))
 		return nil
 	end
+	local copy = rec.part
 	copy.CFrame, copy.Size = part.CFrame, part.Size
 	copy.TextureID, copy.Material, copy.Color, copy.Transparency = part.TextureID, part.Material, part.Color, part.Transparency
 	copy.Anchored, copy.CanCollide, copy.CanQuery, copy.CanTouch = true, false, false, false
@@ -90,18 +108,6 @@ local function editable(part: MeshPart)
 	copy.Name = part.Name
 	copy.Parent = part.Parent
 	part.Parent = nil
-	local rec = { part = copy, em = em }
-	rec.uvIds = em:GetUVs()
-	rec.baseUV = table.create(#rec.uvIds)
-	for i, id in rec.uvIds do
-		rec.baseUV[i] = em:GetUV(id)
-	end
-	rec.vertIds = em:GetVertices()
-	rec.basePos = table.create(#rec.vertIds)
-	for i, id in rec.vertIds do
-		rec.basePos[i] = em:GetPosition(id)
-	end
-	rec.colorIds = em:GetColors()
 	return rec
 end
 
@@ -109,7 +115,9 @@ function WorldFx.Load(mapName: string)
 	table.clear(animated)
 	local root = WorldFx.mapRoot or workspace:FindFirstChild("Map")
 	local maps = Assets.index.maps or {}
-	local info = maps[string.lower(mapName or "")] or {}
+	-- R_LoadWorldMap gets the BSP path ("maps/oa_dm1.bsp")
+	local key = string.lower(mapName or ""):gsub("^maps/", ""):gsub("%.bsp$", "")
+	local info = maps[key] or {}
 	fogs = info.fogs or {}
 	table.clear(meshInfo)
 	for _, m in info.meshes or {} do
@@ -228,7 +236,7 @@ function WorldFx.Update(refdef, timeSec: number)
 		local part = rec.part
 		if st.animMap then
 			local img = Assets.Image(ShaderFx.stageImage(st, timeSec))
-			if img and part.TextureID ~= img.id then
+			if img and img.id and part.TextureID ~= img.id then
 				part.TextureID = img.id
 			end
 		end

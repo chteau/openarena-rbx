@@ -38,7 +38,7 @@ local ID_NETWORK = 13
 local ID_RATE = 14
 local ID_BACK = 15
 
-local rate_items = {
+U.rate_items = {
 	[0] = "<= 28.8K",
 	"33.6K",
 	"56K",
@@ -177,7 +177,7 @@ local function UI_NetworkOptionsMenu_Init()
 	info.rate.generic.id = ID_RATE
 	info.rate.generic.x = 400
 	info.rate.generic.y = y
-	info.rate.itemnames = rate_items
+	info.rate.itemnames = U.rate_items
 	info.rate.curvalue = 0
 
 	info.back.generic.type = C.MTYPE_BITMAP
