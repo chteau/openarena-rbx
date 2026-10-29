@@ -114,6 +114,11 @@ impl Vfs {
         }
     }
 
+    /// Drops every path `keep` refuses, as if no pk3 held it.
+    pub fn retain(&mut self, keep: impl Fn(&str) -> bool) {
+        self.files.retain(|k, _| keep(k));
+    }
+
     /// Every resolved (lowercased) path under `prefix` ending in one of `exts`.
     pub fn list(&self, prefix: &str, exts: &[&str]) -> Vec<String> {
         self.files

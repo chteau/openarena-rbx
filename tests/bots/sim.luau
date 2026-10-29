@@ -42,7 +42,7 @@ h.Game.Command("map " .. map)
 for _ = 1, 10 do
 	h.frame(FRAME_MS)
 end
-local names = { "sarge", "grunt", "major", "kyonshi", "angelyss", "tanisha", "liz", "skelebot" }
+local names = { "sarge", "grunt", "sergei", "tony", "gargoyle", "assassin", "liz", "skelebot" }
 local first = #log + 1
 for i = 1, nbots do
 	h.Game.Command(string.format("addbot %s 4", names[(i - 1) % #names + 1]))

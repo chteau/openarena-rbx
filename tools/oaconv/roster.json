@@ -1,0 +1,49 @@
+{
+  "_doc": "The player models the Roblox port ships (docs/ARCHITECTURE.md, Player roster). Read by oaconv convert, tools/roster.py (client/server file packs, botfiles, place/assemble.py) and the lune test hosts. An excluded name drops models/players/<name>/, models/players/heads/<name>/, sound/player/<name>/, scripts/<name>.vc and scripts/player_<name>.shader; an excluded <model>/<skin> drops that skin's .skin files and icons plus the paths (and shader names) starting with a prefix listed for it in files. Bots whose model is excluded leave scripts/bots.txt, and arenas name the substitute in arena_bots instead.",
+  "default": "sarge",
+  "kept": {
+    "sarge": "armoured soldier; arms bare, torso plated. The classic skins (Grism bot) paint a cartoon bare abdomen strip under an open vest: kept, flagged for Chee",
+    "grism": "not a model: the texture folder sarge's skins use",
+    "assassin": "hooded robe and mask, fully covered",
+    "beret": "soldier in a vest or tank top (default, macho/Morgan, cooldude); the Headcrash skin is dropped below",
+    "gargoyle": "green/stone/tech creature skins, no human-like torso; the l_gen surface named in its .skin does not exist in lower.md3",
+    "liz": "scaled lizard creature with belly plates",
+    "penguin": "cartoon penguin",
+    "sergei": "armoured, clothed; the 0.8.8 team default model",
+    "skelebot": "robot",
+    "smarine": "space marine armour",
+    "tony": "suit"
+  },
+  "excluded": {
+    "neko": "female model",
+    "angelyss": "female model",
+    "hnt": "Angelyss's red, blue and dark skin textures (pak6-patch085)",
+    "sorceress": "female model",
+    "major": "female model",
+    "kyonshi": "female model (also the missionpack team head models/players/heads/kyonshi)",
+    "arachna": "female model (mature pk3 only; its bot, voice, shader and sounds are in the other pk3s)",
+    "ayumi": "female model (mature pk3 only; bots Ayumi and Jenna)",
+    "merman": "the body texture is a realistic bare human torso (pecs, abs, flesh tone) that a nudity classifier can read as a nude torso",
+    "beret/headcrash": "headcrash1.jpg paints a bare hairy chest with a nipple and no vest over it"
+  },
+  "files": {
+    "beret/headcrash": ["models/players/beret/headcrash", "models/players/beret/spec_headcrash"]
+  },
+  "arena_bots": {
+    "ayumi": "Grunt",
+    "jenna": "Liz",
+    "merman": "Beret",
+    "headcrash": "Andriy",
+    "major": "Skelebot",
+    "nekoyss": "Broadklin",
+    "arachna": "Cyber-Garg",
+    "neko": "Penguin",
+    "sorceress": "Sarge",
+    "tanisha": "Ghost",
+    "rai": "Grism",
+    "angelyss": "Metalbot",
+    "dark": "Tony",
+    "murielle": "Assassin",
+    "kyonshi": "Sarge"
+  }
+}

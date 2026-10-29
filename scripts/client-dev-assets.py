@@ -21,16 +21,17 @@ import struct
 import subprocess
 import tempfile
 import zipfile
+import sys
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, 'tools'))
+import roster  # noqa: E402
 BASEOA = os.path.join(ROOT, 'vendor/oa088/openarena-0.8.8/baseoa')
 OUT = os.path.join(ROOT, 'build/client')
 CACHE = os.environ.get('RBX_ASSET_CACHE') or os.path.join(
     os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache')), 'rbx-native/assets')
 NATIVE = os.path.join(CACHE, 'native/openarena')
-SKIP_PAKS = {'pak2-players-mature.pk3'}
-TEXT_EXT = {'.cfg', '.skin', '.shader', '.arena', '.txt', '.menu'}
 IMAGE_EXT = {'.tga', '.jpg', '.png'}
 IMAGE_DIRS = ('gfx/', 'menu/', 'icons/', 'levelshots/', 'sprites/', 'ui/', 'env/')
 LIMIT = 190_000
@@ -214,21 +215,16 @@ def write_parts(name, header, entries):
 
 
 def main():
-    paks = sorted(p for p in os.listdir(BASEOA) if p.endswith('.pk3') and p not in SKIP_PAKS)
-    owner = {}  # Q3 search order: the alphabetically last pk3 wins
-    for p in paks:
-        with zipfile.ZipFile(os.path.join(BASEOA, p)) as z:
-            for n in z.namelist():
-                if not n.endswith('/'):
-                    owner[n.lower()] = (p, n)
+    # Q3 search order (the alphabetically last pk3 wins), with the player
+    # roster applied: tools/roster.py, tools/oaconv/roster.json
+    shipped = roster.Shipped(BASEOA)
+    owner = shipped.owner
+    paks = sorted({p for p, _ in owner.values()})
     zips = {p: zipfile.ZipFile(os.path.join(BASEOA, p)) for p in paks}
-    files, images = {}, set()
-    for low, (p, n) in owner.items():
+    files, images = shipped.text_files(), set()
+    for low in owner:
         ext = os.path.splitext(low)[1]
-        if ext in TEXT_EXT and (low.startswith(('scripts/', 'models/', 'botfiles/', 'ui/'))
-                                or low.endswith('.cfg')):
-            files[low] = zips[p].read(n).decode('latin-1')
-        elif ext in IMAGE_EXT and (low.startswith(IMAGE_DIRS)
+        if ext in IMAGE_EXT and (low.startswith(IMAGE_DIRS)
                                    or re.match(r'models/players/[^/]+/icon_', low)):
             images.add(low)
     # sky box faces named by skyparms

@@ -33,6 +33,30 @@ local BG = require("../shared/BG")
 
 local SF = G.FileStatics("g_client")
 
+-- Roblox port: only the roster's player models ship (tools/oaconv/roster.json,
+-- tools/roster.py). A model or head whose skin file isn't in the shipped
+-- files becomes OA's default model, the one the cgame falls back to when a
+-- model can't load, so no client is announced with a dropped model.
+local function shippedModel(name: string, part: string): string
+	if name == "" then
+		return name
+	end
+	local head = string.sub(name, 1, 1) == "*"
+	local base, skin = string.match(if head then string.sub(name, 2) else name, "^([^/]*)/?(.*)$")
+	if skin == "" then
+		skin = "default"
+	end
+	local path = if head
+		then QS.va("models/players/heads/%s/head_%s.skin", base, skin)
+		else QS.va("models/players/%s/%s_%s.skin", base, part, skin)
+	local _, file = G.trap_FS_FOpenFile(path, C.FS_READ)
+	if file == 0 then
+		return "sarge"
+	end
+	G.trap_FS_FCloseFile(file)
+	return name
+end
+
 local function isxdigitAt(s, i)
 	local ch = string.sub(s, i + 1, i + 1)
 	return ch ~= "" and string.match(ch, "^%x$") ~= nil
@@ -206,6 +230,8 @@ function G.ClientUserinfoChanged(clientNum)
 		model = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "model"), C.MAX_QPATH)
 		headModel = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "headmodel"), C.MAX_QPATH)
 	end
+	model = shippedModel(model, "lower")
+	headModel = shippedModel(headModel, "head")
 
 	-- bots set their team a few frames later
 	if

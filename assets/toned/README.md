@@ -4,6 +4,11 @@ Modified copies of OpenArena 0.8.8 art (GPL-2.0, same licence as the
 originals), kept at the same paths as in the pk3s. `tools/oaconv` reads this
 folder after every pk3, so these files replace the originals in `build/`.
 
+**None of this ships any more**: every model below is dropped from the
+Roblox roster (`tools/oaconv/roster.json`, docs/ARCHITECTURE.md "Player
+roster"), so `oaconv convert` skips these files like the originals. They stay
+for the repo's history, and `oaconv tone` still rebuilds them.
+
 Why: the female player models were too revealing for Roblox's rules on
 suggestive content. They keep their faces, hair, colours and silhouettes; the
 chest is now flat to modestly athletic, the buttocks are smaller, nothing

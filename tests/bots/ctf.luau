@@ -21,7 +21,7 @@ h.Game.Command("map oa_ctf2")
 for _ = 1, 10 do
 	h.frame(FRAME_MS)
 end
-local names = { "sarge", "grunt", "major", "kyonshi", "angelyss", "tanisha", "liz", "skelebot" }
+local names = { "sarge", "grunt", "sergei", "tony", "gargoyle", "assassin", "liz", "skelebot" }
 for i = 1, nbots do
 	h.Game.Command(string.format("addbot %s 4 %s", names[(i - 1) % #names + 1], if i % 2 == 1 then "red" else "blue"))
 end

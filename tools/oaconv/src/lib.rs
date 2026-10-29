@@ -11,6 +11,7 @@ pub mod md3;
 pub mod md3edit;
 pub mod mesh;
 pub mod preview;
+pub mod roster;
 pub mod shader;
 pub mod sound;
 pub mod texture;

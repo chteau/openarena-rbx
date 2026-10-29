@@ -109,9 +109,13 @@ pub fn convert(o: &Options) -> Result<(), String> {
     }
     let out = &o.out;
     std::fs::create_dir_all(out).map_err(err(out.display()))?;
-    let vfs =
+    let mut vfs =
         Vfs::open_with_overlay(&o.root, o.overlay.as_deref()).map_err(err(o.root.display()))?;
-    let shaders = ShaderSet::load(&vfs);
+    // models outside the roster ship nothing (tools/oaconv/roster.json)
+    let roster = oaconv::roster::Roster::get();
+    vfs.retain(|p| !roster.excludes(p));
+    let mut shaders = ShaderSet::load(&vfs);
+    shaders.shaders.retain(|name, _| !roster.excludes(name));
     let mut manifest = Manifest::load(out).unwrap_or_default();
     manifest.version = 1;
     manifest.sources = vfs.pk3s.iter().map(|p| rel(&o.root, p)).collect();
@@ -205,4 +209,77 @@ pub fn convert(o: &Options) -> Result<(), String> {
         serde_json::to_string_pretty(&manifest.totals).unwrap_or_default()
     );
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use oaconv::roster::Roster;
+
+    /// Converts the models, images and shaders of the real data and checks
+    /// that no output, manifest entry, Luau module or index names a model
+    /// the roster excludes.
+    #[test]
+    fn excluded_models_produce_no_output() {
+        let repo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
+        let root = oaconv::vfs::default_root(&repo);
+        if !root.is_dir() {
+            eprintln!("vendor/ missing: skipping real-data test");
+            return;
+        }
+        let scratch = std::env::var_os("CARGO_TARGET_DIR")
+            .map(PathBuf::from)
+            .unwrap_or_else(std::env::temp_dir);
+        let out = scratch.join(format!("oaconv-roster-{}", std::process::id()));
+        convert(&Options {
+            root,
+            overlay: Some(repo.join(oaconv::vfs::OVERLAY)),
+            out: out.clone(),
+            maps: None,
+            only: Some(vec!["models".into(), "images".into(), "shaders".into()]),
+            max_pages: None,
+        })
+        .unwrap();
+        let roster = Roster::get();
+        let needles: Vec<String> = roster
+            .excluded
+            .keys()
+            .flat_map(|k| match k.split_once('/') {
+                Some((m, skin)) => ["head_", "upper_", "lower_", "icon_", "iconh_"]
+                    .iter()
+                    .map(|p| format!("players/{m}/{p}{skin}."))
+                    .collect::<Vec<_>>(),
+                None => vec![format!("players/{k}/"), format!("player_{k}.")],
+            })
+            .chain(roster.files.values().flatten().map(|f| f.to_ascii_lowercase()))
+            .collect();
+        let manifest = Manifest::load(&out).unwrap();
+        assert!(manifest.uploads.iter().any(|u| u.path.contains("players/sarge/")));
+        for u in &manifest.uploads {
+            assert!(!roster.excludes_output(&u.path), "upload {}", u.path);
+        }
+        let mut stack = vec![out.clone()];
+        let mut files = 0;
+        while let Some(dir) = stack.pop() {
+            for e in std::fs::read_dir(&dir).unwrap() {
+                let path = e.unwrap().path();
+                if path.is_dir() {
+                    stack.push(path);
+                    continue;
+                }
+                let name = rel(&out, &path).to_ascii_lowercase();
+                assert!(!roster.excludes_output(&name), "{name}");
+                assert!(!needles.iter().any(|n| name.contains(n)), "{name}");
+                if name.ends_with(".json") || name.ends_with(".luau") {
+                    let text = std::fs::read_to_string(&path).unwrap().to_ascii_lowercase();
+                    if let Some(n) = needles.iter().find(|n| text.contains(n.as_str())) {
+                        panic!("{name} names {n}");
+                    }
+                    files += 1;
+                }
+            }
+        }
+        assert!(files > 2);
+        std::fs::remove_dir_all(&out).unwrap();
+    }
 }
