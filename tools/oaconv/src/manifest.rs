@@ -55,7 +55,8 @@ pub type AssetLock = BTreeMap<String, Locked>;
 
 impl Manifest {
     pub fn load(build: &Path) -> Result<Self, String> {
-        let text = std::fs::read_to_string(build.join("manifest.json")).map_err(|e| format!("manifest.json: {e}"))?;
+        let text = std::fs::read_to_string(build.join("manifest.json"))
+            .map_err(|e| format!("manifest.json: {e}"))?;
         serde_json::from_str(&text).map_err(|e| format!("manifest.json: {e}"))
     }
 
@@ -64,9 +65,19 @@ impl Manifest {
     }
 
     /// Records `path` (absolute, under `build`) for upload.
-    pub fn add_upload(&mut self, build: &Path, path: &Path, kind: UploadKind, name: &str) -> std::io::Result<()> {
+    pub fn add_upload(
+        &mut self,
+        build: &Path,
+        path: &Path,
+        kind: UploadKind,
+        name: &str,
+    ) -> std::io::Result<()> {
         let bytes = std::fs::read(path)?;
-        let rel = path.strip_prefix(build).unwrap_or(path).to_string_lossy().replace('\\', "/");
+        let rel = path
+            .strip_prefix(build)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .replace('\\', "/");
         let name: String = name.chars().take(50).collect();
         self.uploads.push(Upload {
             path: rel,
@@ -94,6 +105,9 @@ pub fn save_lock(build: &Path, lock: &AssetLock) -> std::io::Result<()> {
 
 pub fn write_json<T: Serialize + ?Sized>(path: &Path, value: &T) -> std::io::Result<()> {
     let tmp = path.with_extension("json.tmp");
-    std::fs::write(&tmp, serde_json::to_vec_pretty(value).map_err(std::io::Error::other)?)?;
+    std::fs::write(
+        &tmp,
+        serde_json::to_vec_pretty(value).map_err(std::io::Error::other)?,
+    )?;
     std::fs::rename(tmp, path)
 }

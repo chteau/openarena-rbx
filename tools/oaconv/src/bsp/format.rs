@@ -181,7 +181,9 @@ impl Bsp {
             let at = 8 + i * 8;
             let ofs = i32::from_le_bytes(data[at..at + 4].try_into().unwrap()) as usize;
             let len = i32::from_le_bytes(data[at + 4..at + 8].try_into().unwrap()) as usize;
-            let slice = data.get(ofs..ofs + len).ok_or(format!("lump {i} out of range"))?;
+            let slice = data
+                .get(ofs..ofs + len)
+                .ok_or(format!("lump {i} out of range"))?;
             lumps.push(slice);
         }
         let entities = {
@@ -197,7 +199,10 @@ impl Bsp {
                 surface_flags: r.i32(),
                 content_flags: r.i32(),
             }),
-            planes: lump(lumps[2], 16, |r| DPlane { normal: r.f3(), dist: r.f32() }),
+            planes: lump(lumps[2], 16, |r| DPlane {
+                normal: r.f3(),
+                dist: r.f32(),
+            }),
             nodes: lump(lumps[3], 36, |r| DNode {
                 plane_num: r.i32(),
                 children: [r.i32(), r.i32()],
@@ -229,7 +234,10 @@ impl Bsp {
                 num_sides: r.i32(),
                 shader_num: r.i32(),
             }),
-            brush_sides: lump(lumps[9], 8, |r| DBrushSide { plane_num: r.i32(), shader_num: r.i32() }),
+            brush_sides: lump(lumps[9], 8, |r| DBrushSide {
+                plane_num: r.i32(),
+                shader_num: r.i32(),
+            }),
             verts: lump(lumps[10], 44, |r| DrawVert {
                 xyz: r.f3(),
                 st: r.f2(),
@@ -262,8 +270,10 @@ impl Bsp {
                 patch_height: r.i32(),
             }),
             lightmaps: lumps[14]
-                .chunks_exact(LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3)
-                .map(<[u8]>::to_vec)
+                .as_chunks::<{ LIGHTMAP_SIZE * LIGHTMAP_SIZE * 3 }>()
+                .0
+                .iter()
+                .map(|c| c.to_vec())
                 .collect(),
             light_grid: lumps[15].to_vec(),
             visibility: lumps[16].to_vec(),

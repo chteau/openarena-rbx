@@ -44,7 +44,10 @@ fn chunk_chars() -> usize {
 }
 
 pub fn sha256_hex(bytes: &[u8]) -> String {
-    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// Writes `dir/<name>_000.luau`, ... and the index `dir/<name>.luau`.
@@ -57,7 +60,11 @@ pub fn write_buffer_modules(dir: &Path, name: &str, bytes: &[u8]) -> std::io::Re
     let pieces: Vec<&str> = if encoded.is_empty() {
         vec![""]
     } else {
-        encoded.as_bytes().chunks(chunk_chars()).map(|c| std::str::from_utf8(c).unwrap()).collect()
+        encoded
+            .as_bytes()
+            .chunks(chunk_chars())
+            .map(|c| std::str::from_utf8(c).unwrap())
+            .collect()
     };
     for (i, piece) in pieces.iter().enumerate() {
         let chunk = format!("{name}_{i:03}");
@@ -92,8 +99,14 @@ pub fn read_buffer_modules(dir: &Path, name: &str) -> std::io::Result<Vec<u8>> {
             break;
         }
         let text = std::fs::read_to_string(path)?;
-        let start = text.rfind("return decode(\"").map(|p| p + 15).ok_or(std::io::ErrorKind::InvalidData)?;
-        let end = text[start..].find('"').ok_or(std::io::ErrorKind::InvalidData)? + start;
+        let start = text
+            .rfind("return decode(\"")
+            .map(|p| p + 15)
+            .ok_or(std::io::ErrorKind::InvalidData)?;
+        let end = text[start..]
+            .find('"')
+            .ok_or(std::io::ErrorKind::InvalidData)?
+            + start;
         out.extend(
             base64::engine::general_purpose::STANDARD
                 .decode(&text[start..end])
@@ -112,7 +125,11 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("oaconv-luau-{}", std::process::id()));
         let bytes: Vec<u8> = (0..400_000u32).map(|i| (i * 7 % 251) as u8).collect();
         let files = write_buffer_modules(&dir, "blob", &bytes).unwrap();
-        assert_eq!(files.len(), 4, "400k bytes = 533k base64 chars = 3 chunks + index");
+        assert_eq!(
+            files.len(),
+            4,
+            "400k bytes = 533k base64 chars = 3 chunks + index"
+        );
         for f in &files {
             assert!(std::fs::read_to_string(f).unwrap().len() < MAX_MODULE_CHARS);
         }

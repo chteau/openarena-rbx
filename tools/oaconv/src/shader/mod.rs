@@ -14,9 +14,10 @@ pub use classify::classify;
 pub use parse::{parse_text, tokenize};
 
 /// How the port draws a surface using this shader.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ShaderClass {
+    #[default]
     /// Static stages only: diffuse x lightmap (x static extra stages) is baked into the atlas.
     Opaque,
     Sky,
@@ -86,12 +87,6 @@ pub struct Shader {
     pub other: Vec<Vec<String>>,
     pub stages: Vec<Stage>,
     pub class: ShaderClass,
-}
-
-impl Default for ShaderClass {
-    fn default() -> Self {
-        Self::Opaque
-    }
 }
 
 /// Every scripted shader, with the engine's precedence when two files

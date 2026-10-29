@@ -105,7 +105,10 @@ mod tests {
     use super::*;
 
     fn quad_strip(quads: usize) -> Mesh {
-        let mut m = Mesh { name: "m".into(), ..Default::default() };
+        let mut m = Mesh {
+            name: "m".into(),
+            ..Default::default()
+        };
         for q in 0..=quads {
             for y in 0..2 {
                 m.positions.push([q as f32, y as f32, 0.0]);
@@ -129,6 +132,8 @@ mod tests {
         assert_eq!(pieces.len(), 5);
         assert!(pieces.iter().all(|p| p.tri_count() <= 7));
         assert_eq!(pieces.iter().map(Mesh::tri_count).sum::<usize>(), total);
-        assert!(pieces.iter().all(|p| p.indices.iter().all(|&i| (i as usize) < p.positions.len())));
+        assert!(pieces
+            .iter()
+            .all(|p| p.indices.iter().all(|&i| (i as usize) < p.positions.len())));
     }
 }

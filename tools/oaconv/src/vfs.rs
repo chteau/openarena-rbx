@@ -26,7 +26,11 @@ impl Vfs {
             let mut found: Vec<PathBuf> = std::fs::read_dir(root.join(dir))?
                 .filter_map(|e| e.ok().map(|e| e.path()))
                 .filter(|p| p.extension().is_some_and(|e| e.eq_ignore_ascii_case("pk3")))
-                .filter(|p| !SKIPPED.iter().any(|s| p.file_name().is_some_and(|n| n == *s)))
+                .filter(|p| {
+                    !SKIPPED
+                        .iter()
+                        .any(|s| p.file_name().is_some_and(|n| n == *s))
+                })
                 .collect();
             found.sort();
             pk3s.extend(found);
@@ -42,7 +46,11 @@ impl Vfs {
             }
             archives.push(Mutex::new(zip));
         }
-        Ok(Self { pk3s, archives, files })
+        Ok(Self {
+            pk3s,
+            archives,
+            files,
+        })
     }
 
     pub fn exists(&self, path: &str) -> bool {
