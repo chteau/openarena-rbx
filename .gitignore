@@ -4,3 +4,5 @@
 *.rbxl.lock
 .forge/
 __pycache__/
+/.studio-home/
+/place/*.rbxl

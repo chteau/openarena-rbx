@@ -29,6 +29,16 @@ local cl_timeNudge = Cvar.Get("cl_timeNudge", "0", C.CVAR_TEMP)
 Cvar.Get("protocol", "71", C.CVAR_ROM)
 Cvar.Get("version", "OA 0.8.8 Roblox", C.CVAR_ROM)
 Cvar.Get("name", "UnnamedPlayer", bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
+-- the rest of CL_Init's userinfo cvars (ioq3 cl_main.c), with OA's models
+for _, v in {
+	{ "rate", "25000" }, { "snaps", "20" }, { "model", "sarge" }, { "headmodel", "sarge" },
+	{ "team_model", "sarge" }, { "team_headmodel", "sarge" }, { "color1", "4" }, { "color2", "5" },
+	{ "handicap", "100" }, { "sex", "male" },
+} do
+	Cvar.Get(v[1], v[2], bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
+end
+Cvar.Get("teamtask", "0", C.CVAR_USERINFO)
+Cvar.Get("cg_predictItems", "1", bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
 
 local function loadModules(folder: Instance)
 	for _, child in folder:GetChildren() do
@@ -165,6 +175,15 @@ function Client.Connect()
 	end
 end
 
+-- A new gamestate (map change, map_restart from the server side): cgame
+-- starts again on the next frame, as CL_ParseGamestate -> CL_InitCGame.
+function Client.RestartCGame()
+	if Client.cgameActive then
+		G.CG_Shutdown()
+		Client.cgameActive = false
+	end
+end
+
 function Client.Disconnect()
 	if Client.cgameActive then
 		G.CG_Shutdown()
@@ -210,7 +229,10 @@ function Client.Frame(dtSec: number)
 	Cmd.Execute()
 
 	-- CL_SendCmd
-	if Net.state == C.CA_ACTIVE then
+	-- CL_CreateNewCommands runs from CA_PRIMED on: the server moves a client
+	-- into the world (SV_ClientEnterWorld) on its first usercmd, and only
+	-- then do snapshots lose SNAPFLAG_NOT_ACTIVE
+	if Net.state == C.CA_ACTIVE or Net.state == C.CA_PRIMED then
 		Input.serverTime = Net.serverTime
 		local cmd = Input.CreateNewCommand(now, msec)
 		Net.SendUserCmds({ cmd })

@@ -1,6 +1,7 @@
 -- Headless server with bots for the lune tests: the game branch's server
 -- (src/server/Game, its engine and pmove) with the bot port installed the
--- way Game.luau installs it, BSPs from build/maps, each map's checksum and
+-- way Game.luau installs it, BSPs from build/maps (or, without them, the
+-- converter's Collision and Entities blobs, as the place loads), each map's checksum and
 -- .aas from the converter's output (build/conv/maps/<map>/map.json and its
 -- Aas blob modules), botfiles from tools/pack-botfiles.py's blob, and OA's
 -- scripts from the pk3s.
@@ -10,8 +11,9 @@ local stdio = require("@lune/stdio")
 local BSP = require("../../src/shared/cm/bsp")
 local serde = require("@lune/serde")
 
--- oaconv convert --only maps --out build/conv
-local CONV = "build/conv/maps"
+-- oaconv convert --only maps --out build/conv, or a full convert's build/
+local CONV = if fs.isDir("build/conv/maps") then "build/conv/maps" else "build/maps"
+local Blob = require("../../src/shared/cm/blob")
 
 local M = {}
 
@@ -55,18 +57,26 @@ function M.new(opts: { maps: { string }, quiet: boolean?, log: { string }? })
 		-- converter's map.json and Aas blob, as on Roblox
 		loadMap = function(name: string)
 			local path = "build/maps/" .. name .. ".bsp"
-			if not fs.isFile(path) then
-				return nil
-			end
-			local lumps = BSP.parse(buffer.fromstring(fs.readFile(path)))
 			local conv = CONV .. "/" .. name
+			local lumps
+			if fs.isFile(path) then
+				lumps = BSP.parse(buffer.fromstring(fs.readFile(path)))
+			else
+				-- no BSP: the Collision and Entities blobs the place carries
+				local collision = blob(conv .. "/luau", "Collision")
+				if collision == nil then
+					return nil
+				end
+				local entities = blob(conv .. "/luau", "Entities") :: buffer
+				lumps = Blob.lumps(collision, serde.decode("json", buffer.tostring(entities)))
+			end
 			local info = serde.decode("json", fs.readFile(conv .. "/map.json"))
 			lumps.checksum = info.checksum
 			lumps.aas = blob(conv .. "/luau", "Aas")
 			return lumps
 		end,
 		mapExists = function(name: string): boolean
-			return fs.isFile("build/maps/" .. name .. ".bsp")
+			return fs.isFile("build/maps/" .. name .. ".bsp") or fs.isFile(CONV .. "/" .. name .. "/luau/Collision.luau")
 		end,
 		files = pk3Files(),
 		botfiles = botfiles,

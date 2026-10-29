@@ -345,6 +345,8 @@ function U.ScrollList_Draw(l)
 	end
 end
 
+local COMMON_ZERO = { type = 0, id = 0, x = 0, y = 0, left = 0, top = 0, right = 0, bottom = 0, menuPosition = 0, flags = 0 }
+
 function U.Menu_AddItem(menu, item)
 	if menu.nitems >= C.MAX_MENUITEMS then
 		trap.Error("Menu_AddItem: excessive items")
@@ -352,6 +354,13 @@ function U.Menu_AddItem(menu, item)
 
 	menu.items[menu.nitems] = item
 	local g = item.generic
+	-- C zeroes every menucommon_s; menus that build items as `{ generic = {} }`
+	-- leave the fields they don't set nil
+	for k, v in COMMON_ZERO do
+		if g[k] == nil then
+			g[k] = v
+		end
+	end
 	g.parent = menu
 	g.menuPosition = menu.nitems
 	g.flags = band(g.flags, bnot(C.QMF_HASMOUSEFOCUS))

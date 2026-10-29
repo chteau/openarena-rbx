@@ -162,7 +162,18 @@ local function buildSurface(model, s, parent: Instance)
 	local surf = { s = s }
 	local baked = Assets.index.meshes and Assets.index.meshes[model.name .. "#" .. s.name]
 	if baked then
-		local mp = AssetService:CreateMeshPartAsync(Content.fromUri(baked))
+		-- { id, c }: the place's index (place/assemble.py). The converter bakes
+		-- a static MD3 in world axes, (x, z, -y) / 8, centred on its box
+		-- centre `c`; Roblox's importer turns the scene 180 degrees about Y.
+		-- The part's frame relative to the model's (EditableMesh axes,
+		-- (-y, z, -x) / 8) is then Ry(90) c, turned 270 degrees about Y.
+		local id = baked
+		if type(baked) == "table" then
+			id = baked.id
+			local c = baked.c
+			surf.offset = CFrame.new(c[3], c[2], -c[1]) * CFrame.Angles(0, 1.5 * math.pi, 0)
+		end
+		local mp = AssetService:CreateMeshPartAsync(Content.fromUri(id))
 		mp.Anchored, mp.CanCollide, mp.CanQuery, mp.CanTouch = true, false, false, false
 		mp.CastShadow = false
 		mp.Parent = parent
@@ -171,42 +182,45 @@ local function buildSurface(model, s, parent: Instance)
 		return surf
 	end
 	-- EditableMesh exists only in a running client (not in rbx-native's edit
-	-- runtime, not under lune): without it the surface isn't drawn
-	local okEm, em = pcall(function()
-		return AssetService:CreateEditableMesh({})
-	end)
-	if not okEm or em == nil then
-		if not R3D.noEditableMesh then
-			R3D.noEditableMesh = true
-			warn("R3D: no EditableMesh here, MD3 surfaces won't draw")
-		end
+	-- runtime, not under lune), and only when the experience enables it in its
+	-- Security settings (creating one works there, using it errors): without
+	-- it the surface isn't drawn
+	if R3D.noEditableMesh then
 		return nil
 	end
-	local ids, colors = table.create(s.numVerts), table.create(s.numVerts)
-	for v = 0, s.numVerts - 1 do
-		local x, y, z = Md3.Vertex(s, 0, v)
-		ids[v + 1] = em:AddVertex(Vector3.new(-y / 8, z / 8, -x / 8))
+	local ok, err = pcall(function()
+		local em = AssetService:CreateEditableMesh({})
+		local ids, colors = table.create(s.numVerts), table.create(s.numVerts)
+		for v = 0, s.numVerts - 1 do
+			local x, y, z = Md3.Vertex(s, 0, v)
+			ids[v + 1] = em:AddVertex(Vector3.new(-y / 8, z / 8, -x / 8))
+		end
+		local uvs = table.create(s.numVerts)
+		for v = 0, s.numVerts - 1 do
+			local u, t = Md3.TexCoord(s, v)
+			uvs[v + 1] = em:AddUV(Vector2.new(u, t))
+			colors[v + 1] = em:AddColor(Color3.new(1, 1, 1), 1)
+		end
+		for t = 0, s.numTriangles - 1 do
+			local a, b, c = Md3.Triangle(s, t)
+			-- Q3 front faces wind clockwise, Roblox's counter-clockwise
+			local f = em:AddTriangle(ids[a + 1], ids[c + 1], ids[b + 1])
+			em:SetFaceUVs(f, { uvs[a + 1], uvs[c + 1], uvs[b + 1] })
+			em:SetFaceColors(f, { colors[a + 1], colors[c + 1], colors[b + 1] })
+		end
+		local mp = AssetService:CreateMeshPartAsync(Content.fromObject(em))
+		mp.Anchored, mp.CanCollide, mp.CanQuery, mp.CanTouch = true, false, false, false
+		mp.CastShadow = false
+		-- vertices are in the part's object space: keep the part at 1:1 scale
+		mp.Size = mp.MeshSize
+		mp.Parent = parent
+		surf.part, surf.em, surf.ids, surf.colorIds = mp, em, ids, colors
+	end)
+	if not ok then
+		R3D.noEditableMesh = true
+		warn("R3D: no EditableMesh here, MD3 surfaces won't draw: " .. tostring(err))
+		return nil
 	end
-	local uvs = table.create(s.numVerts)
-	for v = 0, s.numVerts - 1 do
-		local u, t = Md3.TexCoord(s, v)
-		uvs[v + 1] = em:AddUV(Vector2.new(u, t))
-		colors[v + 1] = em:AddColor(Color3.new(1, 1, 1), 1)
-	end
-	for t = 0, s.numTriangles - 1 do
-		local a, b, c = Md3.Triangle(s, t)
-		-- Q3 front faces wind clockwise, Roblox's counter-clockwise
-		local f = em:AddTriangle(ids[a + 1], ids[c + 1], ids[b + 1])
-		em:SetFaceUVs(f, { uvs[a + 1], uvs[c + 1], uvs[b + 1] })
-		em:SetFaceColors(f, { colors[a + 1], colors[c + 1], colors[b + 1] })
-	end
-	local mp = AssetService:CreateMeshPartAsync(Content.fromObject(em))
-	mp.Anchored, mp.CanCollide, mp.CanQuery, mp.CanTouch = true, false, false, false
-	mp.CastShadow = false
-	-- vertices are in the part's object space: keep the part at 1:1 scale
-	mp.Size = mp.MeshSize
-	mp.Parent = parent
-	surf.part, surf.em, surf.ids, surf.colorIds = mp, em, ids, colors
 	surf.colorKey = ""
 	return surf
 end
@@ -267,7 +281,7 @@ local function drawModel(t, e, timeSec: number, firstPerson: boolean)
 	local back = e.backlerp
 	for _, surf in inst.surfaces do
 		local part: MeshPart = surf.part
-		part.CFrame = cf
+		part.CFrame = if surf.offset then cf * surf.offset else cf
 		part.Parent = inst.folder
 		local sh = surfaceShader(e, surf.s)
 		local img, mode, r, g, b, a = shaderLook(sh, e.shaderRGBA, timeSec - (e.shaderTime or 0))
