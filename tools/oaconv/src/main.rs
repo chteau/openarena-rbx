@@ -1,4 +1,4 @@
-//! `oaconv convert | preview | upload`. See docs/conv-notes.md.
+//! `oaconv convert | tone | preview | upload`. See docs/conv-notes.md.
 
 mod pipeline;
 
@@ -9,6 +9,7 @@ use oaconv::manifest::UploadKind;
 const USAGE: &str = "\
 usage:
   oaconv convert [--repo DIR] [--out DIR] [--maps a,b] [--only maps,models,images,sounds,shaders] [--max-pages N]
+  oaconv tone [--repo DIR] [--preview DIR]
   oaconv preview --map NAME [--spawn N | --eye \"x y z yaw\" | --top] [--out FILE.png] [--size WxH] [--repo DIR]
   oaconv upload [--build DIR] [--dry-run] [--only Model|Image|Audio] [--limit N] [--user-id ID]
                 [--hold FILE] [--pace-ms MS]";
@@ -73,9 +74,22 @@ fn run() -> Result<(), String> {
                 only: list(args.value("--only")),
                 max_pages: args.number("--max-pages")?,
                 root: oaconv::vfs::default_root(&repo),
+                overlay: Some(repo.join(oaconv::vfs::OVERLAY)).filter(|d| d.is_dir()),
             };
             args.finish()?;
             pipeline::convert(&opts)
+        }
+        "tone" => {
+            let repo = repo_root(args.value("--repo"))?;
+            let preview = args.value("--preview").map(PathBuf::from);
+            args.finish()?;
+            let written = oaconv::md3edit::run(&repo, preview.as_deref())?;
+            println!(
+                "wrote {} files under {}",
+                written.len(),
+                oaconv::vfs::OVERLAY
+            );
+            Ok(())
         }
         "preview" => {
             let repo = repo_root(args.value("--repo"))?;

@@ -5,10 +5,8 @@ images/models/weaphits/blood
 images/gfx/damage/blood
 images/gfx/newbg/blood
 images/gfx/2d/bloodspew
-# Player skins were reviewed 2026-10-29 and released, except these two
-# characters (revealing outfits): Chee decides.
-images/models/players/neko/
-images/models/players/angelyss/
+# Player skins were reviewed 2026-10-29 and released; neko and angelyss
+# ship the covered-up textures from assets/toned/.
 # Map textures with blood, flesh or occult symbols (pentagrams).
 images/textures/base_floor/rusty_pentagrate.png
 images/textures/base_wall/metalblackbloody.png
