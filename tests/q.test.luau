@@ -1,0 +1,182 @@
+-- Tests for src/client/q/Q.luau (q_shared.c + q_math.c).
+
+local Q = H.require('client/q/Q')
+
+local function vec(x, y, z)
+	return Q.vec3(x, y, z)
+end
+
+H.test('Q.vec3 builds a 0-based vector', function()
+	local v = vec(1, 2, 3)
+	H.eq(v[0], 1)
+	H.eq(v[1], 2)
+	H.eq(v[2], 3)
+	H.eq(v[3], nil)
+end)
+
+H.test('VectorCopy copies all three components', function()
+	local out = vec(0, 0, 0)
+	Q.VectorCopy(vec(4, 5, 6), out)
+	H.eq(out[0], 4)
+	H.eq(out[1], 5)
+	H.eq(out[2], 6)
+end)
+
+H.test('VectorAdd and VectorSubtract', function()
+	local out = vec(0, 0, 0)
+	Q.VectorAdd(vec(1, 2, 3), vec(10, 20, 30), out)
+	H.eq(out[0], 11)
+	H.eq(out[1], 22)
+	H.eq(out[2], 33)
+	Q.VectorSubtract(vec(10, 20, 30), vec(1, 2, 3), out)
+	H.eq(out[0], 9)
+	H.eq(out[1], 18)
+	H.eq(out[2], 27)
+end)
+
+H.test('VectorMA adds a scaled vector', function()
+	local out = vec(0, 0, 0)
+	Q.VectorMA(vec(1, 1, 1), 2, vec(1, 2, 3), out)
+	H.eq(out[0], 3)
+	H.eq(out[1], 5)
+	H.eq(out[2], 7)
+end)
+
+H.test('VectorScale multiplies each component', function()
+	local out = vec(0, 0, 0)
+	Q.VectorScale(vec(1, -2, 3), 0.5, out)
+	H.eq(out[0], 0.5)
+	H.eq(out[1], -1)
+	H.eq(out[2], 1.5)
+end)
+
+H.test('DotProduct', function()
+	H.eq(Q.DotProduct(vec(1, 2, 3), vec(4, 5, 6)), 32)
+end)
+
+H.test('CrossProduct follows right-hand rule', function()
+	local out = vec(0, 0, 0)
+	Q.CrossProduct(vec(1, 0, 0), vec(0, 1, 0), out)
+	H.eq(out[0], 0)
+	H.eq(out[1], 0)
+	H.eq(out[2], 1)
+end)
+
+H.test('VectorLength', function()
+	H.near(Q.VectorLength(vec(3, 4, 0)), 5, 1e-9)
+end)
+
+H.test('VectorNormalize returns length and mutates vector', function()
+	local v = vec(0, 3, 4)
+	local len = Q.VectorNormalize(v)
+	H.near(len, 5, 1e-9)
+	H.near(v[0], 0, 1e-9)
+	H.near(v[1], 0.6, 1e-9)
+	H.near(v[2], 0.8, 1e-9)
+end)
+
+H.test('VectorNormalize2 returns length and writes normalized output', function()
+	local src = vec(0, 0, 2)
+	local out = vec(0, 0, 0)
+	local len = Q.VectorNormalize2(src, out)
+	H.near(len, 2, 1e-9)
+	H.near(out[0], 0, 1e-9)
+	H.near(out[1], 0, 1e-9)
+	H.near(out[2], 1, 1e-9)
+end)
+
+H.test('VectorNormalize on zero vector returns 0 and leaves it zero', function()
+	local v = vec(0, 0, 0)
+	H.eq(Q.VectorNormalize(v), 0)
+	H.eq(v[0], 0)
+	H.eq(v[1], 0)
+	H.eq(v[2], 0)
+end)
+
+H.test('AngleVectors: yaw 90 faces +Y', function()
+	local fwd = vec(0, 0, 0)
+	local right = vec(0, 0, 0)
+	local up = vec(0, 0, 0)
+	Q.AngleVectors(vec(0, 90, 0), fwd, right, up)
+	H.near(fwd[0], 0, 1e-9)
+	H.near(fwd[1], 1, 1e-9)
+	H.near(fwd[2], 0, 1e-9)
+	H.near(up[2], 1, 1e-9)
+end)
+
+H.test('AnglesToAxis with zero angles yields identity axis', function()
+	local axis = { [0] = vec(0, 0, 0), [1] = vec(0, 0, 0), [2] = vec(0, 0, 0) }
+	Q.AnglesToAxis(vec(0, 0, 0), axis)
+	H.near(axis[0][0], 1, 1e-9)
+	H.near(axis[1][1], 1, 1e-9)
+	H.near(axis[2][2], 1, 1e-9)
+	H.near(axis[0][1], 0, 1e-9)
+	H.near(axis[0][2], 0, 1e-9)
+end)
+
+H.test('AnglesToAxis yaw 90 forward matches AngleVectors', function()
+	local axis = { [0] = vec(0, 0, 0), [1] = vec(0, 0, 0), [2] = vec(0, 0, 0) }
+	Q.AnglesToAxis(vec(0, 90, 0), axis)
+	H.near(axis[0][0], 0, 1e-9)
+	H.near(axis[0][1], 1, 1e-9)
+	H.near(axis[0][2], 0, 1e-9)
+end)
+
+H.test('AngleMod(-90) is 270', function()
+	H.near(Q.AngleMod(-90), 270, 1e-9)
+end)
+
+H.test('AngleSubtract(350, 10) is -20', function()
+	H.near(Q.AngleSubtract(350, 10), -20, 1e-9)
+end)
+
+H.test('LerpAngle(350, 10, 0.5) wraps to 0 modulo 360', function()
+	local r = Q.LerpAngle(350, 10, 0.5)
+	H.near(r % 360, 0, 1e-9)
+end)
+
+H.test('Q.int truncates toward zero', function()
+	H.eq(Q.int(-1.7), -1)
+	H.eq(Q.int(1.7), 1)
+end)
+
+H.test('Q.idiv truncates toward zero', function()
+	H.eq(Q.idiv(-7, 2), -3)
+	H.eq(Q.idiv(7, 2), 3)
+end)
+
+H.test('Q.rand stays within 0..32767', function()
+	for _ = 1, 1000 do
+		local r = Q.rand()
+		H.eq(r >= 0 and r <= 32767, true)
+	end
+end)
+
+H.test('Q.va formats C-style', function()
+	H.eq(Q.va('%i %s', 3, 'x'), '3 x')
+end)
+
+H.test('Q.stricmp is case-insensitive', function()
+	H.eq(Q.stricmp('aB', 'Ab'), 0)
+end)
+
+H.test('Info_ValueForKey reads a key from an info string', function()
+	H.eq(Q.Info_ValueForKey('\\name\\bob\\t\\1', 't'), '1')
+end)
+
+H.test('ColorIndex maps a digit byte to its colour index', function()
+	H.eq(Q.ColorIndex(string.byte('1')), 1)
+end)
+
+H.test('IsColorString detects a colour escape', function()
+	H.eq(Q.IsColorString('^3x', 1), true)
+end)
+
+H.test('CleanStr removes colour escapes', function()
+	H.eq(Q.CleanStr('^1a^7b'), 'ab')
+end)
+
+H.test('Q.b2i converts booleans to integers', function()
+	H.eq(Q.b2i(true), 1)
+	H.eq(Q.b2i(false), 0)
+end)

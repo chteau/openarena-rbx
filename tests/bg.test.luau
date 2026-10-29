@@ -1,0 +1,23 @@
+H.test("bg.fallback", function()
+	local BG = H.require("client/adapters/fallback/bg_misc")
+	local Q = H.require("client/q/Q")
+	local C = H.require("client/q/Consts")
+	local T = H.require("client/q/Types")
+	H.eq(BG.bg_itemlist[0].classname == nil or BG.bg_itemlist[0].classname == "", true)
+	H.eq(BG.bg_itemlist[1].classname, "item_armor_shard")
+	local rl = BG.BG_FindItemForWeapon(C.WP_ROCKET_LAUNCHER)
+	H.eq(rl.classname, "weapon_rocketlauncher")
+	H.eq(BG.bg_itemlist[rl.index], rl)
+	local tr = T.trajectory_t()
+	tr.trType = C.TR_LINEAR
+	tr.trTime = 1000
+	tr.trBase = Q.vec3(0, 0, 0)
+	tr.trDelta = Q.vec3(100, 0, 0)
+	local out = Q.vec3(0, 0, 0)
+	BG.BG_EvaluateTrajectory(tr, 1500, out)
+	H.near(out[0], 50)
+	tr.trType = C.TR_GRAVITY
+	tr.trDelta = Q.vec3(0, 0, 0)
+	BG.BG_EvaluateTrajectory(tr, 2000, out)
+	H.near(out[2], -0.5 * 800)
+end)
