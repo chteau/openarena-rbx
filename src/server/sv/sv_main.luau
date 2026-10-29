@@ -61,6 +61,8 @@ local MAX_RELIABLE_COMMANDS = SV.MAX_RELIABLE_COMMANDS
 SV.send = function(clientNum: number, data: buffer) end
 -- map loader hook: (mapname) -> lumps for Collision.LoadMap (maps/<name>.bsp)
 SV.loadMap = nil :: ((string) -> any)?
+-- the bots (bot/Bots.luau), set by Game.luau
+SV.Bots = nil :: any
 
 local cv: { [string]: any } = {}
 
@@ -1430,6 +1432,9 @@ function SV.SV_Frame(msec: number)
 	-- update ping based on the all received frames
 	SV_CalcPings()
 
+	-- the bots think once per host frame (dedicated server)
+	SV.Bots.Frame(sv.time)
+
 	-- run the game simulation in chunks
 	while sv.timeResidual >= frameMsec do
 		sv.timeResidual -= frameMsec
@@ -1593,6 +1598,10 @@ function SV.SV_SpawnServer(server: string, killBots: boolean)
 		error(SV.GameError(QS.va("Couldn't load maps/%s.bsp", server)), 0)
 	end
 	Collision.LoadMap(QS.va("maps/%s.bsp", server), lumps)
+	-- botlib reads maps/<name>.aas when the game loads the map
+	if lumps.aas then
+		Fs.Mount(QS.va("maps/%s.aas", server), buffer.tostring(lumps.aas))
+	end
 
 	-- set serverinfo visible name
 	Cvar.Set("mapname", server)
@@ -1610,12 +1619,14 @@ function SV.SV_SpawnServer(server: string, killBots: boolean)
 	-- so any media configstring commands are not sent to the clients
 	sv.state = SV.SS_LOADING
 
-	-- load and spawn all other entities
+	-- load and spawn all other entities (SV_InitGameProgs)
+	SV.Bots.InitGameProgs()
 	SV_InitGameVM(false)
 
 	-- run a few frames to allow everything to settle
 	for _ = 1, 3 do
 		G.vmMain(C.GAME_RUN_FRAME, sv.time)
+		SV.Bots.Frame(sv.time)
 		sv.time += 100
 		svs.time += 100
 	end
@@ -1661,6 +1672,7 @@ function SV.SV_SpawnServer(server: string, killBots: boolean)
 
 	-- run another frame to allow things to look at all the players
 	G.vmMain(C.GAME_RUN_FRAME, sv.time)
+	SV.Bots.Frame(sv.time)
 	sv.time += 100
 	svs.time += 100
 
@@ -2143,6 +2155,9 @@ function SV.SV_Init()
 	end)
 
 	SV_SetupClients()
+
+	-- load the botlib
+	SV.Bots.Init()
 end
 
 return SV

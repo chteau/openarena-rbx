@@ -17,7 +17,7 @@ from the C, with the reason for each.
 | `src/shared/q_math.luau`, `q_shared.luau` | float32-exact math, strings, info strings, parsing | `q_math.c`, `q_shared.c` |
 | `src/shared/net/msg.luau` | message bit stream and delta coding | ioq3 `qcommon/msg.c` |
 | `src/server/g_*.luau` | the game module, every g_*.c of OA 0.8.8 (large files in `_1`, `_2`, ... parts) | `vendor/gamecode-088/code/game/g_*.c` |
-| `src/server/bg_alloc.luau`, `ai_stubs.luau` | BG_InitMemory and the bot entry points | `bg_alloc.c`, `ai_main.c` prototypes |
+| `src/server/bg_alloc.luau` | BG_InitMemory | `bg_alloc.c` |
 | `src/server/sv/` | dedicated-server engine: cvars, command buffer, virtual FS, world links, trap layer, frame loop, clients, snapshots, Roblox transport | ioq3 `qcommon/cvar.c`, `cmd.c`, `files.c`, `server/*.c` |
 | `src/server/Game.luau` | loads all of the above and exposes `Init`, `Command` and `Frame` | |
 
@@ -216,12 +216,9 @@ that is what the port and `test_rules` follow.
 
 ### Bots
 
-The bot AI and botlib are a separate workstream (ARCHITECTURE.md #6).
-`ai_stubs.luau` keeps every hook the game calls (`BotAISetup`,
-`BotAILoadMap`, `BotAIStartFrame`, `BotAISetupClient`, ...) and the
-`trap_AAS_*` queries. `trap_AAS_Initialized()` is false, so
-`G_BotConnect` refuses bots the way an engine without AAS data does. The
-engine side is ready for bots:
+The bot AI and botlib (`src/server/bot/`, `docs/bots-notes.md`) are
+installed by `Game.luau` and driven by the engine like ioquake3's
+`sv_bot.c`. The engine side:
 
 - `trap_BotAllocateClient` and `trap_BotFreeClient` manage client slots.
 - Bot clients get snapshots built but not sent.
