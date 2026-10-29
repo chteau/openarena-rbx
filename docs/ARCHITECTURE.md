@@ -10,7 +10,8 @@ assembled through rbx-native's MCP server (`rbxstudio --mcp`).
 |---|---|---|
 | `vendor/oa088/openarena-0.8.8/baseoa/*.pk3` | OA 0.8.8 final data | all assets. Skip `pak2-players-mature.pk3` |
 | `vendor/oa088/openarena-0.8.8/missionpack/` | Team Arena-style data | Harvester/Overload/1FCTF assets |
-| `vendor/gamecode/code/{game,cgame,q3_ui,ui}` | OA gamecode (GPLv2) | the Luau port |
+| `vendor/gamecode-088/code/{game,cgame,q3_ui}` | OA gamecode at `9e0f0c0`, the source of 0.8.8's release QVMs (built 2012-01-28) | **the Luau port follows this** |
+| `vendor/gamecode/code/...` | OA gamecode master (post-0.8.8, 2025) | reference only; its behaviour differs (pmove, HUD, colours) |
 | `vendor/ioq3/code/qcommon/cm_*.c`, `code/botlib/*.c` | ioquake3 (GPLv2) | collision model, AAS bot routing |
 | `vendor/oa088/openarena-0.8.8/openarena.x86_64` | real OA | reference screenshots / feel checks |
 
