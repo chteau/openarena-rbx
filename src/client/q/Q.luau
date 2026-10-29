@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/qcommon/q_shared.c and q_math.c (OpenArena gamecode).
+-- Luau port of code/qcommon/q_shared.c and q_math.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local Q = {}
 
@@ -241,10 +241,6 @@ function Q.CountChar(s, tocount)
 		end
 	end
 	return count
-end
-
-function Q.Q_StrToLower(s)
-	return lower(s)
 end
 
 function Q.Q_strrchr(s, c)
@@ -604,7 +600,7 @@ function Q.Info_ValueForKey(s, key)
 		local ve = string.find(s, "\\", pos, true) or (n + 1)
 		local value = sub(s, pos, ve - 1)
 		pos = ve
-		if key == pkey then
+		if Q.stricmp(key, pkey) == 0 then
 			return value
 		end
 		if pos > n then
@@ -631,9 +627,9 @@ function Q.Info_NextPair(head)
 	return key, sub(head, pos, ve - 1), sub(head, ve)
 end
 
-function Q.Info_RemoveKey(s, key)
-	if #s >= MAX_INFO_STRING then
-		error("Info_RemoveKey: oversize infostring")
+local function removeKey(s, key, limit, fname)
+	if #s >= limit then
+		error(fname .. ": oversize infostring")
 	end
 	if string.find(key, "\\", 1, true) then
 		return s
@@ -662,6 +658,14 @@ function Q.Info_RemoveKey(s, key)
 	end
 end
 
+function Q.Info_RemoveKey(s, key)
+	return removeKey(s, key, MAX_INFO_STRING, "Info_RemoveKey")
+end
+
+function Q.Info_RemoveKey_Big(s, key)
+	return removeKey(s, key, BIG_INFO_STRING, "Info_RemoveKey_Big")
+end
+
 function Q.Info_Validate(s)
 	return string.find(s, '"', 1, true) == nil and string.find(s, ";", 1, true) == nil
 end
@@ -684,6 +688,26 @@ function Q.Info_SetValueForKey(s, key, value)
 		return s
 	end
 	return newi .. s
+end
+
+function Q.Info_SetValueForKey_Big(s, key, value)
+	if #s >= BIG_INFO_STRING then
+		error("Info_SetValueForKey: oversize infostring")
+	end
+	for _, ch in ipairs({ "\\", ";", '"' }) do
+		if string.find(key, ch, 1, true) or (value and string.find(value, ch, 1, true)) then
+			return s
+		end
+	end
+	s = Q.Info_RemoveKey_Big(s, key)
+	if value == nil or #value == 0 then
+		return s
+	end
+	local newi = "\\" .. key .. "\\" .. value
+	if #newi + #s >= BIG_INFO_STRING then
+		return s
+	end
+	return s .. newi
 end
 
 ----------------------------------------------------------------------

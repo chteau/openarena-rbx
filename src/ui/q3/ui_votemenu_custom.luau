@@ -19,18 +19,18 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_votemenu_custom.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_votemenu_custom.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local VOTEMENU_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local VOTEMENU_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
-local ART_BACKGROUND = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
+local VOTEMENU_BACK0 = "menu/art_blueish/back_0"
+local VOTEMENU_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/accept_0"
+local ART_FIGHT1 = "menu/art_blueish/accept_1"
+local ART_BACKGROUND = "menu/art_blueish/addbotframe"
 
 local votemenu_custom_artlist = { [0] = VOTEMENU_BACK0, VOTEMENU_BACK1, ART_FIGHT0, ART_FIGHT1 }
 
@@ -71,15 +71,8 @@ local function VoteMenu_custom_Event(ptr, event)
 			return
 		end
 		U.UI_PopMenu()
-	else
-		if event ~= C.QM_ACTIVATED then
-			return
-		end
-		if s_votemenu_custom.selection ~= id then
-			s_votemenu_custom.selection = id
-			U.UI_VoteCustomMenuInternal()
-		end
-		if s_votemenu_custom.selection == 0 then
+	elseif id == ID_GO then
+		if event ~= C.QM_ACTIVATED or s_votemenu_custom.selection == 0 then
 			return
 		end
 		trap.Cmd_ExecuteText(
@@ -88,6 +81,14 @@ local function VoteMenu_custom_Event(ptr, event)
 		)
 		U.UI_PopMenu()
 		U.UI_PopMenu()
+	else
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		if s_votemenu_custom.selection ~= id then
+			s_votemenu_custom.selection = id
+			U.UI_VoteCustomMenuInternal()
+		end
 	end
 end
 
@@ -209,6 +210,7 @@ function U.UI_VoteCustomMenu()
 
 	U.Menu_AddItem(s.menu, s.banner)
 	U.Menu_AddItem(s.menu, s.back)
+	U.Menu_AddItem(s.menu, s.go)
 	for i = 0, CUSTOM_MENU_MAX_ENTRIES - 1 do
 		U.Menu_AddItem(s.menu, s.bEntry[i])
 	end

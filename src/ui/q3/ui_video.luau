@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_video.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_video.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -54,10 +54,10 @@ local MAX_RESOLUTIONS = 32
 
 --[[ DRIVER INFORMATION MENU ]]
 
-local DRIVERINFO_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local DRIVERINFO_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local DRIVERINFO_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local DRIVERINFO_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local DRIVERINFO_FRAMEL = "menu/art_blueish/frame2_l"
+local DRIVERINFO_FRAMER = "menu/art_blueish/frame1_r"
+local DRIVERINFO_BACK0 = "menu/art_blueish/back_0"
+local DRIVERINFO_BACK1 = "menu/art_blueish/back_1"
 
 local driverinfo_artlist = {
 	[0] = DRIVERINFO_FRAMEL,
@@ -209,12 +209,12 @@ end
 
 --[[ GRAPHICS OPTIONS MENU ]]
 
-local GRAPHICSOPTIONS_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local GRAPHICSOPTIONS_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local GRAPHICSOPTIONS_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local GRAPHICSOPTIONS_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local GRAPHICSOPTIONS_ACCEPT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local GRAPHICSOPTIONS_ACCEPT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
+local GRAPHICSOPTIONS_FRAMEL = "menu/art_blueish/frame2_l"
+local GRAPHICSOPTIONS_FRAMER = "menu/art_blueish/frame1_r"
+local GRAPHICSOPTIONS_BACK0 = "menu/art_blueish/back_0"
+local GRAPHICSOPTIONS_BACK1 = "menu/art_blueish/back_1"
+local GRAPHICSOPTIONS_ACCEPT0 = "menu/art_blueish/accept_0"
+local GRAPHICSOPTIONS_ACCEPT1 = "menu/art_blueish/accept_1"
 
 local ID_BACK2 = 101
 local ID_FULLSCREEN = 102
@@ -251,7 +251,6 @@ local function newGraphicsOptions()
 		geometry = newList(),
 		filter = newList(),
 		aniso = newList(),
-		drawfps = newList(),
 		driverinfo = newText(),
 		apply = newBitmap(),
 		back = newBitmap(),
@@ -265,7 +264,6 @@ local s_ivo = {
 	lighting = 0,
 	flares = 0,
 	bloom = 0,
-	drawfps = 0,
 	texturebits = 0,
 	geometry = 0,
 	filter = 0,
@@ -275,7 +273,7 @@ local s_ivo = {
 }
 local s_graphicsoptions = newGraphicsOptions()
 
-local function ivo(mode, fullscreen, tq, lighting, flares, bloom, drawfps, texturebits, geometry, filter, aniso, driver, extensions)
+local function ivo(mode, fullscreen, tq, lighting, flares, bloom, texturebits, geometry, filter, aniso, driver, extensions)
 	return {
 		mode = mode,
 		fullscreen = fullscreen,
@@ -283,7 +281,6 @@ local function ivo(mode, fullscreen, tq, lighting, flares, bloom, drawfps, textu
 		lighting = lighting,
 		flares = flares,
 		bloom = bloom,
-		drawfps = drawfps,
 		texturebits = texturebits,
 		geometry = geometry,
 		filter = filter,
@@ -294,12 +291,12 @@ local function ivo(mode, fullscreen, tq, lighting, flares, bloom, drawfps, textu
 end
 
 local s_ivo_templates = {
-	[0] = ivo(6, 1, 3, 0, 0, 0, 0, 2, 2, 1, 0, 0, 1),
-	ivo(4, 1, 2, 0, 0, 0, 0, 2, 1, 1, 0, 0, 1),
-	ivo(3, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
-	ivo(2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1),
-	ivo(2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1),
-	ivo(3, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1),
+	[0] = ivo(6, 1, 3, 0, 0, 0, 2, 2, 1, 0, 0, 1),
+	ivo(4, 1, 2, 0, 0, 0, 2, 1, 1, 0, 0, 1),
+	ivo(3, 1, 2, 0, 0, 0, 0, 1, 0, 0, 0, 1),
+	ivo(2, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1),
+	ivo(2, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1),
+	ivo(3, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1),
 }
 
 local NUM_IVO_TEMPLATES = 6
@@ -340,7 +337,6 @@ for i = 0, MAX_RESOLUTIONS - 1 do
 end
 
 local detectedResolutions = {}
-local currentResolution = ""
 
 local resolutions = builtinResolutions
 local resolutionsDetected = false
@@ -368,7 +364,7 @@ local function GraphicsOptions_FindBuiltinResolution(mode)
 
 	local i = 0
 	while builtinResolutions[i] ~= nil do
-		if builtinResolutions[i] == detectedResolutions[mode] then
+		if Q.stricmp(builtinResolutions[i], detectedResolutions[mode]) == 0 then
 			return i
 		end
 		i += 1
@@ -388,7 +384,7 @@ local function GraphicsOptions_FindDetectedResolution(mode)
 
 	local i = 0
 	while detectedResolutions[i] ~= nil do
-		if builtinResolutions[mode] == detectedResolutions[i] then
+		if Q.stricmp(builtinResolutions[mode], detectedResolutions[i]) == 0 then
 			return i
 		end
 		i += 1
@@ -410,7 +406,7 @@ local function GraphicsOptions_GetAspectRatios()
 		-- rename common ratios ("1.33:1" -> "4:3")
 		local i = 0
 		while knownRatios[i] ~= nil do
-			if str == knownRatios[i][0] then
+			if Q.stricmp(str, knownRatios[i][0]) == 0 then
 				str = knownRatios[i][1]
 				break
 			end
@@ -421,7 +417,7 @@ local function GraphicsOptions_GetAspectRatios()
 		-- establish res/ratio relationship
 		i = 0
 		while ratioBuf[i] ~= nil and ratioBuf[i] ~= "" do
-			if str == ratioBuf[i] then
+			if Q.stricmp(str, ratioBuf[i]) == 0 then
 				break
 			end
 			i += 1
@@ -447,7 +443,6 @@ local function GraphicsOptions_GetInitialVideo()
 	s_ivo.lighting = g.lighting.curvalue
 	s_ivo.flares = g.flares.curvalue
 	s_ivo.bloom = g.bloom.curvalue
-	s_ivo.drawfps = g.drawfps.curvalue
 	s_ivo.geometry = g.geometry.curvalue
 	s_ivo.filter = g.filter.curvalue
 	s_ivo.aniso = g.aniso.curvalue
@@ -455,7 +450,7 @@ local function GraphicsOptions_GetInitialVideo()
 end
 
 local function GraphicsOptions_GetResolutions()
-	local resbuf = trap.Cvar_VariableStringBuffer("r_availableModes")
+	local resbuf = U.UI_Cvar_VariableString("r_availableModes")
 	if resbuf ~= "" then
 		local pos = 1
 		local i = 0
@@ -472,23 +467,7 @@ local function GraphicsOptions_GetResolutions()
 		end
 		detectedResolutions[i] = nil
 
-		-- add custom resolution if not in mode list
-		if i < MAX_RESOLUTIONS - 1 then
-			currentResolution = string.format("%dx%d", U.uis.glconfig.vidWidth, U.uis.glconfig.vidHeight)
-
-			i = 0
-			while detectedResolutions[i] ~= nil do
-				if detectedResolutions[i] == currentResolution then
-					break
-				end
-				i += 1
-			end
-
-			if detectedResolutions[i] == nil then
-				detectedResolutions[i] = currentResolution
-				detectedResolutions[i + 1] = nil
-			end
-
+		if i > 0 then
 			resolutions = detectedResolutions
 			resolutionsDetected = true
 		end
@@ -507,7 +486,6 @@ local function GraphicsOptions_CheckConfig()
 			and t.lighting == g.lighting.curvalue
 			and t.flares == g.flares.curvalue
 			and t.bloom == g.bloom.curvalue
-			and t.drawfps == g.drawfps.curvalue
 			and t.geometry == g.geometry.curvalue
 			and t.filter == g.filter.curvalue
 			and t.aniso == g.aniso.curvalue
@@ -548,7 +526,6 @@ local function GraphicsOptions_UpdateMenuItems()
 		or s_ivo.lighting ~= g.lighting.curvalue
 		or s_ivo.flares ~= g.flares.curvalue
 		or s_ivo.bloom ~= g.bloom.curvalue
-		or s_ivo.drawfps ~= g.drawfps.curvalue
 		or s_ivo.driver ~= g.driver.curvalue
 		or s_ivo.texturebits ~= g.texturebits.curvalue
 		or s_ivo.geometry ~= g.geometry.curvalue
@@ -606,7 +583,6 @@ local function GraphicsOptions_ApplyChanges(unused, notification)
 	trap.Cvar_SetValue("cg_autovertex", g.lighting.curvalue)
 	trap.Cvar_SetValue("r_flares", g.flares.curvalue)
 	trap.Cvar_SetValue("r_bloom", g.bloom.curvalue)
-	trap.Cvar_SetValue("cg_drawFPS", g.drawfps.curvalue)
 
 	--r_ext_texture_filter_anisotropic is special
 	if g.aniso.curvalue ~= 0 then
@@ -615,6 +591,8 @@ local function GraphicsOptions_ApplyChanges(unused, notification)
 	else
 		trap.Cvar_SetValue("r_ext_texture_filter_anisotropic", 0)
 	end
+
+	trap.Cvar_SetValue("com_hunkmegs", 128)
 
 	if g.geometry.curvalue == 2 then
 		trap.Cvar_SetValue("r_lodBias", 0)
@@ -675,7 +653,6 @@ local function GraphicsOptions_Event(ptr, event)
 		g.fs.curvalue = t.fullscreen
 		g.flares.curvalue = t.flares
 		g.bloom.curvalue = t.bloom
-		g.drawfps.curvalue = t.drawfps
 	elseif id == ID_DRIVERINFO then
 		UI_DriverInfo_Menu()
 	elseif id == ID_BACK2 then
@@ -719,7 +696,7 @@ local function GraphicsOptions_SetMenuItems()
 
 			local i = 0
 			while detectedResolutions[i] ~= nil do
-				if buf == detectedResolutions[i] then
+				if Q.stricmp(buf, detectedResolutions[i]) == 0 then
 					g.mode.curvalue = i
 					break
 				end
@@ -736,7 +713,6 @@ local function GraphicsOptions_SetMenuItems()
 	g.allow_extensions.curvalue = Q.int(trap.Cvar_VariableValue("r_allowExtensions"))
 	g.flares.curvalue = Q.int(trap.Cvar_VariableValue("r_flares"))
 	g.bloom.curvalue = Q.int(trap.Cvar_VariableValue("r_bloom"))
-	g.drawfps.curvalue = Q.int(trap.Cvar_VariableValue("cg_drawFPS"))
 	if trap.Cvar_VariableValue("r_ext_texture_filter_anisotropic") ~= 0 then
 		g.aniso.curvalue = Q.int(trap.Cvar_VariableValue("r_ext_max_anisotropy") / 2)
 	end
@@ -757,7 +733,7 @@ local function GraphicsOptions_SetMenuItems()
 		g.texturebits.curvalue = 0
 	end
 
-	if U.UI_Cvar_VariableString("r_textureMode") == "GL_LINEAR_MIPMAP_NEAREST" then
+	if Q.stricmp(U.UI_Cvar_VariableString("r_textureMode"), "GL_LINEAR_MIPMAP_NEAREST") == 0 then
 		g.filter.curvalue = 0
 	else
 		g.filter.curvalue = 1
@@ -965,14 +941,6 @@ function U.GraphicsOptions_MenuInit()
 	g.bloom.itemnames = enabled_names
 	y += step
 
-	g.drawfps.generic.type = C.MTYPE_SPINCONTROL
-	g.drawfps.generic.name = "Draw FPS:"
-	g.drawfps.generic.flags = SPIN_FLAGS
-	g.drawfps.generic.x = 400
-	g.drawfps.generic.y = y
-	g.drawfps.itemnames = enabled_names
-	y += step
-
 	-- references/modifies "r_lodBias" & "subdivisions"
 	g.geometry.generic.type = C.MTYPE_SPINCONTROL
 	g.geometry.generic.name = "Geometric Detail:"
@@ -1069,7 +1037,6 @@ function U.GraphicsOptions_MenuInit()
 	U.Menu_AddItem(g.menu, g.lighting)
 	U.Menu_AddItem(g.menu, g.flares)
 	U.Menu_AddItem(g.menu, g.bloom)
-	U.Menu_AddItem(g.menu, g.drawfps)
 	U.Menu_AddItem(g.menu, g.geometry)
 	U.Menu_AddItem(g.menu, g.tq)
 	U.Menu_AddItem(g.menu, g.texturebits)

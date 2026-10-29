@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_atoms.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_atoms.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- Covers C lines 1-1293.
 
 --[[
@@ -763,47 +763,47 @@ function U.UI_ConsoleCommand(realTime)
 	-- ensure minimum menu data is available
 	U.Menu_Cache()
 
-	if cmd == "levelselect" then
+	if Q.stricmp(cmd, "levelselect") == 0 then
 		U.UI_SPLevelMenu_f()
 		return true
 	end
 
-	if cmd == "postgame" then
+	if Q.stricmp(cmd, "postgame") == 0 then
 		U.UI_SPPostgameMenu_f()
 		return true
 	end
 
-	if cmd == "ui_cache" then
+	if Q.stricmp(cmd, "ui_cache") == 0 then
 		U.UI_Cache_f()
 		return true
 	end
 
-	if cmd == "ui_cinematics" then
+	if Q.stricmp(cmd, "ui_cinematics") == 0 then
 		U.UI_CinematicsMenu_f()
 		return true
 	end
 
-	if cmd == "ui_teamOrders" then
+	if Q.stricmp(cmd, "ui_teamOrders") == 0 then
 		U.UI_TeamOrdersMenu_f()
 		return true
 	end
 
-	if cmd == "iamacheater" then
+	if Q.stricmp(cmd, "iamacheater") == 0 then
 		U.UI_SPUnlock_f()
 		return true
 	end
 
-	if cmd == "iamamonkey" then
+	if Q.stricmp(cmd, "iamamonkey") == 0 then
 		U.UI_SPUnlockMedals_f()
 		return true
 	end
 
-	if cmd == "ui_cdkey" then
+	if Q.stricmp(cmd, "ui_cdkey") == 0 then
 		U.UI_CDKeyMenu_f()
 		return true
 	end
 
-	if cmd == "ui_mappage" then
+	if Q.stricmp(cmd, "ui_mappage") == 0 then
 		local mappage = U.mappage
 		mappage.pagenumber = Q.int(tonumber(U.UI_Argv(1)) or 0)
 		for k = 0, 9 do
@@ -814,7 +814,7 @@ function U.UI_ConsoleCommand(realTime)
 		return true
 	end
 
-	if cmd == "ui_writemappools" then
+	if Q.stricmp(cmd, "ui_writemappools") == 0 then
 		U.WriteMapList()
 		return true
 	end
@@ -880,11 +880,6 @@ function U.UI_DrawHandlePic(x, y, w, h, hShader)
 	trap.R_DrawStretchPic(x, y, w, h, s0, t0, s1, t1, hShader)
 end
 
-function U.UI_DrawBackgroundPic(hShader)
-	local uis = U.uis
-	trap.R_DrawStretchPic(0.0, 0.0, uis.glconfig.vidWidth, uis.glconfig.vidHeight, 0, 0, 1, 1, hShader)
-end
-
 -- Coordinates are 640*480 virtual values
 function U.UI_FillRect(x, y, width, height, color)
 	trap.R_SetColor(color)
@@ -934,9 +929,9 @@ function U.UI_Refresh(realtime)
 		if uis.activemenu.fullscreen then
 			-- draw the background
 			if uis.activemenu.showlogo then
-				U.UI_DrawBackgroundPic(uis.menuBackShader)
+				U.UI_DrawHandlePic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, uis.menuBackShader)
 			else
-				U.UI_DrawBackgroundPic(uis.menuBackNoLogoShader)
+				U.UI_DrawHandlePic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, uis.menuBackNoLogoShader)
 			end
 		end
 

@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_view.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_view.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_view.c -- setup all the parameters (position, angle, etc)
 -- for a 3D rendering
 
@@ -41,7 +41,6 @@ function G.CG_TestModel_f()
 	local cg = G.cg
 	local angles = Q.vec3(0, 0, 0)
 
-	cg.testGun = false
 	T.reset(cg.testModelEntity, T.refEntity_t)
 	if trap.Argc() < 2 then
 		return
@@ -67,16 +66,12 @@ function G.CG_TestModel_f()
 	angles[C.ROLL] = 0
 
 	Q.AnglesToAxis(angles, cg.testModelEntity.axis)
+	cg.testGun = false
 end
 
 -- Replaces the current view weapon with the given model
 function G.CG_TestGun_f()
 	G.CG_TestModel_f()
-
-	if G.cg.testModelEntity.hModel == 0 then
-		return
-	end
-
 	G.cg.testGun = true
 	G.cg.testModelEntity.renderfx = bit32.bor(C.RF_MINLIGHT, C.RF_DEPTHHACK, C.RF_FIRST_PERSON)
 end
@@ -157,43 +152,27 @@ local function CG_CalcVrect()
 		if G.cg_viewsize.integer < 30 then
 			trap.Cvar_Set("cg_viewsize", "30")
 			size = 30
-		elseif G.cg_viewsize.integer > 120 then
-			trap.Cvar_Set("cg_viewsize", "120")
-			size = 120
+		elseif G.cg_viewsize.integer > 100 then
+			trap.Cvar_Set("cg_viewsize", "100")
+			size = 100
 		else
 			size = G.cg_viewsize.integer
 		end
 	end
 
-	local size2 = size
-	if size > 100 then
-		size = 100
-	end
 	local notOne = bit32.bnot(1)
 	cg.refdef.width = bit32.band(Q.idiv(cgs.glconfig.vidWidth * size, 100), notOne)
 	cg.refdef.height = bit32.band(Q.idiv(cgs.glconfig.vidHeight * size, 100), notOne)
 
 	cg.refdef.x = Q.idiv(cgs.glconfig.vidWidth - cg.refdef.width, 2)
 	cg.refdef.y = Q.idiv(cgs.glconfig.vidHeight - cg.refdef.height, 2)
-
-	-- leilei - nudge
-	if G.cg_viewnudge.integer ~= 0 then
-		local nudged = 0
-
-		if size2 < 110 then
-			nudged = 48
-		elseif size2 < 120 then
-			nudged = 24
-		end
-
-		nudged = Q.int(nudged * (cgs.glconfig.vidHeight / 480.0))
-		cg.refdef.y = Q.idiv(cgs.glconfig.vidHeight - cg.refdef.height, 2) - nudged
-	end
 end
 
 --==============================================================================
 
 local FOCUS_DISTANCE = 512
+local tpMins = Q.vec3(-4, -4, -4)
+local tpMaxs = Q.vec3(4, 4, 4)
 local function CG_OffsetThirdPersonView()
 	local cg = G.cg
 	local cgs = G.cgs
@@ -202,11 +181,11 @@ local function CG_OffsetThirdPersonView()
 	local up = Q.vec3(0, 0, 0)
 	local view = Q.vec3(0, 0, 0)
 	local focusAngles = Q.vec3(0, 0, 0)
+	local trace = T.trace_t()
 	local focusPoint = Q.vec3(0, 0, 0)
 	local focusDist
 	local forwardScale, sideScale
 
-	local range = G.cg_thirdPersonRange.value
 	local pps = cg.predictedPlayerState
 
 	cg.refdef.vieworg[2] += pps.viewheight
@@ -222,84 +201,53 @@ local function CG_OffsetThirdPersonView()
 		cg.refdefViewAngles[C.YAW] = pps.stats[C.STAT_DEAD_YAW]
 	end
 
-	if G.cg_deathcam.integer == 2 and pps.stats[C.STAT_HEALTH] <= 0 then -- leilei - deathcam
-		range = 100
+	if focusAngles[C.PITCH] > 45 then
+		focusAngles[C.PITCH] = 45 -- don't go too far overhead
+	end
+	Q.AngleVectors(focusAngles, forward, nil, nil)
+
+	Q.VectorMA(cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint)
+
+	Q.VectorCopy(cg.refdef.vieworg, view)
+
+	view[2] += 8
+
+	cg.refdefViewAngles[C.PITCH] *= 0.5
+
+	Q.AngleVectors(cg.refdefViewAngles, forward, right, up)
+
+	forwardScale = math.cos(G.cg_thirdPersonAngle.value / 180 * math.pi)
+	sideScale = math.sin(G.cg_thirdPersonAngle.value / 180 * math.pi)
+	Q.VectorMA(view, -G.cg_thirdPersonRange.value * forwardScale, forward, view)
+	Q.VectorMA(view, -G.cg_thirdPersonRange.value * sideScale, right, view)
+
+	-- trace a ray from the origin to the viewpoint to make sure the view isn't
+	-- in a solid block.  Use an 8 by 8 block to prevent the view from near clipping anything
+
+	if G.cg_cameraMode.integer == 0 then
+		G.CG_Trace(trace, cg.refdef.vieworg, tpMins, tpMaxs, view, pps.clientNum, C.MASK_SOLID)
+
+		if trace.fraction ~= 1.0 then
+			Q.VectorCopy(trace.endpos, view)
+			view[2] += (1.0 - trace.fraction) * 32
+			-- try another trace to this position, because a tunnel may have the ceiling
+			-- close enogh that this is poking out
+
+			G.CG_Trace(trace, cg.refdef.vieworg, tpMins, tpMaxs, view, pps.clientNum, C.MASK_SOLID)
+			Q.VectorCopy(trace.endpos, view)
+		end
 	end
 
-	if G.cg_cameramode.integer ~= 0 and pps.stats[C.STAT_HEALTH] > 0 then
-		-- leilei this mode is off to the player's right
-		-- and should look towards a 3d crosshair
-		Q.AngleVectors(focusAngles, forward, nil, nil)
-		Q.VectorMA(cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint)
-		Q.VectorCopy(cg.refdef.vieworg, view)
+	Q.VectorCopy(view, cg.refdef.vieworg)
 
-		view[2] += 3
-
-		cg.refdefViewAngles[C.PITCH] *= 0.5
-
-		Q.AngleVectors(focusAngles, forward, nil, nil)
-		Q.VectorMA(cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint)
-		Q.VectorCopy(cg.refdef.vieworg, view)
-
-		Q.AngleVectors(cg.refdefViewAngles, forward, right, up)
-
-		forwardScale = math.cos(0 / 180 * math.pi)
-		sideScale = math.sin(0 / 180 * math.pi) - 0.465
-		Q.VectorMA(view, -range * forwardScale, forward, view)
-		Q.VectorMA(view, -range * sideScale, right, view)
-
-		Q.VectorCopy(view, cg.refdef.vieworg)
-
-		-- select pitch to look at focus point from vieword
-		Q.VectorSubtract(focusPoint, cg.refdef.vieworg, focusPoint)
-		focusDist = math.sqrt(focusPoint[0] * focusPoint[0] + focusPoint[1] * focusPoint[1])
-		if focusDist < 1 then
-			focusDist = 1 -- should never happen
-		end
-		cg.refdefViewAngles[C.PITCH] = -180 / math.pi * math.atan2(focusPoint[2], focusDist)
-
-		-- leilei - make it look to a 3d cursor
-		do
-			local forward2 = Q.vec3(0, 0, 0)
-			local up2 = Q.vec3(0, 0, 0)
-
-			cg.refdef.vieworg[2] -= 24
-			Q.AngleVectors(cg.refdefViewAngles, forward2, nil, up2)
-			Q.VectorMA(cg.refdef.vieworg, 1, forward2, cg.refdef.vieworg)
-			Q.VectorMA(cg.refdef.vieworg, 24, up2, cg.refdef.vieworg)
-		end
-	else
-		if focusAngles[C.PITCH] > 45 then
-			focusAngles[C.PITCH] = 45 -- don't go too far overhead
-		end
-		Q.AngleVectors(focusAngles, forward, nil, nil)
-
-		Q.VectorMA(cg.refdef.vieworg, FOCUS_DISTANCE, forward, focusPoint)
-
-		Q.VectorCopy(cg.refdef.vieworg, view)
-
-		view[2] += 8
-
-		cg.refdefViewAngles[C.PITCH] *= 0.5
-
-		Q.AngleVectors(cg.refdefViewAngles, forward, right, up)
-
-		forwardScale = math.cos(G.cg_thirdPersonAngle.value / 180 * math.pi)
-		sideScale = math.sin(G.cg_thirdPersonAngle.value / 180 * math.pi)
-		Q.VectorMA(view, -range * forwardScale, forward, view)
-		Q.VectorMA(view, -range * sideScale, right, view)
-
-		Q.VectorCopy(view, cg.refdef.vieworg)
-
-		-- select pitch to look at focus point from vieword
-		Q.VectorSubtract(focusPoint, cg.refdef.vieworg, focusPoint)
-		focusDist = math.sqrt(focusPoint[0] * focusPoint[0] + focusPoint[1] * focusPoint[1])
-		if focusDist < 1 then
-			focusDist = 1 -- should never happen
-		end
-		cg.refdefViewAngles[C.PITCH] = -180 / math.pi * math.atan2(focusPoint[2], focusDist)
-		cg.refdefViewAngles[C.YAW] -= G.cg_thirdPersonAngle.value
+	-- select pitch to look at focus point from vieword
+	Q.VectorSubtract(focusPoint, cg.refdef.vieworg, focusPoint)
+	focusDist = math.sqrt(focusPoint[0] * focusPoint[0] + focusPoint[1] * focusPoint[1])
+	if focusDist < 1 then
+		focusDist = 1 -- should never happen
 	end
+	cg.refdefViewAngles[C.PITCH] = -180 / math.pi * math.atan2(focusPoint[2], focusDist)
+	cg.refdefViewAngles[C.YAW] -= G.cg_thirdPersonAngle.value
 end
 
 -- smooth out stair climbing
@@ -347,13 +295,13 @@ local function CG_OffsetFirstPersonView()
 		ratio = cg.time - cg.damageTime
 		if ratio < C.DAMAGE_DEFLECT_TIME then
 			ratio /= C.DAMAGE_DEFLECT_TIME
-			angles[C.PITCH] += ratio * cg.v_dmg_pitch * G.cg_kickScale.value
-			angles[C.ROLL] += ratio * cg.v_dmg_roll * G.cg_kickScale.value
+			angles[C.PITCH] += ratio * cg.v_dmg_pitch
+			angles[C.ROLL] += ratio * cg.v_dmg_roll
 		else
 			ratio = 1.0 - (ratio - C.DAMAGE_DEFLECT_TIME) / C.DAMAGE_RETURN_TIME
 			if ratio > 0 then
-				angles[C.PITCH] += ratio * cg.v_dmg_pitch * G.cg_kickScale.value
-				angles[C.ROLL] += ratio * cg.v_dmg_roll * G.cg_kickScale.value
+				angles[C.PITCH] += ratio * cg.v_dmg_pitch
+				angles[C.ROLL] += ratio * cg.v_dmg_roll
 			end
 		end
 	end
@@ -368,45 +316,22 @@ local function CG_OffsetFirstPersonView()
 	angles[C.ROLL] -= delta * G.cg_runroll.value
 
 	-- add angles based on bob
-	local bobMode = G.cg_bob.integer
-	if bobMode == 6 then -- leilei - sweeney bob
-		local forward = Q.vec3(0, 0, 0)
-		local right = Q.vec3(0, 0, 0)
-		local up = Q.vec3(0, 0, 0)
-		speed = cg.xyspeed
-		if speed > 320 then
-			speed = 320
-		end
-		delta = cg.bobfracsin * 0.006 * speed
-		if bit32.band(cg.bobcycle, 1) ~= 0 then
-			delta = -delta
-		end
-		Q.AngleVectors(angles, forward, right, up)
-		Q.VectorMA(origin, delta, right, origin)
-	elseif bobMode ~= 0 then
-		-- make sure the bob is visible even at low speeds
-		speed = if cg.xyspeed > 200 then cg.xyspeed else 200
+	-- make sure the bob is visible even at low speeds
+	speed = if cg.xyspeed > 200 then cg.xyspeed else 200
 
-		delta = cg.bobfracsin * G.cg_bobpitch.value * speed
-		if bit32.band(cg.predictedPlayerState.pm_flags, C.PMF_DUCKED) ~= 0 then
-			delta *= 3 -- crouching
-		end
-		-- leilei - no pitch for 3 or 4
-		if bobMode == 1 or bobMode == 2 then
-			angles[C.PITCH] += delta
-		end
-		delta = cg.bobfracsin * G.cg_bobroll.value * speed
-		if bit32.band(cg.predictedPlayerState.pm_flags, C.PMF_DUCKED) ~= 0 then
-			delta *= 3 -- crouching accentuates roll
-		end
-		if bit32.band(cg.bobcycle, 1) ~= 0 then
-			delta = -delta
-		end
-		-- leilei - no roll for 2 or 4
-		if bobMode == 1 or bobMode == 3 or bobMode == 5 then
-			angles[C.ROLL] += delta
-		end
+	delta = cg.bobfracsin * G.cg_bobpitch.value * speed
+	if bit32.band(cg.predictedPlayerState.pm_flags, C.PMF_DUCKED) ~= 0 then
+		delta *= 3 -- crouching
 	end
+	angles[C.PITCH] += delta
+	delta = cg.bobfracsin * G.cg_bobroll.value * speed
+	if bit32.band(cg.predictedPlayerState.pm_flags, C.PMF_DUCKED) ~= 0 then
+		delta *= 3 -- crouching accentuates roll
+	end
+	if bit32.band(cg.bobcycle, 1) ~= 0 then
+		delta = -delta
+	end
+	angles[C.ROLL] += delta
 
 	--===================================
 
@@ -419,14 +344,13 @@ local function CG_OffsetFirstPersonView()
 		cg.refdef.vieworg[2] -= cg.duckChange * (C.DUCK_TIME - timeDelta) / C.DUCK_TIME
 	end
 
-	if bobMode ~= 0 then
-		-- add bob height
-		bob = cg.bobfracsin * cg.xyspeed * G.cg_bobup.value
-		if bob > 6 then
-			bob = 6
-		end
-		origin[2] += bob
+	-- add bob height
+	bob = cg.bobfracsin * cg.xyspeed * G.cg_bobup.value
+	if bob > 6 then
+		bob = 6
 	end
+
+	origin[2] += bob
 
 	-- add fall height
 	delta = cg.time - cg.landTime
@@ -528,11 +452,6 @@ local function CG_CalcFov(): number
 		end
 	end
 
-	if G.cg_cameramode.integer == 1 and G.cg_thirdPerson.integer ~= 0 then
-		-- fov scaling for the modern third person view
-		fov_x = fov_x * 0.93 * (cg.xyspeed * 0.0006 + 1)
-	end
-
 	local x = cg.refdef.width / math.tan(fov_x / 360 * math.pi)
 	fov_y = math.atan2(cg.refdef.height, x)
 	fov_y = fov_y * 360 / math.pi
@@ -567,10 +486,6 @@ local function CG_DamageBlendBlob()
 	local cgs = G.cgs
 
 	if cg.damageValue == 0 then
-		return
-	end
-
-	if cg.cameraMode then
 		return
 	end
 
@@ -625,12 +540,7 @@ local function CG_CalcViewValues(): number
 	cg.bobcycle = bit32.rshift(bit32.band(bc, 128), 7)
 	cg.bobfracsin = math.abs(math.sin(bit32.band(bc, 127) / 127.0 * math.pi))
 
-	cg.bobfraccos = math.abs(math.cos(bit32.band(bc, 127) / 127.0 * math.pi))
-	cg.bobfracsin2 = math.abs(math.sin(bit32.band(bc, 127) / 127.0 * math.pi))
-
 	cg.xyspeed = math.sqrt(ps.velocity[0] * ps.velocity[0] + ps.velocity[1] * ps.velocity[1])
-
-	cg.bobcycle2 = ps.bobCycle -- leilei - copy the bobcycle so we can use it directly elsewhere
 
 	Q.VectorCopy(ps.origin, cg.refdef.vieworg)
 	Q.VectorCopy(ps.viewangles, cg.refdefViewAngles)
@@ -658,30 +568,6 @@ local function CG_CalcViewValues(): number
 	else
 		-- offset for local bobbing and kicks
 		CG_OffsetFirstPersonView()
-	end
-
-	-- leilei - View-from-the-model-eyes feature, aka "fullbody awareness" lol
-	if G.cg_cameraEyes.integer ~= 0 and not cg.renderingThirdPerson then
-		local forward = Q.vec3(0, 0, 0)
-		local up = Q.vec3(0, 0, 0)
-		local headang = G.headang
-		local headpos = G.headpos
-		cg.refdefViewAngles[C.ROLL] = headang[C.ROLL]
-		cg.refdefViewAngles[C.PITCH] = headang[C.PITCH]
-		cg.refdefViewAngles[C.YAW] = headang[C.YAW]
-
-		Q.AngleVectors(headang, forward, nil, up)
-		if G.cg_cameraEyes.integer == 2 then
-			Q.VectorMA(headpos, 0, forward, headpos)
-			Q.VectorMA(headpos, 4, up, headpos)
-		else
-			Q.VectorMA(headpos, G.cg_cameraEyes_Fwd.value, forward, headpos)
-			Q.VectorMA(headpos, G.cg_cameraEyes_Up.value, up, headpos)
-		end
-
-		cg.refdef.vieworg[0] = ps.origin[0] + headpos[0]
-		cg.refdef.vieworg[1] = ps.origin[1] + headpos[1]
-		cg.refdef.vieworg[2] = ps.origin[2] + headpos[2]
 	end
 
 	-- position eye reletive to origin
@@ -784,13 +670,7 @@ function G.CG_DrawActiveFrame(serverTime, stereoView, demoPlayback)
 	G.CG_PredictPlayerState()
 
 	-- decide on third person view
-	if G.cg_deathcam.integer == 0 then
-		-- leilei - allow first person deathcam
-		cg.renderingThirdPerson = G.cg_thirdPerson.integer ~= 0
-	else
-		cg.renderingThirdPerson = cg.snap.ps.persistant[C.PERS_TEAM] ~= C.TEAM_SPECTATOR
-			and (G.cg_thirdPerson.integer ~= 0 or cg.snap.ps.stats[C.STAT_HEALTH] <= 0)
-	end
+	cg.renderingThirdPerson = G.cg_thirdPerson.integer ~= 0 or cg.snap.ps.stats[C.STAT_HEALTH] <= 0
 
 	-- build cg.refdef
 	inwater = CG_CalcViewValues()
@@ -804,6 +684,7 @@ function G.CG_DrawActiveFrame(serverTime, stereoView, demoPlayback)
 	if not cg.hyperspace then
 		G.CG_AddPacketEntities() -- adter calcViewValues, so predicted player state is correct
 		G.CG_AddMarks()
+		G.CG_AddParticles()
 		G.CG_AddLocalEntities()
 	end
 	G.CG_AddViewWeapon(cg.predictedPlayerState)

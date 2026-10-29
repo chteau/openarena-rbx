@@ -19,16 +19,13 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_menu.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_menu.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
-
-local OA_VERSION = "0.8.8"
-local OA_STD_PROTOCOL = 71
 
 local ID_SINGLEPLAYER = 10
 local ID_MULTIPLAYER = 11
@@ -160,13 +157,14 @@ local function Main_MenuDraw()
 
 	local fmt = bit32.bor(C.UI_CENTER, C.UI_SMALLFONT)
 	U.UI_DrawProportionalString(320, 372, "", fmt, color)
-	U.UI_DrawString(320, 400, "OpenArena(c) 2005-2018 OpenArena Team", fmt, color)
+	U.UI_DrawString(320, 400, "OpenArena(c) 2005-2012 OpenArena Team", fmt, color)
 	U.UI_DrawString(320, 414, "OpenArena comes with ABSOLUTELY NO WARRANTY; this is free software", fmt, color)
 	U.UI_DrawString(320, 428, "and you are welcome to redistribute it under certain conditions;", fmt, color)
 	U.UI_DrawString(320, 444, "read COPYING for details.", fmt, color)
 
-	U.UI_DrawString(640 - 40, 480 - 14, "^7" .. OA_VERSION, C.UI_SMALLFONT, color)
-	if Q.int(trap.Cvar_VariableValue("protocol")) ~= OA_STD_PROTOCOL then
+	-- 9e0f0c0 says "^7OAX" here; the 0.8.8 release ui.qvm draws "^70.8.8"
+	U.UI_DrawString(640 - 40, 480 - 14, "^70.8.8", C.UI_SMALLFONT, color)
+	if Q.int(trap.Cvar_VariableValue("protocol")) ~= 71 then
 		U.UI_DrawString(0, 480 - 14, Q.va("^7Protocol: %i", Q.int(trap.Cvar_VariableValue("protocol"))), C.UI_SMALLFONT, color)
 	end
 end

@@ -19,17 +19,16 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_startserver.c (OpenArena gamecode).
--- This part covers C lines 1-1200 (start server menu, server options up to ServerOptions_Event).
+-- Luau port of code/q3_ui/ui_startserver.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-1220 of the 0.8.8 source.
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
-local BG = require(script.Parent.Parent.Parent.client.adapters.BG)
 
-local MENU_ART_DIR = C.MENU_ART_DIR or "art_blueish"
+local MENU_ART_DIR = "art_blueish"
 
 local GAMESERVER_BACK0 = "menu/" .. MENU_ART_DIR .. "/back_0"
 local GAMESERVER_BACK1 = "menu/" .. MENU_ART_DIR .. "/back_1"
@@ -208,7 +207,6 @@ end
 
 U.s_startserver = newStartServer()
 U.s_serveroptions = newServerOptions()
-U.mapinfo = (T.mapinfo_result_t and T.mapinfo_result_t()) or { gametypeSupported = {} }
 
 local gametype_items = {
 	[0] = "Free For All",
@@ -223,7 +221,6 @@ local gametype_items = {
 	"Last Man Standing",
 	"Double Domination",
 	"Domination",
-	"Possession",
 }
 
 local gametype_remap = {
@@ -239,10 +236,9 @@ local gametype_remap = {
 	C.GT_LMS,
 	C.GT_DOUBLE_D,
 	C.GT_DOMINATION,
-	C.GT_POSSESSION,
 }
 
-local gametype_remap2 = { [0] = 0, 2, 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 }
+local gametype_remap2 = { [0] = 0, 2, 0, 1, 3, 4, 5, 6, 7, 8, 9, 10, 11 }
 
 local playerType_list = { [0] = "Open", "Bot", "----" }
 local playerTeam_list = { [0] = "Blue", "Red" }
@@ -260,7 +256,7 @@ U.lmsMode_list = lmsMode_list
 U.pmove_list = pmove_list
 
 local gametypeTokenBits = {
-	ffa = { C.GT_FFA, C.GT_POSSESSION },
+	ffa = { C.GT_FFA },
 	tourney = { C.GT_TOURNAMENT },
 	single = { C.GT_SINGLE_PLAYER },
 	team = { C.GT_TEAM },
@@ -273,14 +269,13 @@ local gametypeTokenBits = {
 	lms = { C.GT_LMS },
 	dd = { C.GT_DOUBLE_D },
 	dom = { C.GT_DOMINATION },
-	pos = { C.GT_POSSESSION },
 }
 
 -- GametypeBits from arenas.txt + .arena files
 function U.GametypeBits(str)
 	local bits = 0
 	for token in string.gmatch(str, "%S+") do
-		local list = gametypeTokenBits[token]
+		local list = gametypeTokenBits[string.lower(token)]
 		if list ~= nil then
 			for _, gt in list do
 				bits = bit32.bor(bits, bit32.lshift(1, gt))
@@ -391,20 +386,12 @@ function U.WriteMapList()
 	end
 end
 
-local function supportedChar(v)
-	if type(v) == "number" then
-		return string.char(v)
-	end
-	return v
-end
-
 function U.StartServer_GametypeEvent(ptr, event)
 	if event ~= C.QM_ACTIVATED then
 		return
 	end
 
 	local s = U.s_startserver
-	local mapinfo = U.mapinfo
 	local count = U.UI_GetNumArenas()
 	s.nummaps = 0
 	local gt = gametype_remap[s.gametype.curvalue]
@@ -414,18 +401,8 @@ function U.StartServer_GametypeEvent(ptr, event)
 	end
 	for i = 0, count - 1 do
 		local info = U.UI_GetArenaInfoByNumber(i)
-		BG.MapInfoGet(Q.Info_ValueForKey(info, "map"), gt, mapinfo)
 
 		local gamebits = U.GametypeBits(Q.Info_ValueForKey(info, "type"))
-		for j = 0, C.GT_MAX_GAME_TYPE - 1 do
-			local ch = supportedChar(mapinfo.gametypeSupported[j])
-			if ch == "y" or ch == "Y" then
-				gamebits = bit32.bor(gamebits, bit32.lshift(1, j))
-			end
-			if ch == "n" or ch == "N" then
-				gamebits = bit32.band(gamebits, bit32.bnot(bit32.lshift(1, j)))
-			end
-		end
 		if bit32.band(gamebits, matchbits) == 0 then
 			continue
 		end
@@ -666,11 +643,11 @@ function U.StartServer_MenuInit()
 	U.Menu_AddItem(s.menu, s.framer)
 
 	U.Menu_AddItem(s.menu, s.gametype)
+	U.Menu_AddItem(s.menu, s.autonextmap)
 	for i = 0, MAX_MAPSPERPAGE - 1 do
 		U.Menu_AddItem(s.menu, s.mappics[i])
 		U.Menu_AddItem(s.menu, s.mapbuttons[i])
 	end
-	U.Menu_AddItem(s.menu, s.autonextmap)
 
 	U.Menu_AddItem(s.menu, s.arrows)
 	U.Menu_AddItem(s.menu, s.prevpage)
@@ -724,7 +701,7 @@ SERVER OPTIONS MENU *****
 ]]
 
 local function isTeamMode(gametype)
-	return gametype >= C.GT_TEAM and gametype ~= C.GT_LMS and gametype ~= C.GT_POSSESSION
+	return gametype >= C.GT_TEAM and gametype ~= C.GT_LMS
 end
 
 function U.BotAlreadySelected(checkName)
@@ -739,7 +716,7 @@ function U.BotAlreadySelected(checkName)
 		then
 			continue
 		end
-		if checkName == so.playerNameBuffers[n] then
+		if Q.stricmp(checkName, so.playerNameBuffers[n]) == 0 then
 			return true
 		end
 	end
@@ -749,17 +726,15 @@ end
 
 local limitCvars = {
 	[C.GT_TOURNAMENT] = { "ui_tourney_fraglimit", "ui_tourney_timelimit", nil },
-	[C.GT_TEAM] = { "ui_team_fraglimit", "ui_team_timelimit", "ui_team_friendly" },
-	[C.GT_CTF] = { "ui_ctf_fraglimit", "ui_ctf_timelimit", "ui_ctf_friendly" },
-	[C.GT_1FCTF] = { "ui_1fctf_capturelimit", "ui_1fctf_timelimit", "ui_1fctf_friendly" },
-	[C.GT_OBELISK] = { "ui_overload_capturelimit", "ui_overload_timelimit", "ui_overload_friendly" },
-	[C.GT_HARVESTER] = { "ui_harvester_capturelimit", "ui_harvester_timelimit", "ui_harvester_friendly" },
+	[C.GT_TEAM] = { "ui_team_fraglimit", "ui_team_timelimit", "ui_team_friendlt" },
+	[C.GT_CTF] = { "ui_ctf_fraglimit", "ui_ctf_timelimit", "ui_ctf_friendlt" },
+	[C.GT_1FCTF] = { "ui_1fctf_capturelimit", "ui_1fctf_timelimit", "ui_1fctf_friendlt" },
+	[C.GT_OBELISK] = { "ui_overload_capturelimit", "ui_overload_timelimit", "ui_overload_friendlt" },
+	[C.GT_HARVESTER] = { "ui_harvester_capturelimit", "ui_harvester_timelimit", "ui_harvester_friendlt" },
 	[C.GT_ELIMINATION] = { "ui_elimination_capturelimit", "ui_elimination_timelimit", nil },
 	[C.GT_CTF_ELIMINATION] = { "ui_ctf_elimination_capturelimit", "ui_ctf_elimination_timelimit", nil },
 	[C.GT_LMS] = { "ui_lms_fraglimit", "ui_lms_timelimit", nil },
-	[C.GT_DOUBLE_D] = { "ui_dd_capturelimit", "ui_dd_timelimit", "ui_dd_friendly" },
-	[C.GT_DOMINATION] = { "ui_dom_capturelimit", "ui_dom_timelimit", "ui_dom_friendly" },
-	[C.GT_POSSESSION] = { "ui_pos_scorelimit", "ui_pos_timelimit", nil },
+	[C.GT_DOUBLE_D] = { "ui_dd_capturelimit", "ui_dd_timelimit", "ui_dd_friendlt" },
 }
 local defaultLimitCvars = { "ui_ffa_fraglimit", "ui_ffa_timelimit", nil }
 
@@ -915,7 +890,7 @@ function U.ServerOptions_SetPlayerItems()
 		end
 	end
 
-	if so.gametype < C.GT_TEAM or so.gametype == C.GT_LMS or so.gametype == C.GT_POSSESSION then
+	if so.gametype < C.GT_TEAM or so.gametype == C.GT_LMS then
 		return
 	end
 	for n = start, PLAYER_SLOTS - 1 do

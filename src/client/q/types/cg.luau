@@ -33,9 +33,8 @@ local MAX_REWARDSTACK = 10
 local MAX_SOUNDBUFFER = 20
 local MAX_PREDICTED_EVENTS = 16
 local MAX_VERTS_ON_POLY = 10
-local FOOTSTEP_TOTAL = 14
-local NUM_CROSSHAIRS = 10
-local FRAGMSG_MAX = 5
+local FOOTSTEP_TOTAL = 7
+local NUM_CROSSHAIRS = 99
 local TEAMCHAT_HEIGHT = 8
 
 local function fill(n, f)
@@ -120,9 +119,6 @@ function T.playerEntity_t()
 		barrelAngle = 0,
 		barrelTime = 0,
 		barrelSpinning = false,
-		eyepos = vec3(),
-		eyelookat = vec3(),
-		head = T.lerpFrame_t(),
 	}
 end
 
@@ -149,19 +145,6 @@ function T.centity_t()
 		beamEnd = vec3(),
 		lerpOrigin = vec3(),
 		lerpAngles = vec3(),
-		newcamrunning = 0,
-		eyesOrigin = vec3(),
-		eyesAngles = vec3(),
-		eyepos = vec3(),
-		eyepos2 = vec3(),
-		eyelookat = vec3(),
-		weapOrigin = vec3(),
-		weapAngles = vec3(),
-		startroll = 0,
-		muztime = nums(5),
-		muzslot = 0,
-		muzroll = nums(5),
-		headpos = vec3(),
 	}
 end
 
@@ -198,7 +181,6 @@ function T.localEntity_t()
 		leMarkType = 0,
 		leBounceSoundType = 0,
 		refEntity = S.refEntity_t(),
-		avelocity = trajectory_t(),
 	}
 end
 
@@ -269,8 +251,6 @@ function T.clientInfo_t()
 		animations = fill(K.MAX_TOTALANIMATIONS, animation_t),
 		sounds = nums(K.MAX_CUSTOM_SOUNDS),
 		isDead = 0,
-		eyepos = vec3(),
-		onepiece = 0,
 	}
 end
 
@@ -301,15 +281,6 @@ function T.weaponInfo_t()
 		readySound = 0,
 		firingSound = 0,
 		loopFireSound = false,
-		lfx = 0,
-		lfxdrawn = 0,
-		flashModel_type1 = 0,
-		flashModel_type2 = 0,
-		flashModel_type2a = 0,
-		flashModel_type3 = 0,
-		flashModel_type4 = 0,
-		flashModel_type5 = 0,
-		flashModel_type5a = 0,
 	}
 end
 
@@ -323,17 +294,6 @@ end
 
 function T.skulltrail_t()
 	return { positions = fill(MAX_SKULLTRAIL, vec3), numpositions = 0 }
-end
-
-function T.fragInfo_t()
-	return {
-		targetName = "",
-		attackerName = "",
-		causeShader = 0,
-		fragTime = 0,
-		teamFrag = false,
-		message = "",
-	}
 end
 
 function T.cg_t()
@@ -462,10 +422,8 @@ function T.cg_t()
 		kick_origin = vec3(),
 		bobfracsin = 0,
 		bobcycle = 0,
-		bobcycle2 = 0,
 		xyspeed = 0,
 		nextOrbitTime = 0,
-		cameraMode = false,
 		testModelEntity = S.refEntity_t(),
 		testModelName = "",
 		testGun = false,
@@ -477,11 +435,6 @@ function T.cg_t()
 		respawnTime = 0,
 		redObeliskHealth = 0,
 		blueObeliskHealth = 0,
-		bobfraccos = 0,
-		bobfracsin2 = 0,
-		headpos = fill(K.MAX_CLIENTS, vec3),
-		headent = fill(K.MAX_CLIENTS, T.centity_t),
-		headon = nums(K.MAX_CLIENTS),
 	}
 end
 
@@ -522,9 +475,6 @@ local mediaHandles = {
 	"scoreboardName", "scoreboardPing", "scoreboardScore", "scoreboardTime",
 	"medalImpressive", "medalExcellent", "medalGauntlet", "medalDefend", "medalAssist",
 	"medalCapture",
-	"bfgShader", "chaingunShader", "gauntletShader", "grapplehookShader", "grenadeShader",
-	"kamikazeShader", "lightninggunShader", "machinegunShader", "nailgunShader", "plasmaShader",
-	"proxlauncherShader", "railgunShader", "rocketShader", "shotgunShader", "skullShader",
 	"quadSound", "tracerSound", "selectSound", "useNothingSound", "wearOffSound",
 	"sfx_lghit1", "sfx_lghit2", "sfx_lghit3", "sfx_ric1", "sfx_ric2", "sfx_ric3", "sfx_railg",
 	"sfx_rockexp", "sfx_plasmaexp", "sfx_proxexp", "sfx_nghit", "sfx_nghitflesh",
@@ -623,7 +573,7 @@ function T.cgs_t()
 		attackingTeam = 0,
 		lms_mode = 0,
 		nopickup = 0,
-		takeAt = 0,
+		timetaken = 0,
 		domination_points_count = 0,
 		domination_points_names = fill(domCount, empty),
 		domination_points_status = nums(domCount),
@@ -650,7 +600,6 @@ function T.cgs_t()
 		sizingHud = false,
 		capturedItem = nil,
 		activeCursor = 0,
-		fragMsg = fill(FRAGMSG_MAX, T.fragInfo_t),
 		currentOrder = 0,
 		orderPending = false,
 		orderTime = 0,
@@ -764,8 +713,6 @@ function T.playerInfo_t()
 		headModel = 0,
 		headSkin = 0,
 		animations = fill(K.MAX_ANIMATIONS, animation_t),
-		fixedlegs = false,
-		fixedtorso = false,
 		weaponModel = 0,
 		barrelModel = 0,
 		flashModel = 0,

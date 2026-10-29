@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_playersettings.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_playersettings.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -27,12 +27,12 @@ local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local ART_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local ART_MODEL0 = "menu/" .. C.MENU_ART_DIR .. "/model_0"
-local ART_MODEL1 = "menu/" .. C.MENU_ART_DIR .. "/model_1"
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local ART_FRAMEL = "menu/art_blueish/frame2_l"
+local ART_FRAMER = "menu/art_blueish/frame1_r"
+local ART_MODEL0 = "menu/art_blueish/model_0"
+local ART_MODEL1 = "menu/art_blueish/model_1"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
 local ART_FX_BASE = "menu/art/fx_base"
 local ART_FX_BLUE = "menu/art/fx_blue"
 local ART_FX_CYAN = "menu/art/fx_cyan"

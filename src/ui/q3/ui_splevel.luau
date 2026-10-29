@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_splevel.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_splevel.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 --[[
 SINGLE PLAYER LEVEL SELECT MENU
@@ -30,24 +30,24 @@ local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_LEVELFRAME_FOCUS = "menu/" .. C.MENU_ART_DIR .. "/maps_select"
-local ART_LEVELFRAME_SELECTED = "menu/" .. C.MENU_ART_DIR .. "/maps_selected"
-local ART_ARROW = "menu/" .. C.MENU_ART_DIR .. "/narrow_0"
-local ART_ARROW_FOCUS = "menu/" .. C.MENU_ART_DIR .. "/narrow_1"
+local ART_LEVELFRAME_FOCUS = "menu/art_blueish/maps_select"
+local ART_LEVELFRAME_SELECTED = "menu/art_blueish/maps_selected"
+local ART_ARROW = "menu/art_blueish/narrow_0"
+local ART_ARROW_FOCUS = "menu/art_blueish/narrow_1"
 local ART_MAP_UNKNOWN = "menu/art/unknownmap"
 local ART_MAP_COMPLETE1 = "menu/art/level_complete1"
 local ART_MAP_COMPLETE2 = "menu/art/level_complete2"
 local ART_MAP_COMPLETE3 = "menu/art/level_complete3"
 local ART_MAP_COMPLETE4 = "menu/art/level_complete4"
 local ART_MAP_COMPLETE5 = "menu/art/level_complete5"
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/fight_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/fight_1"
-local ART_RESET0 = "menu/" .. C.MENU_ART_DIR .. "/reset_0"
-local ART_RESET1 = "menu/" .. C.MENU_ART_DIR .. "/reset_1"
-local ART_CUSTOM0 = "menu/" .. C.MENU_ART_DIR .. "/skirmish_0"
-local ART_CUSTOM1 = "menu/" .. C.MENU_ART_DIR .. "/skirmish_1"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/fight_0"
+local ART_FIGHT1 = "menu/art_blueish/fight_1"
+local ART_RESET0 = "menu/art_blueish/reset_0"
+local ART_RESET1 = "menu/art_blueish/reset_1"
+local ART_CUSTOM0 = "menu/art_blueish/skirmish_0"
+local ART_CUSTOM1 = "menu/art_blueish/skirmish_1"
 
 local ID_LEFTARROW = 10
 local ID_PICTURE0 = 11
@@ -173,7 +173,7 @@ local function PlayerIcon(modelAndSkin)
 
 	local iconName = Q.va("models/players/%s/icon_%s.tga", model, skin)
 
-	if trap.R_RegisterShaderNoMip(iconName) == 0 and skin ~= "default" then
+	if trap.R_RegisterShaderNoMip(iconName) == 0 and Q.stricmp(skin, "default") ~= 0 then
 		iconName = Q.va("models/players/%s/icon_default.tga", model)
 	end
 	return iconName
@@ -196,10 +196,6 @@ local function UI_SPLevelMenu_SetBots()
 		while p <= len and string.sub(bots, p, p) == " " do
 			p += 1
 		end
-		if p > len then
-			break
-		end
-
 		local start = p
 		while p <= len and string.sub(bots, p, p) ~= " " do
 			p += 1
@@ -338,11 +334,7 @@ local function UI_SPLevelMenu_ResetAction(result)
 	end
 
 	U.UI_NewGame()
-	if U.UI_GetSpecialArenaInfo("training") ~= nil then
-		trap.Cvar_SetValue("ui_spSelection", -4)
-	else
-		trap.Cvar_SetValue("ui_spSelection", 0)
-	end
+	trap.Cvar_SetValue("ui_spSelection", -4)
 
 	U.UI_PopMenu()
 	U.UI_SPLevelMenu()
@@ -465,7 +457,7 @@ local function UI_SPLevelMenu_MenuDraw()
 
 	-- check for model changes
 	local buf = trap.Cvar_VariableStringBuffer("model")
-	if buf ~= levelMenuInfo.playerModel then
+	if Q.stricmp(buf, levelMenuInfo.playerModel) ~= 0 then
 		levelMenuInfo.playerModel = string.sub(buf, 1, 63)
 		levelMenuInfo.playerPicName = PlayerIcon(levelMenuInfo.playerModel)
 		levelMenuInfo.item_player.generic.name = levelMenuInfo.playerPicName
@@ -603,8 +595,8 @@ end
 local function UI_SPLevelMenu_Init()
 	local skill = Q.int(trap.Cvar_VariableValue("g_spSkill"))
 	if skill < 1 or skill > 5 then
+		trap.Cvar_Set("g_spSkill", "2")
 		skill = 2
-		trap.Cvar_SetValue("g_spSkill", skill)
 	end
 
 	levelMenuInfo = newInfo()

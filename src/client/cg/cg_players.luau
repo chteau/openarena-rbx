@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_players.c (OpenArena gamecode).
--- This part covers lines 1-1470 (through CG_PlayerAnimation).
+-- Luau port of code/cgame/cg_players.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-1279 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -43,11 +43,6 @@ G.cg_customSoundNames = {
 	"*fall1.wav",
 	"*taunt.wav",
 }
-
--- leilei - eyes hack
-G.headpos = Q.vec3(0, 0, 0)
-G.headang = Q.vec3(0, 0, 0)
-G.enableQ = 0
 
 local function isTeamGame(): boolean
 	return G.cgs.gametype >= C.GT_TEAM and G.cgs.ffa_gt ~= 1
@@ -140,23 +135,6 @@ local function atoi(s: string): number
 	return Q.int(atof(string.match(s, "^%s*([%+%-]?%d*)") or ""))
 end
 
-local animFallbacks = {
-	{ C.TORSO_RUN, C.TORSO_STAND },
-	{ C.TORSO_RUN2, C.TORSO_STAND2 },
-	{ C.TORSO_RUN3, C.TORSO_STAND },
-	{ C.TORSO_STRAFE, C.TORSO_STAND },
-	{ C.TORSO_STAND3, C.TORSO_STAND },
-	{ C.TORSO_JUMP, C.TORSO_STAND },
-	{ C.TORSO_JUMP2, C.TORSO_STAND },
-	{ C.TORSO_JUMP3, C.TORSO_STAND },
-	{ C.TORSO_FALL, C.TORSO_STAND },
-	{ C.TORSO_FALL2, C.TORSO_STAND2 },
-	{ C.TORSO_FALL3, C.TORSO_STAND },
-	{ C.TORSO_TALK, C.TORSO_STAND },
-	{ C.LEGS_STRAFE_LEFT, C.LEGS_RUN },
-	{ C.LEGS_STRAFE_RIGHT, C.LEGS_RUN },
-}
-
 function G.CG_ParseAnimationFile(filename, ci)
 	local animations = ci.animations
 
@@ -185,26 +163,26 @@ function G.CG_ParseAnimationFile(filename, ci)
 		if token == "" then
 			break
 		end
-		if token == "footsteps" then
+		if Q.stricmp(token, "footsteps") == 0 then
 			token, pos = comParse(text, pos)
 			if token == "" then
 				break
 			end
-			if token == "default" or token == "normal" then
+			if Q.stricmp(token, "default") == 0 or Q.stricmp(token, "normal") == 0 then
 				ci.footsteps = C.FOOTSTEP_NORMAL
-			elseif token == "boot" then
+			elseif Q.stricmp(token, "boot") == 0 then
 				ci.footsteps = C.FOOTSTEP_BOOT
-			elseif token == "flesh" then
+			elseif Q.stricmp(token, "flesh") == 0 then
 				ci.footsteps = C.FOOTSTEP_FLESH
-			elseif token == "mech" then
+			elseif Q.stricmp(token, "mech") == 0 then
 				ci.footsteps = C.FOOTSTEP_MECH
-			elseif token == "energy" then
+			elseif Q.stricmp(token, "energy") == 0 then
 				ci.footsteps = C.FOOTSTEP_ENERGY
 			else
 				G.CG_Printf(Q.va("Bad footsteps parm in %s: %s\n", filename, token))
 			end
 			continue
-		elseif token == "headoffset" then
+		elseif Q.stricmp(token, "headoffset") == 0 then
 			for i = 0, 2 do
 				token, pos = comParse(text, pos)
 				if token == "" then
@@ -213,16 +191,7 @@ function G.CG_ParseAnimationFile(filename, ci)
 				ci.headOffset[i] = atof(token)
 			end
 			continue
-		elseif token == "eyes" then
-			for i = 0, 2 do
-				token, pos = comParse(text, pos)
-				if token == "" then
-					break
-				end
-				ci.eyepos[i] = atof(token)
-			end
-			continue
-		elseif token == "sex" then
+		elseif Q.stricmp(token, "sex") == 0 then
 			token, pos = comParse(text, pos)
 			if token == "" then
 				break
@@ -236,10 +205,10 @@ function G.CG_ParseAnimationFile(filename, ci)
 				ci.gender = C.GENDER_MALE
 			end
 			continue
-		elseif token == "fixedlegs" then
+		elseif Q.stricmp(token, "fixedlegs") == 0 then
 			ci.fixedlegs = true
 			continue
-		elseif token == "fixedtorso" then
+		elseif Q.stricmp(token, "fixedtorso") == 0 then
 			ci.fixedtorso = true
 			continue
 		end
@@ -250,7 +219,7 @@ function G.CG_ParseAnimationFile(filename, ci)
 			pos = prev -- unget the token
 			break
 		end
-		trap.Print(Q.va("unknown token '%s' in %s\n", token, filename))
+		trap.Print(Q.va("unknown token '%s' is %s\n", token, filename))
 	end
 
 	-- read information for each frame
@@ -259,23 +228,13 @@ function G.CG_ParseAnimationFile(filename, ci)
 		token, pos = comParse(text, pos)
 		if token == "" then
 			if i >= C.TORSO_GETFLAG and i <= C.TORSO_NEGATIVE then
-				animations[i] = T.copy(animations[C.TORSO_GESTURE])
+				animations[i].firstFrame = animations[C.TORSO_GESTURE].firstFrame
+				animations[i].frameLerp = animations[C.TORSO_GESTURE].frameLerp
+				animations[i].initialLerp = animations[C.TORSO_GESTURE].initialLerp
+				animations[i].loopFrames = animations[C.TORSO_GESTURE].loopFrames
+				animations[i].numFrames = animations[C.TORSO_GESTURE].numFrames
 				animations[i].reversed = false
 				animations[i].flipflop = false
-				i += 1
-				continue
-			end
-			local handled = false
-			for _, fb in animFallbacks do
-				if i == fb[1] then
-					animations[i] = T.copy(animations[fb[2]])
-					animations[i].reversed = false
-					animations[i].flipflop = false
-					handled = true
-					break
-				end
-			end
-			if handled then
 				i += 1
 				continue
 			end
@@ -364,37 +323,6 @@ function G.CG_ParseAnimationFile(filename, ci)
 	animations[C.TORSO_AFFIRMATIVE].flipflop = true
 	animations[C.TORSO_NEGATIVE].flipflop = true
 	--
-	return true
-end
-
-function G.CG_ParseEyesFile(filename, ci)
-	local text = readFile(filename)
-	if text == nil then
-		return false
-	end
-
-	local pos = 1
-	local token
-
-	while true do
-		token, pos = comParse(text, pos)
-		if token == "" then
-			break
-		end
-
-		if Q.stricmp(token, "eyes") == 0 then
-			for i = 0, 2 do
-				token, pos = comParse(text, pos)
-				if token == "" then
-					break
-				end
-				ci.eyepos[i] = atof(token)
-			end
-			continue
-		end
-		break
-	end
-
 	return true
 end
 
@@ -532,20 +460,12 @@ function G.CG_RegisterClientSkin(ci, teamName, modelName, skinName, headModelNam
 	local filename = ""
 	local found
 
-	if ci.onepiece ~= 0 then
-		filename = Q.va("models/playerfs/%s/%stris_%s.skin", modelName, teamName, skinName)
+	found, filename = G.CG_FindClientModelFile(ci, teamName, modelName, skinName, "lower", "skin")
+	if found then
 		ci.legsSkin = trap.R_RegisterSkin(filename)
-		if ci.legsSkin == 0 then
-			trap.Print(Q.va("Onepieced model skin load failure: %s\n", filename))
-		end
-	else
-		found, filename = G.CG_FindClientModelFile(ci, teamName, modelName, skinName, "lower", "skin")
-		if found then
-			ci.legsSkin = trap.R_RegisterSkin(filename)
-		end
-		if ci.legsSkin == 0 then
-			trap.Print(Q.va("Leg skin load failure: %s\n", filename))
-		end
+	end
+	if ci.legsSkin == 0 then
+		trap.Print(Q.va("Leg skin load failure: %s\n", filename))
 	end
 
 	found, filename = G.CG_FindClientModelFile(ci, teamName, modelName, skinName, "upper", "skin")
@@ -574,103 +494,50 @@ end
 function G.CG_RegisterClientModelname(ci, modelName, skinName, headModelName, headSkinName, teamName)
 	local filename
 	local headName
-	local FSloaded = 0
 
 	if headModelName == "" then
 		headName = modelName
 	else
 		headName = headModelName
 	end
-
-	-- leilei - onepiece model loading for certain maps or WIP animation debug
-	ci.onepiece = 0
-	if G.cg_enableFS.integer ~= 0 then
-		filename = Q.va("models/playerfs/%s/tris.mdr", modelName)
+	filename = Q.va("models/players/%s/lower.md3", modelName)
+	ci.legsModel = trap.R_RegisterModel(filename)
+	if ci.legsModel == 0 then
+		filename = Q.va("models/players/characters/%s/lower.md3", modelName)
 		ci.legsModel = trap.R_RegisterModel(filename)
-		if ci.legsModel ~= 0 then
-			FSloaded = 1
-			ci.onepiece = 1
-		end
 		if ci.legsModel == 0 then
-			FSloaded = 0
-		end
-
-		if FSloaded ~= 0 then
-			trap.Print(Q.va("%s is fanservice\n", filename))
-		else
-			trap.Print(Q.va("%s can't provide fanservice\n", filename))
+			trap.Print(Q.va("Failed to load model file %s\n", filename))
+			return false
 		end
 	end
 
-	-- load the usual model
-	if FSloaded == 0 then
-		filename = Q.va("models/players/%s/lower.mdr", modelName)
-		ci.legsModel = trap.R_RegisterModel(filename)
-		if ci.legsModel == 0 then
-			filename = Q.va("models/players/characters/%s/lower.mdr", modelName)
-			ci.legsModel = trap.R_RegisterModel(filename)
-			if ci.legsModel == 0 then
-				filename = Q.va("models/players/%s/lower.md3", modelName)
-				ci.legsModel = trap.R_RegisterModel(filename)
-				if ci.legsModel == 0 then
-					filename = Q.va("models/players/characters/%s/lower.md3", modelName)
-					ci.legsModel = trap.R_RegisterModel(filename)
-					if ci.legsModel == 0 then
-						trap.Print(Q.va("Failed to load model file %s\n", filename))
-						return false
-					end
-				end
-			end
-		end
-
-		filename = Q.va("models/players/%s/upper.mdr", modelName)
+	filename = Q.va("models/players/%s/upper.md3", modelName)
+	ci.torsoModel = trap.R_RegisterModel(filename)
+	if ci.torsoModel == 0 then
+		filename = Q.va("models/players/characters/%s/upper.md3", modelName)
 		ci.torsoModel = trap.R_RegisterModel(filename)
 		if ci.torsoModel == 0 then
-			filename = Q.va("models/players/characters/%s/upper.mdr", modelName)
-			ci.torsoModel = trap.R_RegisterModel(filename)
-			if ci.torsoModel == 0 then
-				filename = Q.va("models/players/%s/upper.md3", modelName)
-				ci.torsoModel = trap.R_RegisterModel(filename)
-				if ci.torsoModel == 0 then
-					filename = Q.va("models/players/characters/%s/upper.md3", modelName)
-					ci.torsoModel = trap.R_RegisterModel(filename)
-					if ci.torsoModel == 0 then
-						trap.Print(Q.va("Failed to load model file %s\n", filename))
-						return false
-					end
-				end
-			end
+			trap.Print(Q.va("Failed to load model file %s\n", filename))
+			return false
 		end
 	end
 
 	local headStar = string.sub(headName, 1, 1) == "*"
 	local headRest = string.sub(headModelName, 2)
 	if headStar then
-		filename = Q.va("models/players/heads/%s/%s.mdr", headRest, headRest)
+		filename = Q.va("models/players/heads/%s/%s.md3", headRest, headRest)
 	else
-		filename = Q.va("models/players/%s/head.mdr", headName)
+		filename = Q.va("models/players/%s/head.md3", headName)
 	end
 	ci.headModel = trap.R_RegisterModel(filename)
 	-- if the head model could not be found and we didn't load from the heads folder try to load from there
 	if ci.headModel == 0 and not headStar then
-		filename = Q.va("models/players/heads/%s/%s.mdr", headModelName, headModelName)
+		filename = Q.va("models/players/heads/%s/%s.md3", headModelName, headModelName)
 		ci.headModel = trap.R_RegisterModel(filename)
 	end
 	if ci.headModel == 0 then
-		if headStar then
-			filename = Q.va("models/players/heads/%s/%s.md3", headRest, headRest)
-		else
-			filename = Q.va("models/players/%s/head.md3", headName)
-		end
-		ci.headModel = trap.R_RegisterModel(filename)
-		if ci.headModel == 0 and not headStar then
-			filename = Q.va("models/players/heads/%s/%s.md3", headModelName, headModelName)
-			ci.headModel = trap.R_RegisterModel(filename)
-		end
-		if ci.headModel == 0 then
-			trap.Print(Q.va("Failed to load model file %s\n", filename))
-			return false
-		end
+		trap.Print(Q.va("Failed to load model file %s\n", filename))
+		return false
 	end
 
 	-- if any skins failed to load, return failure
@@ -694,26 +561,14 @@ function G.CG_RegisterClientModelname(ci, modelName, skinName, headModelName, he
 	end
 
 	-- load the animations
-	-- leilei - load one piece animation
-	if ci.onepiece ~= 0 then
-		filename = Q.va("models/playerfs/%s/animation.cfg", modelName)
+	filename = Q.va("models/players/%s/animation.cfg", modelName)
+	if not G.CG_ParseAnimationFile(filename, ci) then
+		filename = Q.va("models/players/characters/%s/animation.cfg", modelName)
 		if not G.CG_ParseAnimationFile(filename, ci) then
 			trap.Print(Q.va("Failed to load animation file %s\n", filename))
-		end
-	else
-		filename = Q.va("models/players/%s/animation.cfg", modelName)
-		if not G.CG_ParseAnimationFile(filename, ci) then
-			filename = Q.va("models/players/characters/%s/animation.cfg", modelName)
-			if not G.CG_ParseAnimationFile(filename, ci) then
-				trap.Print(Q.va("Failed to load animation file %s\n", filename))
-				return false
-			end
+			return false
 		end
 	end
-
-	-- leilei - load eyes
-	filename = Q.va("models/players/%s/eyes.cfg", modelName)
-	G.CG_ParseEyesFile(filename, ci)
 
 	local found
 	found, filename = G.CG_FindClientHeadFile(ci, teamName, headName, headSkinName, "icon", "skin")
@@ -832,7 +687,6 @@ end
 
 function G.CG_CopyClientInfoModel(from, to)
 	to.headOffset[0], to.headOffset[1], to.headOffset[2] = from.headOffset[0], from.headOffset[1], from.headOffset[2]
-	to.eyepos[0], to.eyepos[1], to.eyepos[2] = from.eyepos[0], from.eyepos[1], from.eyepos[2]
 	to.footsteps = from.footsteps
 	to.gender = from.gender
 
@@ -863,12 +717,12 @@ function G.CG_ScanForExistingClientInfo(ci)
 		if match.deferred then
 			continue
 		end
-		if ci.modelName == match.modelName
-			and ci.skinName == match.skinName
-			and ci.headModelName == match.headModelName
-			and ci.headSkinName == match.headSkinName
-			and ci.blueTeam == match.blueTeam
-			and ci.redTeam == match.redTeam
+		if Q.stricmp(ci.modelName, match.modelName) == 0
+			and Q.stricmp(ci.skinName, match.skinName) == 0
+			and Q.stricmp(ci.headModelName, match.headModelName) == 0
+			and Q.stricmp(ci.headSkinName, match.headSkinName) == 0
+			and Q.stricmp(ci.blueTeam, match.blueTeam) == 0
+			and Q.stricmp(ci.redTeam, match.redTeam) == 0
 			and (G.cgs.gametype < C.GT_TEAM or G.cgs.ffa_gt == 1 or ci.team == match.team) then
 			-- this clientinfo is identical, so use it's handles
 			ci.deferred = false
@@ -895,8 +749,8 @@ function G.CG_SetDeferredClientInfo(clientNum, ci)
 		if not match.infoValid or match.deferred then
 			continue
 		end
-		if ci.skinName ~= match.skinName
-			or ci.modelName ~= match.modelName
+		if Q.stricmp(ci.skinName, match.skinName) ~= 0
+			or Q.stricmp(ci.modelName, match.modelName) ~= 0
 			or (isTeamGame() and ci.team ~= match.team) then
 			continue
 		end
@@ -912,7 +766,7 @@ function G.CG_SetDeferredClientInfo(clientNum, ci)
 			if not match.infoValid or match.deferred then
 				continue
 			end
-			if ci.skinName ~= match.skinName or (isTeamGame() and ci.team ~= match.team) then
+			if Q.stricmp(ci.skinName, match.skinName) ~= 0 or (isTeamGame() and ci.team ~= match.team) then
 				continue
 			end
 			ci.deferred = true

@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ]]
--- Luau port of code/cgame/cg_weapons.c (OpenArena gamecode).
--- This part covers C lines 1149-2265.
+-- Luau port of code/cgame/cg_weapons.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1049-1667 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -80,58 +80,9 @@ function G.CG_CalculateWeaponPosition(origin, angles)
 	end
 
 	-- gun angles from bobbing
-	local bobmodel = G.cg_bobmodel.integer
-	if bobmodel ~= 0 then
-		local forward, right, up = Q.vec3(0, 0, 0), Q.vec3(0, 0, 0), Q.vec3(0, 0, 0)
-		local bob: number
-
-		Q.AngleVectors(angles, forward, right, up)
-
-		-- Arc 1
-		if bobmodel == 1 then
-			bob = scale * 2 * 0.05 * cg.bobfracsin * 0.04
-			Q.VectorMA(origin, bob, right, origin)
-
-			bob = math.cos(scale * 0.07 * cg.bobfracsin * 0.05) - math.cos(scale * 0.07 * cg.bobfracsin * 0.1)
-			Q.VectorMA(origin, bob, up, origin)
-		end
-
-		-- Thrust
-		if bobmodel == 2 then
-			bob = scale * 2 * 0.05 * cg.bobfracsin * 0.04
-			Q.VectorMA(origin, bob, forward, origin)
-		end
-
-		-- figure 8
-		if bobmodel == 3 then
-			local thebob = cg.bobcycle2 * (1.0 / 41.0)
-			local scale2 = 0.001 * scale
-			if scale2 < 0 then
-				scale2 *= -1
-			end
-
-			Q.VectorMA(origin, (math.sin(thebob) * 1.5) * scale2, right, origin)
-			Q.VectorMA(origin, (math.sin(thebob * 2) * 0.5) * scale2, up, origin)
-		end
-	else
-		angles[C.ROLL] += scale * cg.bobfracsin * 0.005
-		angles[C.YAW] += scale * cg.bobfracsin * 0.01
-		angles[C.PITCH] += cg.xyspeed * cg.bobfracsin * 0.005
-	end
-
-	-- leilei - fudgeweapon ported directly from quake
-	if G.cg_viewnudge.integer ~= 0 then
-		local vs = G.cg_viewsize.integer
-		if vs == 110 then
-			origin[2] += 1
-		elseif vs == 100 then
-			origin[2] += 2
-		elseif vs == 90 then
-			origin[2] += 1
-		elseif vs == 80 then
-			origin[2] += 0.5
-		end
-	end
+	angles[C.ROLL] += scale * cg.bobfracsin * 0.005
+	angles[C.YAW] += scale * cg.bobfracsin * 0.01
+	angles[C.PITCH] += cg.xyspeed * cg.bobfracsin * 0.005
 
 	-- drop the weapon when landing
 	delta = cg.time - cg.landTime
@@ -142,13 +93,11 @@ function G.CG_CalculateWeaponPosition(origin, angles)
 	end
 
 	-- idle drift
-	if bobmodel == 0 then
-		scale = cg.xyspeed + 40
-		fracsin = math.sin(cg.time * 0.001)
-		angles[C.ROLL] += scale * fracsin * 0.01
-		angles[C.YAW] += scale * fracsin * 0.01
-		angles[C.PITCH] += scale * fracsin * 0.01
-	end
+	scale = cg.xyspeed + 40
+	fracsin = math.sin(cg.time * 0.001)
+	angles[C.ROLL] += scale * fracsin * 0.01
+	angles[C.YAW] += scale * fracsin * 0.01
+	angles[C.PITCH] += scale * fracsin * 0.01
 end
 
 --[[
@@ -180,11 +129,9 @@ function G.CG_LightningBolt(cent, origin)
 	elseif isUs and G.cg_trueLightning.value ~= 0 then
 		-- CPMA "true" lightning
 		local angle = Q.vec3(0, 0, 0)
-		local viewangles = Q.vec3(0, 0, 0)
-		Q.VectorCopy(cg.predictedPlayerState.viewangles, viewangles)
 
 		for i = 0, 2 do
-			local a = cent.lerpAngles[i] - viewangles[i]
+			local a = cent.lerpAngles[i] - cg.refdefViewAngles[i]
 			if a > 180 then
 				a -= 360
 			end
@@ -192,7 +139,7 @@ function G.CG_LightningBolt(cent, origin)
 				a += 360
 			end
 
-			angle[i] = viewangles[i] + a * (1.0 - G.cg_trueLightning.value)
+			angle[i] = cg.refdefViewAngles[i] + a * (1.0 - G.cg_trueLightning.value)
 			if angle[i] < 0 then
 				angle[i] += 360
 			end
@@ -315,96 +262,15 @@ function G.CG_AddWeaponWithPowerups(gun, powerups: number)
 			trap.R_AddRefEntityToScene(gun)
 		end
 	else
-		local shell = G.cg_alternateShell.integer
-		if shell < 2 then -- leilei - skip the shell for the glow
-			trap.R_AddRefEntityToScene(gun)
-		end
+		trap.R_AddRefEntityToScene(gun)
 
 		if bit32.band(powerups, bit32.lshift(1, C.PW_BATTLESUIT)) ~= 0 then
-			if shell > 1 then
-				gun.glow = 1340
-				gun.glowcol = 0xE29000
-			else
-				gun.customShader = cgs.media.battleWeaponShader
-				trap.R_AddRefEntityToScene(gun)
-			end
-		end
-		if bit32.band(powerups, bit32.lshift(1, C.PW_QUAD)) ~= 0 then
-			if shell > 1 then
-				gun.glow = 1338
-				gun.glowcol = 0x0040E2
-			else
-				gun.customShader = cgs.media.quadWeaponShader
-				trap.R_AddRefEntityToScene(gun)
-			end
-		end
-		if shell > 1 then -- NOW add the entity for the glow
+			gun.customShader = cgs.media.battleWeaponShader
 			trap.R_AddRefEntityToScene(gun)
 		end
-	end
-end
-
-local function scaleAxis(axis, s: number)
-	Q.VectorScale(axis[0], s, axis[0])
-	Q.VectorScale(axis[1], s, axis[1])
-	Q.VectorScale(axis[2], s, axis[2])
-end
-
-function G.MuzzleFlashStyleQ1(parent, ps, cent, weaponNum, nonPredictedCent, gun, weapon)
-	local cg = G.cg
-	local angles = Q.vec3(0, 0, 0)
-	local flash = T.refEntity_t()
-	if isBeamWeapon(weaponNum) and bit32.band(nonPredictedCent.currentState.eFlags, C.EF_FIRING) ~= 0 then
-		-- continuous flash
-	else
-		-- impulse flash
-		if cg.time - cent.muzzleFlashTime > 200 and not cent.pe.railgunFlash then
-			return
-		end
-	end
-	Q.VectorCopy(parent.lightingOrigin, flash.lightingOrigin)
-	flash.shadowPlane = parent.shadowPlane
-	flash.renderfx = parent.renderfx
-
-	flash.hModel = weapon.flashModel_type1
-	if flash.hModel == 0 then
-		return
-	end
-	angles[C.YAW] = 0
-	angles[C.PITCH] = 0
-	angles[C.ROLL] = 0 -- don't roll randomly.
-	Q.AnglesToAxis(angles, flash.axis)
-
-	-- downscale hack
-	if cg.time - cent.muzzleFlashTime > 100 then
-		scaleAxis(flash.axis, 1.5)
-	end
-
-	-- colorize the railgun blast
-	if weaponNum == C.WP_RAILGUN then
-		local ci = G.cgs.clientinfo[cent.currentState.clientNum]
-		flash.shaderRGBA[0] = 255 * ci.color1[0]
-		flash.shaderRGBA[1] = 255 * ci.color1[1]
-		flash.shaderRGBA[2] = 255 * ci.color1[2]
-	end
-
-	G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
-
-	trap.R_AddRefEntityToScene(flash)
-
-	if ps ~= nil or cg.renderingThirdPerson or cent.currentState.number ~= cg.predictedPlayerState.clientNum then
-		-- add lightning bolt
-		if cg.time - cent.muzzleFlashTime < 100 and not cent.pe.railgunFlash then
-			G.CG_LightningBolt(nonPredictedCent, flash.origin)
-		end
-
-		-- add rail trail
-		G.CG_SpawnRailTrail(cent, flash.origin)
-
-		if cg.time - cent.muzzleFlashTime < 100 then -- flash for 0.1 sec
-			if anyDlight(weapon) then
-				trap.R_AddLightToScene(parent.origin, 300, 0.95, 0.95, 0.95) -- mono lighting
-			end
+		if bit32.band(powerups, bit32.lshift(1, C.PW_QUAD)) ~= 0 then
+			gun.customShader = cgs.media.quadWeaponShader
+			trap.R_AddRefEntityToScene(gun)
 		end
 	end
 end
@@ -501,292 +367,12 @@ function G.CG_AddPlayerWeapon(parent, ps, cent, team)
 	end
 
 	-- make sure we aren't looking at cg.predictedPlayerEntity for LG
-	local nonPredictedCent = G.cg_entities[cent.currentState.number]
-
-	-- if the index of the nonPredictedCent is not the same as the clientNum
-	-- then this is a fake player (like on teh single player podiums), so
-	-- go ahead and use the cent
-	if cent.currentState.number ~= cent.currentState.clientNum then
-		nonPredictedCent = cent
-	end
+	local nonPredictedCent = G.cg_entities[cent.currentState.clientNum]
 
 	-- add the flash
-	-- leilei - split into styles: 1 Q3 (default), 2 q1, 3 fake99, 4 64, 5 anime, 6 fake2003
-	local style = G.cg_muzzleflashStyle.integer
-	local continuous = isBeamWeapon(weaponNum) and bit32.band(nonPredictedCent.currentState.eFlags, C.EF_FIRING) ~= 0
-	local thirdOrOther = ps ~= nil or cg.renderingThirdPerson or cent.currentState.number ~= cg.predictedPlayerState.clientNum
-	local isOwnFirst = cent.currentState.number == cg.snap.ps.clientNum and not cg.renderingThirdPerson
-
-	if style == 2 then
-		G.MuzzleFlashStyleQ1(parent, ps, cent, weaponNum, nonPredictedCent, gun, weapon)
-		return
-	elseif style == 3 then -- "fake '99"
-		if not continuous then
-			if cg.time - cent.muzzleFlashTime > 120 and not cent.pe.railgunFlash then
-				return
-			end
-		end
-
-		local flash = T.refEntity_t()
-		Q.VectorCopy(parent.lightingOrigin, flash.lightingOrigin)
-		flash.shadowPlane = parent.shadowPlane
-		flash.renderfx = parent.renderfx
-
-		if isOwnFirst then
-			flash.hModel = weapon.flashModel_type2
-		else
-			flash.hModel = weapon.flashModel_type2a
-		end
-
-		if flash.hModel == 0 then
-			return
-		end
-		angles[C.YAW] = 0
-		angles[C.PITCH] = 0
-		angles[C.ROLL] = Q.crandom() * 360
-		if isOwnFirst then
-			-- don't roll the first person
-			angles[C.ROLL] = 0
-		end
-
-		Q.AnglesToAxis(angles, flash.axis)
-
-		G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
-
-		trap.R_AddRefEntityToScene(flash)
-
-		if thirdOrOther then
-			-- add lightning bolt
-			if cg.time - cent.muzzleFlashTime < 100 and not cent.pe.railgunFlash then
-				G.CG_LightningBolt(nonPredictedCent, flash.origin)
-			end
-
-			-- add rail trail
-			G.CG_SpawnRailTrail(cent, flash.origin)
-
-			if anyDlight(weapon) then
-				trap.R_AddLightToScene(
-					parent.origin,
-					150,
-					weapon.flashDlightColor[0],
-					weapon.flashDlightColor[1],
-					weapon.flashDlightColor[2]
-				)
-			end
-		end
-		return
-	elseif style == 4 then -- "64". alpha muzzle sprites only, is a shader sequence
-		if not continuous then
-			if cg.time - cent.muzzleFlashTime > 240 and not cent.pe.railgunFlash then
-				return
-			end
-		end
-
-		local flash = T.refEntity_t()
-		Q.VectorCopy(parent.lightingOrigin, flash.lightingOrigin)
-		flash.shadowPlane = parent.shadowPlane
-		flash.renderfx = parent.renderfx
-		flash.hModel = weapon.flashModel_type3
-
-		if flash.hModel == 0 then
-			return
-		end
-		angles[C.YAW] = 0
-		angles[C.PITCH] = 0
-		angles[C.ROLL] = 0
-
-		Q.AnglesToAxis(angles, flash.axis)
-		flash.shaderTime = cent.muzzleFlashTime / 1000.0
-
-		G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
-
-		trap.R_AddRefEntityToScene(flash)
-
-		if thirdOrOther then
-			if cg.time - cent.muzzleFlashTime < 100 and not cent.pe.railgunFlash then
-				G.CG_LightningBolt(nonPredictedCent, flash.origin)
-			end
-
-			G.CG_SpawnRailTrail(cent, flash.origin)
-
-			if anyDlight(weapon) then
-				trap.R_AddLightToScene(
-					parent.origin,
-					150,
-					weapon.flashDlightColor[0],
-					weapon.flashDlightColor[1],
-					weapon.flashDlightColor[2]
-				)
-			end
-		end
-		return
-	elseif style == 5 then -- anime
-		if not continuous then
-			if cg.time - cent.muzzleFlashTime > 400 and not cent.pe.railgunFlash then
-				return
-			end
-		end
-
-		local fadeout = (400 - (cg.time - cent.muzzleFlashTime)) * 0.001
-		if fadeout < 0 then
-			return -- if we faded, we don't draw. ok
-		end
-
-		local flash = T.refEntity_t()
-		Q.VectorCopy(parent.lightingOrigin, flash.lightingOrigin)
-		flash.shadowPlane = parent.shadowPlane
-		flash.renderfx = parent.renderfx
-
-		if cg.time - cent.muzzleFlashTime < 5 then
-			-- hopefully no one will notice the jitter at this rate
-			cent.startroll = Q.crandom() * 720
-		end
-
-		flash.hModel = weapon.flashModel_type4
-		if flash.hModel == 0 then
-			return
-		end
-		angles[C.YAW] = 0
-		angles[C.PITCH] = 0
-		angles[C.ROLL] = cent.startroll
-
-		Q.AnglesToAxis(angles, flash.axis)
-
-		-- Expand, and fade
-		do
-			local eh: number
-			if isOwnFirst then
-				eh = (cg.time - cent.muzzleFlashTime) * 0.003 + 0.2
-			else
-				eh = (cg.time - cent.muzzleFlashTime) * 0.007 + 0.6
-			end
-			scaleAxis(flash.axis, eh)
-
-			flash.shaderRGBA[0] = 255
-			flash.shaderRGBA[1] = 255
-			flash.shaderRGBA[2] = 255
-
-			-- leilei - scale hack, flip the flash
-			if cent.startroll > 360 then
-				Q.VectorScale(flash.axis[1], -1, flash.axis[1])
-			end
-		end
-
-		flash.shaderTime = cent.muzzleFlashTime / 1000.0
-
-		-- colorize the railgun blast
-		if weaponNum == C.WP_RAILGUN then
-			local ci = G.cgs.clientinfo[cent.currentState.clientNum]
-			flash.shaderRGBA[0] = 255 * ci.color1[0]
-			flash.shaderRGBA[1] = 255 * ci.color1[1]
-			flash.shaderRGBA[2] = 255 * ci.color1[2]
-		end
-
-		G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
-
-		trap.R_AddRefEntityToScene(flash)
-
-		if thirdOrOther then
-			if cg.time - cent.muzzleFlashTime < 100 and not cent.pe.railgunFlash then
-				G.CG_LightningBolt(nonPredictedCent, flash.origin)
-			end
-			G.CG_SpawnRailTrail(cent, flash.origin)
-			if anyDlight(weapon) then
-				trap.R_AddLightToScene(
-					flash.origin,
-					500 * fadeout,
-					weapon.flashDlightColor[0] * (fadeout * 4),
-					weapon.flashDlightColor[1] * (fadeout * 4),
-					weapon.flashDlightColor[2] * (fadeout * 4)
-				)
-			end
-		end
-		return
-	elseif style == 6 then -- "fake2003"
-		if not continuous then
-			if cg.time - cent.muzzleFlashTime > 200 and not cent.pe.railgunFlash then
-				return
-			end
-		end
-
-		local fadeout = (200 - (cg.time - cent.muzzleFlashTime)) * 0.001
-		if fadeout < 0 then
-			return -- if we faded, we don't draw. ok
-		end
-
-		local flash = T.refEntity_t()
-		Q.VectorCopy(parent.lightingOrigin, flash.lightingOrigin)
-		flash.shadowPlane = parent.shadowPlane
-		flash.renderfx = parent.renderfx
-
-		if cg.time - cent.muzzleFlashTime < 5 then
-			cent.startroll = Q.crandom() * 361
-		end
-
-		if isOwnFirst then
-			flash.hModel = weapon.flashModel_type5
-		else
-			flash.hModel = weapon.flashModel_type5a
-		end
-		if flash.hModel == 0 then
-			return
-		end
-		angles[C.YAW] = 0
-		angles[C.PITCH] = 0
-		if isOwnFirst then
-			angles[C.ROLL] = 0
-		else
-			angles[C.ROLL] = cent.startroll
-		end
-
-		Q.AnglesToAxis(angles, flash.axis)
-
-		-- Expand, and fade
-		do
-			local eh = (cg.time - cent.muzzleFlashTime) * 0.005 + 0.6
-			scaleAxis(flash.axis, eh)
-
-			flash.shaderRGBA[0] = 255 * fadeout
-			flash.shaderRGBA[1] = 255 * fadeout
-			flash.shaderRGBA[2] = 255 * fadeout
-		end
-
-		flash.shaderTime = cent.muzzleFlashTime / 1000.0
-
-		-- colorize the railgun blast
-		if weaponNum == C.WP_RAILGUN then
-			local ci = G.cgs.clientinfo[cent.currentState.clientNum]
-			flash.shaderRGBA[0] = 255 * ci.color1[0] * fadeout
-			flash.shaderRGBA[1] = 255 * ci.color1[1] * fadeout
-			flash.shaderRGBA[2] = 255 * ci.color1[2] * fadeout
-		end
-
-		G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
-
-		trap.R_AddRefEntityToScene(flash)
-
-		if thirdOrOther then
-			if cg.time - cent.muzzleFlashTime < 100 and not cent.pe.railgunFlash then
-				G.CG_LightningBolt(nonPredictedCent, flash.origin)
-			end
-
-			G.CG_SpawnRailTrail(cent, flash.origin)
-
-			if anyDlight(weapon) then
-				trap.R_AddLightToScene(
-					parent.origin,
-					200,
-					weapon.flashDlightColor[0] * fadeout,
-					weapon.flashDlightColor[1] * fadeout,
-					weapon.flashDlightColor[2] * fadeout
-				)
-			end
-		end
-		return
-	end
-
-	-- q3 - don't touch this!
-	if not continuous then
+	if isBeamWeapon(weaponNum) and bit32.band(nonPredictedCent.currentState.eFlags, C.EF_FIRING) ~= 0 then
+		-- continuous flash
+	else
 		-- impulse flash
 		if cg.time - cent.muzzleFlashTime > C.MUZZLE_FLASH_TIME and not cent.pe.railgunFlash then
 			return
@@ -814,11 +400,11 @@ function G.CG_AddPlayerWeapon(parent, ps, cent, team)
 		flash.shaderRGBA[1] = 255 * ci.color1[1]
 		flash.shaderRGBA[2] = 255 * ci.color1[2]
 	end
-	G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
 
+	G.CG_PositionRotatedEntityOnTag(flash, gun, weapon.weaponModel, "tag_flash")
 	trap.R_AddRefEntityToScene(flash)
 
-	if thirdOrOther then
+	if ps ~= nil or cg.renderingThirdPerson or cent.currentState.number ~= cg.predictedPlayerState.clientNum then
 		-- add lightning bolt
 		G.CG_LightningBolt(nonPredictedCent, flash.origin)
 

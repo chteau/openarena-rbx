@@ -19,8 +19,8 @@ along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_players.c (OpenArena gamecode).
--- This part covers C lines 1471-3187.
+-- Luau port of code/cgame/cg_players.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1280-2624 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -31,10 +31,6 @@ local BG = require(script.Parent.Parent.adapters.BG)
 
 local band = bit32.band
 local bor = bit32.bor
-
-G.eyeat = Q.vec3(0, 0, 0)
-G.headang = G.headang or Q.vec3(0, 0, 0)
-G.headpos = G.headpos or Q.vec3(0, 0, 0)
 
 G.movementOffsets = { [0] = 0, 22, 45, -22, 0, 22, -45, -22 }
 G.SHADOW_DISTANCE = 128
@@ -73,7 +69,7 @@ function G.CG_SwingAngles(destination, swingTolerance, clampTolerance, speed, an
 			swinging = false
 		end
 		angle = Q.AngleMod(angle + move)
-	else
+	elseif swing < 0 then
 		move = G.cg.frametime * scale * -speed
 		if move <= swing then
 			move = swing
@@ -107,7 +103,6 @@ function G.CG_AddPainTwitch(cent, torsoAngles)
 end
 
 function G.CG_PlayerAngles(cent, legs, torso, head)
-	local cg = G.cg
 	local legsAngles = Q.vec3(0, 0, 0)
 	local torsoAngles = Q.vec3(0, 0, 0)
 	local headAngles = Q.vec3(0, 0, 0)
@@ -115,26 +110,12 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 	local velocity = Q.vec3(0, 0, 0)
 	local speed
 	local dir, clientNum
-	local ci = nil
-	local camereyes
+	local ci
 
 	Q.VectorCopy(cent.lerpAngles, headAngles)
 	headAngles[C.YAW] = Q.AngleMod(headAngles[C.YAW])
 
-	camereyes = 0
-	if cent.currentState.number == cg.snap.ps.clientNum then
-		camereyes = 1
-	end
-
-	cent.newcamrunning = 0
-	if G.cg_cameramode.integer == 1 then
-		if band(cent.currentState.torsoAnim, ANIM_MASK) ~= C.TORSO_ATTACK then
-			cent.newcamrunning = 1
-		else
-			cent.newcamrunning = 0
-		end
-	end
-
+	-- allow yaw to drift a bit
 	local legsAnim = band(cent.currentState.legsAnim, ANIM_MASK)
 	local torsoAnim = band(cent.currentState.torsoAnim, ANIM_MASK)
 	if legsAnim ~= C.LEGS_IDLE or (torsoAnim ~= C.TORSO_STAND and torsoAnim ~= C.TORSO_STAND2) then
@@ -143,18 +124,7 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 		cent.pe.legs.yawing = true
 	end
 
-	if cent.newcamrunning ~= 0 then
-		Q.VectorCopy(cent.currentState.pos.trDelta, velocity)
-		speed = Q.VectorNormalize(velocity)
-		if speed ~= 0 then
-			local veel = Q.vec3(0, 0, 0)
-			local fwad = Q.vec3(0, 0, 0)
-			local rait = Q.vec3(0, 0, 0)
-			Q.AngleVectors(veel, velocity, fwad, rait)
-			speed *= 0.05
-		end
-	end
-
+	-- adjust legs for movement dir
 	if band(cent.currentState.eFlags, C.EF_DEAD) ~= 0 then
 		dir = 0
 	else
@@ -163,38 +133,24 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 			G.CG_Error("Bad player movement angle")
 		end
 	end
-
 	legsAngles[C.YAW] = headAngles[C.YAW] + G.movementOffsets[dir]
 	torsoAngles[C.YAW] = headAngles[C.YAW] + 0.25 * G.movementOffsets[dir]
 
 	local pe = cent.pe
-	if G.cg_cameramode.integer == 1 then
-		pe.torso.yawAngle, pe.torso.yawing = G.CG_SwingAngles(torsoAngles[C.YAW], 180, 90, G.cg_swingSpeed.value, pe.torso.yawAngle, pe.torso.yawing)
-		pe.legs.yawAngle, pe.legs.yawing = G.CG_SwingAngles(legsAngles[C.YAW], 180, 90, G.cg_swingSpeed.value, pe.legs.yawAngle, pe.legs.yawing)
-	else
-		pe.torso.yawAngle, pe.torso.yawing = G.CG_SwingAngles(torsoAngles[C.YAW], 25, 90, G.cg_swingSpeed.value, pe.torso.yawAngle, pe.torso.yawing)
-		pe.legs.yawAngle, pe.legs.yawing = G.CG_SwingAngles(legsAngles[C.YAW], 40, 90, G.cg_swingSpeed.value, pe.legs.yawAngle, pe.legs.yawing)
-	end
+	pe.torso.yawAngle, pe.torso.yawing = G.CG_SwingAngles(torsoAngles[C.YAW], 25, 90, G.cg_swingSpeed.value, pe.torso.yawAngle, pe.torso.yawing)
+	pe.legs.yawAngle, pe.legs.yawing = G.CG_SwingAngles(legsAngles[C.YAW], 40, 90, G.cg_swingSpeed.value, pe.legs.yawAngle, pe.legs.yawing)
 
 	torsoAngles[C.YAW] = pe.torso.yawAngle
 	legsAngles[C.YAW] = pe.legs.yawAngle
 
+	-- only show a fraction of the pitch angle in the torso
 	if headAngles[C.PITCH] > 180 then
 		dest = (-360 + headAngles[C.PITCH]) * 0.75
 	else
 		dest = headAngles[C.PITCH] * 0.75
 	end
-	if G.cg_cameramode.integer == 1 then
-		pe.torso.pitchAngle, pe.torso.pitching = G.CG_SwingAngles(dest, 15, 30, 0.1, pe.torso.pitchAngle, pe.torso.pitching)
-
-		headAngles[C.PITCH] = pe.torso.pitchAngle
-		headAngles[C.YAW] = torsoAngles[C.YAW] + 0.25 * G.movementOffsets[dir]
-		torsoAngles[C.PITCH] = pe.torso.pitchAngle
-	else
-		pe.torso.pitchAngle, pe.torso.pitching = G.CG_SwingAngles(dest, 15, 30, 0.1, pe.torso.pitchAngle, pe.torso.pitching)
-
-		torsoAngles[C.PITCH] = pe.torso.pitchAngle
-	end
+	pe.torso.pitchAngle, pe.torso.pitching = G.CG_SwingAngles(dest, 15, 30, 0.1, pe.torso.pitchAngle, pe.torso.pitching)
+	torsoAngles[C.PITCH] = pe.torso.pitchAngle
 
 	clientNum = cent.currentState.clientNum
 	if clientNum >= 0 and clientNum < C.MAX_CLIENTS then
@@ -204,6 +160,7 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 		end
 	end
 
+	-- lean towards the direction of travel
 	Q.VectorCopy(cent.currentState.pos.trDelta, velocity)
 	speed = Q.VectorNormalize(velocity)
 	if speed ~= 0 then
@@ -223,27 +180,15 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 	clientNum = cent.currentState.clientNum
 	if clientNum >= 0 and clientNum < C.MAX_CLIENTS then
 		ci = G.cgs.clientinfo[clientNum]
-
 		if ci.fixedlegs then
 			legsAngles[C.YAW] = torsoAngles[C.YAW]
 			legsAngles[C.PITCH] = 0.0
 			legsAngles[C.ROLL] = 0.0
 		end
-
-		-- leilei - don't lean for our new strafe animations
-		if legsAnim == C.LEGS_STRAFE_LEFT or legsAnim == C.LEGS_STRAFE_RIGHT then
-			legsAngles[C.YAW] = torsoAngles[C.YAW]
-			legsAngles[C.ROLL] = 0.0
-		end
 	end
 
+	-- pain twitch
 	G.CG_AddPainTwitch(cent, torsoAngles)
-
-	if camereyes ~= 0 then
-		cent.eyesAngles[C.YAW] = headAngles[C.YAW]
-		cent.eyesAngles[C.PITCH] = headAngles[C.PITCH]
-		cent.eyesAngles[C.ROLL] = headAngles[C.ROLL]
-	end
 
 	-- pull the angles back out of the hierarchial chain
 	Q.AnglesSubtract(headAngles, torsoAngles, headAngles)
@@ -251,10 +196,6 @@ function G.CG_PlayerAngles(cent, legs, torso, head)
 	Q.AnglesToAxis(legsAngles, legs)
 	Q.AnglesToAxis(torsoAngles, torso)
 	Q.AnglesToAxis(headAngles, head)
-
-	if ci ~= nil then
-		Q.VectorCopy(ci.eyepos, cent.pe.eyepos)
-	end
 end
 
 function G.CG_HasteTrail(cent)
@@ -285,6 +226,7 @@ function G.CG_HasteTrail(cent)
 		0,
 		G.cgs.media.hastePuffShader)
 
+	-- use the optimized local entity add
 	smoke.leType = C.LE_SCALE_FADE
 end
 
@@ -391,6 +333,7 @@ function G.CG_PlayerFlag(cent, hSkin, torso)
 	local updateangles
 	local angle, d
 
+	-- show the flag pole model
 	pole.hModel = media.flagPoleModel
 	Q.VectorCopy(torso.lightingOrigin, pole.lightingOrigin)
 	pole.shadowPlane = torso.shadowPlane
@@ -398,11 +341,14 @@ function G.CG_PlayerFlag(cent, hSkin, torso)
 	G.CG_PositionEntityOnTag(pole, torso, torso.hModel, "tag_flag")
 	trap.R_AddRefEntityToScene(pole)
 
+	-- show the flag model
 	flag.hModel = media.flagFlapModel
 	flag.customSkin = hSkin
 	Q.VectorCopy(torso.lightingOrigin, flag.lightingOrigin)
 	flag.shadowPlane = torso.shadowPlane
 	flag.renderfx = torso.renderfx
+
+	Q.VectorClear(angles)
 
 	updateangles = false
 	legsAnim = band(cent.currentState.legsAnim, ANIM_MASK)
@@ -445,11 +391,14 @@ function G.CG_PlayerFlag(cent, hSkin, torso)
 				angles[C.YAW] -= 360
 			end
 
+			-- change the yaw angle
 			cent.pe.flag.yawAngle, cent.pe.flag.yawing = G.CG_SwingAngles(angles[C.YAW], 25, 90, 0.15, cent.pe.flag.yawAngle, cent.pe.flag.yawing)
 		end
 	end
 
+	-- set the yaw angle
 	angles[C.YAW] = cent.pe.flag.yawAngle
+	-- lerp the flag animation frames
 	local ci = G.cgs.clientinfo[cent.currentState.clientNum]
 	G.CG_RunLerpFrame(ci, cent.pe.flag, flagAnim, 1)
 	flag.oldframe = cent.pe.flag.oldFrame
@@ -467,9 +416,6 @@ function G.CG_PlayerTokens(cent, renderfx)
 	local tokens, angle
 	local dir = Q.vec3(0, 0, 0)
 	local origin = Q.vec3(0, 0, 0)
-	if cent.currentState.number >= C.MAX_CLIENTS then
-		return
-	end
 	local trail = cg.skulltrails[cent.currentState.number]
 	tokens = cent.currentState.generic1
 	if tokens == 0 then
@@ -595,10 +541,6 @@ function G.CG_PlayerFloatSprite(cent, shader)
 	trap.R_AddRefEntityToScene(ent)
 end
 
--- leilei - name over the head is MISSIONPACK-only; nothing to do in baseoa
-function G.CG_FloatName(cent)
-end
-
 function G.CG_PlayerSprites(cent)
 	local cg = G.cg
 	local media = G.cgs.media
@@ -648,23 +590,10 @@ function G.CG_PlayerSprites(cent)
 	if band(eFlags, C.EF_DEAD) == 0
 		and cg.snap.ps.persistant[C.PERS_TEAM] == team
 		and G.cgs.gametype >= C.GT_TEAM and G.cgs.ffa_gt ~= 1 then
-		if G.cg_drawFriend.integer == 2 then -- leilei - name tags
-			cg.headon[cent.currentState.clientNum] = 0
-			Q.VectorCopy(cent.headpos, cg.headpos[cent.currentState.clientNum])
-			cg.headent[cent.currentState.clientNum] = T.copy(cent)
-		elseif G.cg_drawFriend.integer ~= 0 then
+		if G.cg_drawFriend.integer ~= 0 then
 			G.CG_PlayerFloatSprite(cent, media.friendShader)
 		end
-
 		return
-	end
-end
-
-function G.CG_PlayerSpritesOverWorld(cent)
-	local cg = G.cg
-	if cg.headon[cent.currentState.clientNum] == 0 then
-		G.CG_FloatName(cent)
-		cg.headon[cent.currentState.clientNum] = 1
 	end
 end
 
@@ -773,7 +702,6 @@ end
 function G.CG_AddRefEntityWithPowerups(ent, state, team, isMissile)
 	local media = G.cgs.media
 	local cgs = G.cgs
-	local alt = G.cg_alternateShell.integer
 
 	if band(state.powerups, bit32.lshift(1, C.PW_INVIS)) ~= 0 then
 		if band(cgs.dmflags, C.DF_INVIS) == 0 then
@@ -781,69 +709,34 @@ function G.CG_AddRefEntityWithPowerups(ent, state, team, isMissile)
 			trap.R_AddRefEntityToScene(ent)
 		end
 	else
-		if alt < 2 then -- leilei - skip the shell for the glow
-			trap.R_AddRefEntityToScene(ent)
-		end
+		trap.R_AddRefEntityToScene(ent)
 		if not isMissile and band(cgs.dmflags, C.DF_PLAYER_OVERLAY) ~= 0 and band(state.eFlags, C.EF_DEAD) == 0 then
-			if alt > 1 then
-				ent.glow = 1337
-				if team == C.TEAM_RED then
-					ent.glowcol = 0xF80A85
-				elseif team == C.TEAM_BLUE then
-					ent.glowcol = 0x0585FD
-				else
-					ent.glowcol = 0xA0A0A0
-				end
+			if team == C.TEAM_RED then
+				ent.customShader = media.redOverlay
+			elseif team == C.TEAM_BLUE then
+				ent.customShader = media.blueOverlay
 			else
-				if team == C.TEAM_RED then
-					ent.customShader = media.redOverlay
-				elseif team == C.TEAM_BLUE then
-					ent.customShader = media.blueOverlay
-				else
-					ent.customShader = media.neutralOverlay
-				end
-				trap.R_AddRefEntityToScene(ent)
+				ent.customShader = media.neutralOverlay
 			end
+			trap.R_AddRefEntityToScene(ent)
 		end
 
 		if band(state.powerups, bit32.lshift(1, C.PW_QUAD)) ~= 0 then
-			if alt > 1 then
-				ent.glow = 1338
-				if team == C.TEAM_RED then
-					ent.glowcol = 0xFF3040
-				else
-					ent.glowcol = 0x0040E2
-				end
+			if team == C.TEAM_RED then
+				ent.customShader = media.redQuadShader
 			else
-				if team == C.TEAM_RED then
-					ent.customShader = media.redQuadShader
-				else
-					ent.customShader = media.quadShader
-				end
-				trap.R_AddRefEntityToScene(ent)
+				ent.customShader = media.quadShader
 			end
+			trap.R_AddRefEntityToScene(ent)
 		end
 		if band(state.powerups, bit32.lshift(1, C.PW_REGEN)) ~= 0 then
 			if math.fmod(Q.idiv(G.cg.time, 100), 10) == 1 then
-				if alt > 1 then
-					ent.glow = 1337
-					ent.glowcol = 0xFF6080
-				else
-					ent.customShader = media.regenShader
-					trap.R_AddRefEntityToScene(ent)
-				end
-			end
-		end
-		if band(state.powerups, bit32.lshift(1, C.PW_BATTLESUIT)) ~= 0 then
-			if alt > 1 then
-				ent.glow = 1340
-				ent.glowcol = 0xE29000
-			else
-				ent.customShader = media.battleSuitShader
+				ent.customShader = media.regenShader
 				trap.R_AddRefEntityToScene(ent)
 			end
 		end
-		if alt > 1 then -- NOW add the entity for the glow
+		if band(state.powerups, bit32.lshift(1, C.PW_BATTLESUIT)) ~= 0 then
+			ent.customShader = media.battleSuitShader
 			trap.R_AddRefEntityToScene(ent)
 		end
 	end
@@ -884,22 +777,6 @@ local function addSkull(skull, hModel)
 	trap.R_AddRefEntityToScene(skull)
 end
 
-local function eyeLook(cent, head)
-	local v = Q.vec3(0, 0, 0)
-	local forwaad = Q.vec3(0, 0, 0)
-	local orrg = Q.vec3(0, 0, 0)
-	local trace = T.trace_t()
-	Q.VectorCopy(cent.lerpAngles, v)
-	Q.AngleVectors(v, forwaad, nil, nil)
-	Q.VectorMA(cent.lerpOrigin, 1024, forwaad, v)
-	Q.VectorCopy(head.origin, orrg)
-	G.CG_Trace(trace, orrg, nil, nil, v, -1, C.CONTENTS_SOLID)
-	if trace.fraction < 1 then
-		Q.VectorCopy(trace.endpos, v) -- look closer
-	end
-	Q.VectorCopy(v, head.eyelook)
-end
-
 function G.CG_Player(cent)
 	local cg = G.cg
 	local cgs = G.cgs
@@ -911,8 +788,10 @@ function G.CG_Player(cent)
 	local t, c, angle
 	local dir = Q.vec3(0, 0, 0)
 	local angles = Q.vec3(0, 0, 0)
-	local camereyes = 0
 
+	-- the client number is stored in clientNum.  It can't be derived
+	-- from the entity number, because a single client may have
+	-- multiple corpses on the level using the same clientinfo
 	clientNum = cent.currentState.clientNum
 	if clientNum < 0 or clientNum >= C.MAX_CLIENTS then
 		G.CG_Error("Bad clientNum on player entity")
@@ -925,11 +804,15 @@ function G.CG_Player(cent)
 		return
 	end
 
+	-- get the player model information
 	renderfx = 0
 	if cent.currentState.number == cg.snap.ps.clientNum then
-		camereyes = 1
 		if not cg.renderingThirdPerson then
-			renderfx = C.RF_THIRD_PERSON
+			renderfx = C.RF_THIRD_PERSON -- only draw in mirrors
+		else
+			if G.cg_cameraMode.integer ~= 0 then
+				return
+			end
 		end
 	end
 
@@ -937,47 +820,38 @@ function G.CG_Player(cent)
 	local torso = T.refEntity_t()
 	local head = T.refEntity_t()
 
+	-- get the rotation information
 	G.CG_PlayerAngles(cent, legs.axis, torso.axis, head.axis)
 
+	-- get the animation state (after rotation, to allow feet shuffle)
 	legs.oldframe, legs.frame, legs.backlerp, torso.oldframe, torso.frame, torso.backlerp = G.CG_PlayerAnimation(cent)
 
+	-- add the talk baloon or disconnect icon
 	G.CG_PlayerSprites(cent)
 
+	-- add the shadow
 	shadow, shadowPlane = G.CG_PlayerShadow(cent)
 
+	-- add a water splash if partially in and out of water
 	G.CG_PlayerSplash(cent)
 
 	if G.cg_shadows.integer == 3 and shadow then
 		renderfx = bor(renderfx, C.RF_SHADOW_PLANE)
 	end
-	renderfx = bor(renderfx, C.RF_LIGHTING_ORIGIN)
+	renderfx = bor(renderfx, C.RF_LIGHTING_ORIGIN) -- use the same origin for all
 	if cgs.gametype == C.GT_HARVESTER then
 		G.CG_PlayerTokens(cent, renderfx)
 	end
 
 	-- add the legs
 	legs.hModel = ci.legsModel
-	if ci.onepiece == 0 then
-		legs.customSkin = ci.legsSkin
-	end
+	legs.customSkin = ci.legsSkin
 
 	Q.VectorCopy(cent.lerpOrigin, legs.origin)
 	Q.VectorCopy(cent.lerpOrigin, legs.lightingOrigin)
-
-	-- leilei - q scale hack
-	if G.cg_enableQ.integer ~= 0 then
-		Q.VectorScale(legs.axis[0], C.QUACK_SCALE, legs.axis[0])
-		Q.VectorScale(legs.axis[1], C.QUACK_SCALE, legs.axis[1])
-		Q.VectorScale(legs.axis[2], C.QUACK_SCALE, legs.axis[2])
-	end
-
 	legs.shadowPlane = shadowPlane
 	legs.renderfx = renderfx
 	Q.VectorCopy(legs.origin, legs.oldorigin) -- don't positionally lerp at all
-
-	if G.cg_cameraEyes.integer ~= 0 then
-		legs.renderfx = band(legs.renderfx, C.RF_FIRST_PERSON)
-	end
 
 	G.CG_AddRefEntityWithPowerups(legs, cent.currentState, ci.team, false)
 
@@ -986,57 +860,7 @@ function G.CG_Player(cent)
 		return
 	end
 
-	if ci.onepiece ~= 0 then
-		head.hModel = ci.headModel
-
-		if head.hModel == 0 then
-			return
-		end
-		head.customSkin = ci.headSkin
-
-		Q.VectorCopy(cent.lerpOrigin, head.lightingOrigin)
-
-		G.CG_PositionRotatedEntityOnTag(head, legs, ci.legsModel, "tag_head")
-
-		if camereyes ~= 0 then
-			cent.eyesOrigin[0] = head.origin[0]
-			cent.eyesOrigin[1] = head.origin[1]
-			cent.eyesOrigin[2] = head.origin[2]
-			if G.cg_cameraEyes.integer == 3 then
-				Q.vectoangles(head.axis[0], G.headang)
-			elseif G.cg_cameraEyes.integer == 2 then
-				Q.vectoangles(head.axis[0], G.headang)
-				G.headang[1] = cent.lerpAngles[1]
-			else
-				Q.VectorCopy(cent.lerpAngles, G.headang)
-			end
-
-			if G.cg_cameraEyes.integer ~= 0 then
-				Q.VectorCopy(head.origin, cent.eyesOrigin)
-
-				Q.VectorSubtract(cent.eyesOrigin, cent.lerpOrigin, cent.eyesOrigin)
-				Q.VectorCopy(cent.eyesOrigin, G.headpos)
-			end
-		end
-
-		Q.VectorCopy(cent.pe.eyepos, head.eyepos[0])
-
-		eyeLook(cent, head)
-
-		head.shadowPlane = shadowPlane
-		head.renderfx = renderfx
-
-		if G.cg_cameraEyes.integer == 2 or G.cg_cameraEyes.integer == 3 then
-			head.renderfx = band(head.renderfx, C.RF_FIRST_PERSON)
-		end
-		G.CG_AddRefEntityWithPowerups(head, cent.currentState, ci.team, false)
-
-		G.CG_BreathPuffs(cent, head)
-
-		G.CG_DustTrail(cent)
-		return
-	end
-
+	-- add the torso
 	torso.hModel = ci.torsoModel
 	if torso.hModel == 0 then
 		return
@@ -1050,9 +874,6 @@ function G.CG_Player(cent)
 
 	torso.shadowPlane = shadowPlane
 	torso.renderfx = renderfx
-	if G.cg_cameraEyes.integer ~= 0 then
-		torso.renderfx = band(torso.renderfx, C.RF_FIRST_PERSON)
-	end
 
 	G.CG_AddRefEntityWithPowerups(torso, cent.currentState, ci.team, false)
 
@@ -1170,8 +991,6 @@ function G.CG_Player(cent)
 	if band(powerups, bit32.lshift(1, C.PW_INVULNERABILITY)) ~= 0 or cg.time - ci.invulnerabilityStopTime < 250 then
 		local powerup = T.copy(torso)
 		powerup.hModel = media.invulnerabilityPowerupModel
-		powerup.frame = 0
-		powerup.oldframe = 0
 		powerup.customSkin = 0
 		-- always draw
 		powerup.renderfx = band(powerup.renderfx, bit32.bnot(C.RF_THIRD_PERSON))
@@ -1194,8 +1013,6 @@ function G.CG_Player(cent)
 	if ci.medkitUsageTime ~= 0 and t < 500 then
 		local powerup = T.copy(torso)
 		powerup.hModel = media.medkitUsageModel
-		powerup.frame = 0
-		powerup.oldframe = 0
 		powerup.customSkin = 0
 		-- always draw
 		powerup.renderfx = band(powerup.renderfx, bit32.bnot(C.RF_THIRD_PERSON))
@@ -1228,29 +1045,6 @@ function G.CG_Player(cent)
 	Q.VectorCopy(cent.lerpOrigin, head.lightingOrigin)
 
 	G.CG_PositionRotatedEntityOnTag(head, torso, ci.torsoModel, "tag_head")
-	Q.VectorCopy(head.origin, cent.headpos) -- leilei - copy this position so names/bubbles can work
-
-	if camereyes ~= 0 then
-		cent.eyesOrigin[0] = head.origin[0]
-		cent.eyesOrigin[1] = head.origin[1]
-		cent.eyesOrigin[2] = head.origin[2]
-		if G.cg_cameraEyes.integer == 2 then
-			Q.vectoangles(head.axis[0], G.headang)
-		else
-			Q.VectorCopy(cent.lerpAngles, G.headang)
-		end
-
-		if G.cg_cameraEyes.integer ~= 0 then
-			Q.VectorCopy(head.origin, cent.eyesOrigin)
-
-			Q.VectorSubtract(cent.eyesOrigin, cent.lerpOrigin, cent.eyesOrigin)
-			Q.VectorCopy(cent.eyesOrigin, G.headpos)
-		end
-	end
-
-	Q.VectorCopy(cent.pe.eyepos, head.eyepos[0])
-
-	eyeLook(cent, head)
 
 	head.shadowPlane = shadowPlane
 	head.renderfx = renderfx
@@ -1295,14 +1089,8 @@ function G.CG_ResetPlayerEntity(cent)
 	cent.pe.torso.pitchAngle = cent.rawAngles[C.PITCH]
 	cent.pe.torso.pitching = false
 
-	T.reset(cent.pe.head, T.lerpFrame_t)
-	cent.pe.head.yawAngle = cent.rawAngles[C.YAW]
-	cent.pe.head.yawing = false
-	cent.pe.head.pitchAngle = cent.rawAngles[C.PITCH]
-	cent.pe.head.pitching = false
-
 	if G.cg_debugPosition.integer ~= 0 then
-		G.CG_Printf(Q.va("%i ResetPlayerEntity yaw=%f\n", cent.currentState.number, cent.pe.torso.yawAngle))
+		G.CG_Printf(Q.va("%i ResetPlayerEntity yaw=%i\n", cent.currentState.number, Q.int(cent.pe.torso.yawAngle)))
 	end
 end
 

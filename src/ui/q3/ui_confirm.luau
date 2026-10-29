@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_confirm.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_confirm.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -27,7 +27,7 @@ local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_CONFIRM_FRAME = "menu/" .. C.MENU_ART_DIR .. "/cut_frame"
+local ART_CONFIRM_FRAME = "menu/art_blueish/cut_frame"
 
 local ID_CONFIRM_NO = 10
 local ID_CONFIRM_YES = 11

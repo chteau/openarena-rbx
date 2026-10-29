@@ -19,21 +19,21 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_votemenu_kick.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_votemenu_kick.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
-local ART_BACKGROUND = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
-local ART_ARROWS = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_0"
-local ART_ARROWUP = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_top"
-local ART_ARROWDOWN = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_bot"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/accept_0"
+local ART_FIGHT1 = "menu/art_blueish/accept_1"
+local ART_BACKGROUND = "menu/art_blueish/addbotframe"
+local ART_ARROWS = "menu/art_blueish/arrows_vert_0"
+local ART_ARROWUP = "menu/art_blueish/arrows_vert_top"
+local ART_ARROWDOWN = "menu/art_blueish/arrows_vert_bot"
 
 local ID_BACK = 10
 local ID_GO = 11
@@ -94,13 +94,9 @@ local function VoteKickMenu_Event(ptr, event)
 			return
 		end
 		U.UI_PopMenu()
-	else
+	elseif id == ID_GO then
 		if event ~= C.QM_ACTIVATED then
 			return
-		end
-		if s_votemenu_kick.selected ~= id then
-			s_votemenu_kick.selected = id
-			U.UI_VoteKickMenuInternal()
 		end
 		if s_votemenu_kick.selected == 0 then
 			return
@@ -114,6 +110,14 @@ local function VoteKickMenu_Event(ptr, event)
 		)
 		U.UI_PopMenu()
 		U.UI_PopMenu()
+	else
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		if s_votemenu_kick.selected ~= id then
+			s_votemenu_kick.selected = id
+			U.UI_VoteKickMenuInternal()
+		end
 	end
 end
 
@@ -267,6 +271,7 @@ function U.UI_VoteKickMenu()
 	local s = s_votemenu_kick
 	U.Menu_AddItem(s.menu, s.banner)
 	U.Menu_AddItem(s.menu, s.back)
+	U.Menu_AddItem(s.menu, s.go)
 	U.Menu_AddItem(s.menu, s.arrows)
 	U.Menu_AddItem(s.menu, s.down)
 	U.Menu_AddItem(s.menu, s.up)

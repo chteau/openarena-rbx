@@ -19,26 +19,24 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_network.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_network.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local ART_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local ART_FRAMEL = "menu/art_blueish/frame2_l"
+local ART_FRAMER = "menu/art_blueish/frame1_r"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
 
 local ID_GRAPHICS = 10
 local ID_DISPLAY = 11
 local ID_SOUND = 12
 local ID_NETWORK = 13
 local ID_RATE = 14
-local ID_ALLOWDOWNLOAD = 15
-local ID_LAGOMETER = 16
-local ID_BACK = 17
+local ID_BACK = 15
 
 local rate_items = {
 	[0] = "<= 28.8K",
@@ -83,11 +81,6 @@ local function UI_NetworkOptionsMenu_Event(ptr, event)
 		elseif cv == 4 then
 			trap.Cvar_SetValue("rate", 25000)
 		end
-	elseif id == ID_ALLOWDOWNLOAD then
-		trap.Cvar_SetValue("cl_allowDownload", networkOptionsInfo.allowdownload.curvalue)
-		trap.Cvar_SetValue("sv_allowDownload", networkOptionsInfo.allowdownload.curvalue)
-	elseif id == ID_LAGOMETER then
-		trap.Cvar_SetValue("cg_lagometer", networkOptionsInfo.lagometer.curvalue)
 	elseif id == ID_BACK then
 		U.UI_PopMenu()
 	end
@@ -104,8 +97,6 @@ local function UI_NetworkOptionsMenu_Init()
 		sound = newItem(),
 		network = newItem(),
 		rate = newItem(),
-		allowdownload = newItem(),
-		lagometer = newItem(),
 		back = newItem(),
 	}
 	local info = networkOptionsInfo
@@ -189,24 +180,6 @@ local function UI_NetworkOptionsMenu_Init()
 	info.rate.itemnames = rate_items
 	info.rate.curvalue = 0
 
-	y += C.BIGCHAR_HEIGHT + 2
-	info.allowdownload.generic.type = C.MTYPE_RADIOBUTTON
-	info.allowdownload.generic.name = "Auto Downloading:"
-	info.allowdownload.generic.flags = bit32.bor(C.QMF_PULSEIFFOCUS, C.QMF_SMALLFONT)
-	info.allowdownload.generic.callback = UI_NetworkOptionsMenu_Event
-	info.allowdownload.generic.id = ID_ALLOWDOWNLOAD
-	info.allowdownload.generic.x = 400
-	info.allowdownload.generic.y = y
-
-	y += C.BIGCHAR_HEIGHT + 2
-	info.lagometer.generic.type = C.MTYPE_RADIOBUTTON
-	info.lagometer.generic.name = "Lagometer:"
-	info.lagometer.generic.flags = bit32.bor(C.QMF_PULSEIFFOCUS, C.QMF_SMALLFONT)
-	info.lagometer.generic.callback = UI_NetworkOptionsMenu_Event
-	info.lagometer.generic.id = ID_LAGOMETER
-	info.lagometer.generic.x = 400
-	info.lagometer.generic.y = y
-
 	info.back.generic.type = C.MTYPE_BITMAP
 	info.back.generic.name = ART_BACK0
 	info.back.generic.flags = bit32.bor(C.QMF_LEFT_JUSTIFY, C.QMF_PULSEIFFOCUS)
@@ -226,8 +199,6 @@ local function UI_NetworkOptionsMenu_Init()
 	U.Menu_AddItem(info.menu, info.sound)
 	U.Menu_AddItem(info.menu, info.network)
 	U.Menu_AddItem(info.menu, info.rate)
-	U.Menu_AddItem(info.menu, info.allowdownload)
-	U.Menu_AddItem(info.menu, info.lagometer)
 	U.Menu_AddItem(info.menu, info.back)
 
 	local rate = Q.int(trap.Cvar_VariableValue("rate"))
@@ -242,9 +213,6 @@ local function UI_NetworkOptionsMenu_Init()
 	else
 		info.rate.curvalue = 4
 	end
-
-	info.allowdownload.curvalue = Q.b2i(trap.Cvar_VariableValue("cl_allowDownload") ~= 0)
-	info.lagometer.curvalue = Q.b2i(trap.Cvar_VariableValue("cg_lagometer") ~= 0)
 end
 
 function U.UI_NetworkOptionsMenu_Cache()

@@ -19,7 +19,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_votemenu.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_votemenu.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
@@ -27,11 +27,11 @@ local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local VOTEMENU_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local VOTEMENU_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
-local ART_BACKGROUND = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
+local VOTEMENU_BACK0 = "menu/art_blueish/back_0"
+local VOTEMENU_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/accept_0"
+local ART_FIGHT1 = "menu/art_blueish/accept_1"
+local ART_BACKGROUND = "menu/art_blueish/addbotframe"
 
 local votemenu_artlist = { [0] = VOTEMENU_BACK0, VOTEMENU_BACK1, ART_FIGHT0, ART_FIGHT1 }
 
@@ -46,111 +46,111 @@ local ID_FRAG = 107
 local ID_TIME = 108
 local ID_GAMETYPE = 109
 local ID_CUSTOM = 110
-local ID_YES = 112
-local ID_NO = 113
+local ID_SHUFFLE = 111
 
 local VOTEMENU_MENU_VERTICAL_SPACING = 22
 
-local s_votemenu_logic = {
-	map_restart = false,
-	nextmap = false,
-	g_doWarmup = false,
-	g_doWarmupEnabled = false,
-	clientkick = false,
-	map = false,
-	gametype = false,
-	fraglimit = false,
-	timelimit = false,
-	custom = false,
-}
-
-local ITEM_COUNT = 11
-
-local s_items = {
-	[0] = { id = ID_NEXTMAP, string = "Next map", enabled = function() return s_votemenu_logic.nextmap end },
-	{ id = ID_RESTART, string = "Restart match", enabled = function() return s_votemenu_logic.map_restart end },
-	{ id = ID_MAP, string = "Change map", enabled = function() return s_votemenu_logic.map end },
-	{ id = ID_GAMETYPE, string = "Change gametype", enabled = function() return s_votemenu_logic.gametype end },
-	{ id = ID_KICK, string = "Kick player", enabled = function() return s_votemenu_logic.clientkick end },
-	{ id = ID_DOWARMUP, string = "Disable warmup", enabled = function() return s_votemenu_logic.g_doWarmup end },
-	{ id = ID_FRAG, string = "Change fraglimit", enabled = function() return s_votemenu_logic.fraglimit end },
-	{ id = ID_TIME, string = "Change timelimit", enabled = function() return s_votemenu_logic.timelimit end },
-	{ id = ID_CUSTOM, string = "Custom vote", enabled = function() return s_votemenu_logic.custom end },
-	{ id = ID_YES, string = "Vote yes", enabled = function() return true end },
-	{ id = ID_NO, string = "Vote no", enabled = function() return true end },
-}
-
 local function newVotemenu()
-	local m = {
+	return {
 		menu = T.menuframework_s(),
 		banner = T.menutext_s(),
 		back = T.menubitmap_s(),
 		go = T.menubitmap_s(),
-		bButtons = {},
+
+		map_restart = false,
+		nextmap = false,
+		g_doWarmup = false,
+		g_doWarmupEnabled = false,
+		clientkick = false,
+		map = false,
+		gametype = false,
+		fraglimit = false,
+		timelimit = false,
+		custom = false,
+		shuffle = false,
+
+		bMapRestart = T.menutext_s(),
+		bNextmap = T.menutext_s(),
+		bDoWarmup = T.menutext_s(),
+		bKick = T.menutext_s(),
+		bMap = T.menutext_s(),
+		bGametype = T.menutext_s(),
+		bTimelimit = T.menutext_s(),
+		bFraglimit = T.menutext_s(),
+		bShuffle = T.menutext_s(),
+		bCustom = T.menutext_s(),
+
 		selection = 0,
 	}
-	for i = 0, ITEM_COUNT - 1 do
-		m.bButtons[i] = T.menutext_s()
-	end
-	return m
 end
 
 local s_votemenu = newVotemenu()
 
 local function VoteMenu_CheckVoteNames()
 	local voteflags = Q.int(trap.Cvar_VariableValue("cg_voteflags"))
-	s_votemenu_logic.map_restart = bit32.band(voteflags, C.VF_map_restart) ~= 0
-	s_votemenu_logic.nextmap = bit32.band(voteflags, C.VF_nextmap) ~= 0
-	s_votemenu_logic.map = bit32.band(voteflags, C.VF_map) ~= 0
-	s_votemenu_logic.gametype = bit32.band(voteflags, C.VF_g_gametype) ~= 0
+	s_votemenu.map_restart = bit32.band(voteflags, C.VF_map_restart) ~= 0
+	s_votemenu.nextmap = bit32.band(voteflags, C.VF_nextmap) ~= 0
+	s_votemenu.map = bit32.band(voteflags, C.VF_map) ~= 0
+	s_votemenu.gametype = bit32.band(voteflags, C.VF_g_gametype) ~= 0
 	--We never use "kick" in menues, always clientkick
-	s_votemenu_logic.clientkick = bit32.band(voteflags, C.VF_clientkick) ~= 0
-	s_votemenu_logic.g_doWarmup = bit32.band(voteflags, C.VF_g_doWarmup) ~= 0
-	s_votemenu_logic.timelimit = bit32.band(voteflags, C.VF_timelimit) ~= 0
-	s_votemenu_logic.fraglimit = bit32.band(voteflags, C.VF_fraglimit) ~= 0
-	s_votemenu_logic.custom = bit32.band(voteflags, C.VF_custom) ~= 0
+	s_votemenu.clientkick = bit32.band(voteflags, C.VF_clientkick) ~= 0
+	s_votemenu.g_doWarmup = bit32.band(voteflags, C.VF_g_doWarmup) ~= 0
+	s_votemenu.timelimit = bit32.band(voteflags, C.VF_timelimit) ~= 0
+	s_votemenu.fraglimit = bit32.band(voteflags, C.VF_fraglimit) ~= 0
+	s_votemenu.custom = bit32.band(voteflags, C.VF_custom) ~= 0
+	s_votemenu.shuffle = bit32.band(voteflags, C.VF_shuffle) ~= 0
 end
 
 local function VoteMenu_Event(ptr, event)
-	if event ~= C.QM_ACTIVATED then
-		return
-	end
-
 	local id = ptr.generic.id
 	if id == ID_BACK then
-		U.UI_PopMenu()
-	elseif id == ID_NEXTMAP then
-		trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote nextmap")
-		U.UI_PopMenu()
-	elseif id == ID_RESTART then
-		trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote map_restart")
-		U.UI_PopMenu()
-	elseif id == ID_DOWARMUP then
-		if s_votemenu_logic.g_doWarmupEnabled then
-			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_doWarmup 0")
-		else
-			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_doWarmup 1")
+		if event ~= C.QM_ACTIVATED then
+			return
 		end
 		U.UI_PopMenu()
-	elseif id == ID_FRAG then
-		U.UI_VoteFraglimitMenu()
-		--Don't pop! It will do a double pop if successfull
-	elseif id == ID_CUSTOM then
-		U.UI_VoteCustomMenu()
-	elseif id == ID_TIME then
-		U.UI_VoteTimelimitMenu()
-	elseif id == ID_GAMETYPE then
-		U.UI_VoteGametypeMenu()
-	elseif id == ID_KICK then
-		U.UI_VoteKickMenu()
-	elseif id == ID_MAP then
-		U.UI_VoteMapMenu()
-	elseif id == ID_YES then
-		trap.Cmd_ExecuteText(C.EXEC_APPEND, "vote yes")
-		U.UI_PopMenu()
-	elseif id == ID_NO then
-		trap.Cmd_ExecuteText(C.EXEC_APPEND, "vote no")
-		U.UI_PopMenu()
+	elseif id == ID_GO then
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		local sel = s_votemenu.selection
+		if sel == ID_NEXTMAP then
+			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote nextmap")
+			U.UI_PopMenu()
+		elseif sel == ID_RESTART then
+			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote map_restart")
+			U.UI_PopMenu()
+		elseif sel == ID_DOWARMUP then
+			if s_votemenu.g_doWarmupEnabled then
+				trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_doWarmup 0")
+			else
+				trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_doWarmup 1")
+			end
+			U.UI_PopMenu()
+		elseif sel == ID_SHUFFLE then
+			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote shuffle")
+			U.UI_PopMenu()
+		elseif sel == ID_FRAG then
+			U.UI_VoteFraglimitMenu()
+			--Don't pop! It will do a double pop if successfull
+		elseif sel == ID_CUSTOM then
+			U.UI_VoteCustomMenu()
+		elseif sel == ID_TIME then
+			U.UI_VoteTimelimitMenu()
+		elseif sel == ID_GAMETYPE then
+			U.UI_VoteGametypeMenu()
+		elseif sel == ID_KICK then
+			U.UI_VoteKickMenu()
+		elseif sel == ID_MAP then
+			U.UI_VoteMapMenu()
+		end
+	else
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		if s_votemenu.selection ~= id then
+			s_votemenu.selection = id
+			U.UI_VoteMenuMenuInternal()
+		end
 	end
 end
 
@@ -174,26 +174,21 @@ local function UI_VoteMenu_Draw()
 	U.Menu_Draw(s_votemenu.menu)
 end
 
-local function UI_SetGeneticDefaults(generic, type)
-	generic.type = type
-	generic.x = 320
-	generic.flags = bit32.bor(C.QMF_CENTER_JUSTIFY, C.QMF_PULSEIFFOCUS)
-end
-
-local function UI_SetMenuTextDefaults(mt)
-	UI_SetGeneticDefaults(mt.generic, C.MTYPE_PTEXT)
-	mt.style = bit32.bor(C.UI_CENTER, C.UI_SMALLFONT)
-	mt.color = U.color_red
-end
-
-local function UI_SetTextEffect(mt, enabled, currentSelection)
+local function setButton(b, y, id, string, enabled)
+	b.generic.type = C.MTYPE_PTEXT
+	b.color = U.color_red
+	b.generic.flags = bit32.bor(C.QMF_CENTER_JUSTIFY, C.QMF_PULSEIFFOCUS)
 	if not enabled then
-		mt.generic.flags = bit32.bor(mt.generic.flags, C.QMF_INACTIVE, C.QMF_GRAYED)
-	else
-		if currentSelection == mt.generic.id then
-			mt.color = U.color_orange
-		end
+		b.generic.flags = bit32.bor(b.generic.flags, C.QMF_INACTIVE, C.QMF_GRAYED)
+	elseif s_votemenu.selection == id then
+		b.color = U.color_orange
 	end
+	b.generic.x = 320
+	b.generic.y = y
+	b.generic.id = id
+	b.generic.callback = VoteMenu_Event
+	b.string = string
+	b.style = bit32.bor(C.UI_CENTER, C.UI_SMALLFONT)
 end
 
 -- Used then forcing a redraw
@@ -212,24 +207,40 @@ function U.UI_VoteMenuMenuInternal()
 	s_votemenu.banner.style = C.UI_CENTER
 
 	local y = 98
-	for i = 0, ITEM_COUNT - 1 do
-		local b = s_votemenu.bButtons[i]
-		b.generic.id = s_items[i].id
-		UI_SetMenuTextDefaults(b)
-		UI_SetTextEffect(b, s_items[i].enabled(), s_votemenu.selection)
-		b.generic.y = y
-		b.generic.callback = VoteMenu_Event
-		b.string = s_items[i].string
+	setButton(s_votemenu.bNextmap, y, ID_NEXTMAP, "Next map", s_votemenu.nextmap)
 
-		y += VOTEMENU_MENU_VERTICAL_SPACING
-	end
-	if s_votemenu_logic.g_doWarmupEnabled then
-		for i = 0, ITEM_COUNT - 1 do
-			if s_votemenu.bButtons[i].generic.id == ID_DOWARMUP then
-				s_votemenu.bButtons[i].string = "Enable warmup"
-			end
-		end
-	end
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bMapRestart, y, ID_RESTART, "Restart match", s_votemenu.map_restart)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bShuffle, y, ID_SHUFFLE, "Shuffle teams", s_votemenu.map_restart)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bMap, y, ID_MAP, "Change map", s_votemenu.map)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bGametype, y, ID_GAMETYPE, "Change gametype", s_votemenu.gametype)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bKick, y, ID_KICK, "Kick player", s_votemenu.clientkick)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(
+		s_votemenu.bDoWarmup,
+		y,
+		ID_DOWARMUP,
+		s_votemenu.g_doWarmupEnabled and "Disable warmup" or "Enable warmup",
+		s_votemenu.g_doWarmup
+	)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bFraglimit, y, ID_FRAG, "Change fraglimit", s_votemenu.fraglimit)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bTimelimit, y, ID_TIME, "Change timelimit", s_votemenu.timelimit)
+
+	y += VOTEMENU_MENU_VERTICAL_SPACING
+	setButton(s_votemenu.bCustom, y, ID_CUSTOM, "Custom vote", s_votemenu.custom)
 
 	s_votemenu.back.generic.type = C.MTYPE_BITMAP
 	s_votemenu.back.generic.name = VOTEMENU_BACK0
@@ -237,7 +248,7 @@ function U.UI_VoteMenuMenuInternal()
 	s_votemenu.back.generic.callback = VoteMenu_Event
 	s_votemenu.back.generic.id = ID_BACK
 	s_votemenu.back.generic.x = 320 - 128
-	s_votemenu.back.generic.y = 256 + 128 - 64 + VOTEMENU_MENU_VERTICAL_SPACING * 2
+	s_votemenu.back.generic.y = 256 + 128 - 64
 	s_votemenu.back.width = 128
 	s_votemenu.back.height = 64
 	s_votemenu.back.focuspic = VOTEMENU_BACK1
@@ -248,7 +259,7 @@ function U.UI_VoteMenuMenuInternal()
 	s_votemenu.go.generic.callback = VoteMenu_Event
 	s_votemenu.go.generic.id = ID_GO
 	s_votemenu.go.generic.x = 320
-	s_votemenu.go.generic.y = 256 + 128 - 64 + VOTEMENU_MENU_VERTICAL_SPACING * 2
+	s_votemenu.go.generic.y = 256 + 128 - 64
 	s_votemenu.go.width = 128
 	s_votemenu.go.height = 64
 	s_votemenu.go.focuspic = ART_FIGHT1
@@ -259,14 +270,22 @@ function U.UI_VoteMenuMenu()
 	-- zero set all our globals
 	s_votemenu = newVotemenu()
 	local serverinfo = trap.GetConfigString(C.CS_SERVERINFO)
-	s_votemenu_logic.g_doWarmupEnabled = Q.int(tonumber(Q.Info_ValueForKey(serverinfo, "g_doWarmup")) or 0) ~= 0
+	s_votemenu.g_doWarmupEnabled = Q.int(tonumber(Q.Info_ValueForKey(serverinfo, "g_doWarmup")) or 0) ~= 0
 	U.UI_VoteMenuMenuInternal()
 
 	U.Menu_AddItem(s_votemenu.menu, s_votemenu.banner)
 	U.Menu_AddItem(s_votemenu.menu, s_votemenu.back)
-	for i = 0, ITEM_COUNT - 1 do
-		U.Menu_AddItem(s_votemenu.menu, s_votemenu.bButtons[i])
-	end
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.go)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bNextmap)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bMapRestart)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bShuffle)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bMap)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bGametype)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bKick)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bDoWarmup)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bFraglimit)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bTimelimit)
+	U.Menu_AddItem(s_votemenu.menu, s_votemenu.bCustom)
 
 	U.UI_PushMenu(s_votemenu.menu)
 end

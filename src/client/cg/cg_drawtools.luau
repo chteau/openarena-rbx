@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_drawtools.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_drawtools.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -73,7 +73,7 @@ function G.CG_DrawRect(x, y, width, height, size, color)
 	trap.R_SetColor(color)
 
 	G.CG_DrawTopBottom(x, y, width, height, size)
-	G.CG_DrawSides(x, y + size, width, height - size * 2, size)
+	G.CG_DrawSides(x, y, width, height, size)
 
 	trap.R_SetColor(nil)
 end

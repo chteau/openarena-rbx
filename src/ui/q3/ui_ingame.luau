@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_ingame.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_ingame.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -27,7 +27,7 @@ local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local INGAME_FRAME = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
+local INGAME_FRAME = "menu/art_blueish/addbotframe"
 local INGAME_MENU_VERTICAL_SPACING = 28
 
 local ID_TEAM = 10
@@ -131,8 +131,6 @@ function U.InGame_MenuInit()
 
 	U.InGame_Cache()
 
-	local gametype = Q.int(trap.Cvar_VariableValue("g_gametype"))
-
 	s_ingame.menu.wrapAround = true
 	s_ingame.menu.fullscreen = false
 
@@ -149,19 +147,19 @@ function U.InGame_MenuInit()
 
 	y += INGAME_MENU_VERTICAL_SPACING
 	setupText(s_ingame.addbots, ID_ADDBOTS, y, "ADD BOTS")
-	if trap.Cvar_VariableValue("sv_running") == 0 or trap.Cvar_VariableValue("bot_enable") == 0 or gametype == C.GT_SINGLE_PLAYER then
+	if trap.Cvar_VariableValue("sv_running") == 0 or trap.Cvar_VariableValue("bot_enable") == 0 or trap.Cvar_VariableValue("g_gametype") == C.GT_SINGLE_PLAYER then
 		gray(s_ingame.addbots)
 	end
 
 	y += INGAME_MENU_VERTICAL_SPACING
 	setupText(s_ingame.removebots, ID_REMOVEBOTS, y, "REMOVE BOTS")
-	if trap.Cvar_VariableValue("sv_running") == 0 or trap.Cvar_VariableValue("bot_enable") == 0 or gametype == C.GT_SINGLE_PLAYER then
+	if trap.Cvar_VariableValue("sv_running") == 0 or trap.Cvar_VariableValue("bot_enable") == 0 or trap.Cvar_VariableValue("g_gametype") == C.GT_SINGLE_PLAYER then
 		gray(s_ingame.removebots)
 	end
 
 	y += INGAME_MENU_VERTICAL_SPACING
 	setupText(s_ingame.teamorders, ID_TEAMORDERS, y, "TEAM ORDERS")
-	if not (gametype >= C.GT_TEAM) or gametype == C.GT_LMS or gametype == C.GT_POSSESSION then
+	if not (trap.Cvar_VariableValue("g_gametype") >= C.GT_TEAM) or trap.Cvar_VariableValue("g_gametype") == C.GT_LMS then
 		gray(s_ingame.teamorders)
 	else
 		local cs = T.uiClientState_t()
@@ -176,7 +174,7 @@ function U.InGame_MenuInit()
 	y += INGAME_MENU_VERTICAL_SPACING
 	setupText(s_ingame.vote, ID_VOTE, y, "CALL VOTE")
 	local info = trap.GetConfigString(C.CS_SERVERINFO)
-	if atoi(Q.Info_ValueForKey(info, "g_allowVote")) == 0 or gametype == C.GT_SINGLE_PLAYER then
+	if atoi(Q.Info_ValueForKey(info, "g_allowVote")) == 0 or trap.Cvar_VariableValue("g_gametype") == C.GT_SINGLE_PLAYER then
 		gray(s_ingame.vote)
 	end
 

@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_players.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_players.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -257,8 +257,8 @@ local function UI_PositionRotatedEntityOnTag(entity, parent, parentModel, tagNam
 		Q.VectorMA(entity.origin, lerped.origin[i], parent.axis[i], entity.origin)
 	end
 
-	Q.MatrixMultiply(entity.axis, lerped.axis, tempAxis)
-	Q.MatrixMultiply(tempAxis, parent.axis, entity.axis)
+	Q.MatrixMultiply(entity.axis, parent.axis, tempAxis)
+	Q.MatrixMultiply(lerped.axis, tempAxis, entity.axis)
 end
 
 local function UI_SetLerpFrameAnimation(ci, lf, newAnimation)
@@ -285,36 +285,23 @@ local function UI_RunLerpFrame(ci, lf, newAnimation)
 		lf.oldFrameTime = lf.frameTime
 
 		local anim = lf.animation
-		if anim.frameLerp == 0 then
-			return
-		end
 		if dp_realtime < lf.animationTime then
 			lf.frameTime = lf.animationTime
 		else
 			lf.frameTime = lf.oldFrameTime + anim.frameLerp
 		end
 		local f = Q.idiv(lf.frameTime - lf.animationTime, anim.frameLerp)
-		local numFrames = anim.numFrames
-		if anim.flipflop then
-			numFrames *= 2
-		end
-		if f >= numFrames then
-			f -= numFrames
+		if f >= anim.numFrames then
+			f -= anim.numFrames
 			if anim.loopFrames ~= 0 then
 				f = math.fmod(f, anim.loopFrames)
 				f += anim.numFrames - anim.loopFrames
 			else
-				f = numFrames - 1
+				f = anim.numFrames - 1
 				lf.frameTime = dp_realtime
 			end
 		end
-		if anim.reversed then
-			lf.frame = anim.firstFrame + anim.numFrames - 1 - f
-		elseif anim.flipflop and f >= anim.numFrames then
-			lf.frame = anim.firstFrame + anim.numFrames - 1 - math.fmod(f, anim.numFrames)
-		else
-			lf.frame = anim.firstFrame + f
-		end
+		lf.frame = anim.firstFrame + f
 		if dp_realtime > lf.frameTime then
 			lf.frameTime = dp_realtime
 		end
@@ -484,14 +471,6 @@ local function UI_PlayerAngles(pi, legs, torso, head)
 	pi.torso.pitchAngle, pi.torso.pitching =
 		UI_SwingAngles(dest, 15, 30, 0.1, pi.torso.pitchAngle, pi.torso.pitching)
 	torsoAngles[C.PITCH] = pi.torso.pitchAngle
-	if pi.fixedtorso then
-		torsoAngles[C.PITCH] = 0.0
-	end
-	if pi.fixedlegs then
-		legsAngles[C.YAW] = torsoAngles[C.YAW]
-		legsAngles[C.PITCH] = 0.0
-		legsAngles[C.ROLL] = 0.0
-	end
 
 	Q.AnglesSubtract(headAngles, torsoAngles, headAngles)
 	Q.AnglesSubtract(torsoAngles, legsAngles, torsoAngles)
@@ -557,10 +536,10 @@ function U.UI_DrawPlayer(x, y, w, h, pi, time)
 
 	dp_realtime = time
 
-	if pi.pendingWeapon ~= C.WP_NUM_WEAPONS and dp_realtime > pi.weaponTimer then
+	if pi.pendingWeapon ~= -1 and dp_realtime > pi.weaponTimer then
 		pi.weapon = pi.pendingWeapon
 		pi.lastWeapon = pi.pendingWeapon
-		pi.pendingWeapon = C.WP_NUM_WEAPONS
+		pi.pendingWeapon = -1
 		pi.weaponTimer = 0
 		if pi.currentWeapon ~= pi.weapon then
 			trap.S_StartLocalSound(U.weaponChangeSound, C.CHAN_LOCAL)
@@ -580,9 +559,9 @@ function U.UI_DrawPlayer(x, y, w, h, pi, time)
 	refdef.width = w
 	refdef.height = h
 
-	refdef.fov_x = Q.int(refdef.width / U.uis.xscale / 640.0 * 90.0)
-	local xx = refdef.width / U.uis.xscale / math.tan(refdef.fov_x / 360 * math.pi)
-	refdef.fov_y = math.atan2(refdef.height / U.uis.yscale, xx)
+	refdef.fov_x = Q.int(refdef.width / 640.0 * 90.0)
+	local xx = refdef.width / math.tan(refdef.fov_x / 360 * math.pi)
+	refdef.fov_y = math.atan2(refdef.height, xx)
 	refdef.fov_y *= (360 / math.pi)
 
 	local len = 0.7 * (maxs[2] - mins[2])
@@ -662,6 +641,10 @@ function U.UI_DrawPlayer(x, y, w, h, pi, time)
 		angles[C.YAW] = 0
 		angles[C.PITCH] = 0
 		angles[C.ROLL] = U.UI_MachinegunSpinAngle(pi)
+		if pi.realWeapon == C.WP_GAUNTLET or pi.realWeapon == C.WP_BFG then
+			angles[C.PITCH] = angles[C.ROLL]
+			angles[C.ROLL] = 0
+		end
 		Q.AnglesToAxis(angles, barrel.axis)
 
 		UI_PositionRotatedEntityOnTag(barrel, gun, pi.weaponModel, "tag_barrel")
@@ -751,15 +734,12 @@ local function parseToken(text, pos)
 	end
 end
 
-local function UI_ParseAnimationFile(filename, pi)
-	local animations = pi.animations
+local function UI_ParseAnimationFile(filename, animations)
 	local skip = 0
 
 	for k = 0, C.MAX_ANIMATIONS - 1 do
 		animations[k] = T.animation_t()
 	end
-	pi.fixedlegs = false
-	pi.fixedtorso = false
 
 	local len, f = trap.FS_FOpenFile(filename, C.FS_READ)
 	if len <= 0 then
@@ -799,10 +779,6 @@ local function UI_ParseAnimationFile(filename, pi)
 			if token == "" then
 				break
 			end
-		elseif Q.stricmp(token, "fixedlegs") == 0 then
-			pi.fixedlegs = true
-		elseif Q.stricmp(token, "fixedtorso") == 0 then
-			pi.fixedtorso = true
 		else
 			local b = string.byte(token, 1)
 			if b >= 48 and b <= 57 then
@@ -810,58 +786,28 @@ local function UI_ParseAnimationFile(filename, pi)
 				break
 			end
 
-			trap.Print(Q.va("unknown token '%s' in %s\n", token, filename))
+			trap.Print(Q.va("unknown token '%s' is %s\n", token, filename))
 		end
 	end
 
 	local i = 0
 	while i < C.MAX_ANIMATIONS do
 		token, pos = parseToken(text, pos)
-		if token == "" then
-			if i >= C.TORSO_GETFLAG and i <= C.TORSO_NEGATIVE then
-				animations[i].firstFrame = animations[C.TORSO_GESTURE].firstFrame
-				animations[i].frameLerp = animations[C.TORSO_GESTURE].frameLerp
-				animations[i].initialLerp = animations[C.TORSO_GESTURE].initialLerp
-				animations[i].loopFrames = animations[C.TORSO_GESTURE].loopFrames
-				animations[i].numFrames = animations[C.TORSO_GESTURE].numFrames
-				animations[i].reversed = false
-				animations[i].flipflop = false
-				i += 1
-				continue
-			end
-			break
-		end
 		animations[i].firstFrame = Q.int(tonumber(token) or 0)
 		if i == C.LEGS_WALKCR then
 			skip = animations[C.LEGS_WALKCR].firstFrame - animations[C.TORSO_GESTURE].firstFrame
 		end
-		if i >= C.LEGS_WALKCR and i < C.TORSO_GETFLAG then
+		if i >= C.LEGS_WALKCR then
 			animations[i].firstFrame -= skip
 		end
 
 		token, pos = parseToken(text, pos)
-		if token == "" then
-			break
-		end
 		animations[i].numFrames = Q.int(tonumber(token) or 0)
 
-		animations[i].reversed = false
-		animations[i].flipflop = false
-		if animations[i].numFrames < 0 then
-			animations[i].numFrames = -animations[i].numFrames
-			animations[i].reversed = true
-		end
-
 		token, pos = parseToken(text, pos)
-		if token == "" then
-			break
-		end
 		animations[i].loopFrames = Q.int(tonumber(token) or 0)
 
 		token, pos = parseToken(text, pos)
-		if token == "" then
-			break
-		end
 		local fps = tonumber(token) or 0
 		if fps == 0 then
 			fps = 1
@@ -871,7 +817,7 @@ local function UI_ParseAnimationFile(filename, pi)
 		i += 1
 	end
 
-	if i ~= C.MAX_ANIMATIONS - (C.TORSO_NEGATIVE - C.TORSO_GETFLAG + 1) then
+	if i ~= C.MAX_ANIMATIONS then
 		trap.Print(Q.va("Error parsing animation file: %s\n", filename))
 		return false
 	end
@@ -927,7 +873,7 @@ function U.UI_RegisterClientModelname(pi, modelSkinName)
 	end
 
 	filename = Q.va("models/players/%s/animation.cfg", modelName)
-	if not UI_ParseAnimationFile(filename, pi) then
+	if not UI_ParseAnimationFile(filename, pi.animations) then
 		trap.Print(Q.va("Failed to load animation file %s\n", filename))
 		return false
 	end
@@ -941,7 +887,7 @@ function U.UI_PlayerInfo_SetModel(pi, model)
 	pi.weapon = C.WP_MACHINEGUN
 	pi.currentWeapon = pi.weapon
 	pi.lastWeapon = pi.weapon
-	pi.pendingWeapon = C.WP_NUM_WEAPONS
+	pi.pendingWeapon = -1
 	pi.weaponTimer = 0
 	pi.chat = false
 	pi.newModel = true
@@ -969,11 +915,11 @@ function U.UI_PlayerInfo_SetInfo(pi, legsAnim, torsoAnim, viewAngles, moveAngles
 		pi.torso.yawAngle = viewAngles[C.YAW]
 		pi.torso.yawing = false
 
-		if weaponNumber ~= C.WP_NUM_WEAPONS then
+		if weaponNumber ~= -1 then
 			pi.weapon = weaponNumber
 			pi.currentWeapon = weaponNumber
 			pi.lastWeapon = weaponNumber
-			pi.pendingWeapon = C.WP_NUM_WEAPONS
+			pi.pendingWeapon = -1
 			pi.weaponTimer = 0
 			UI_PlayerInfo_SetWeapon(pi, pi.weapon)
 		end
@@ -981,8 +927,8 @@ function U.UI_PlayerInfo_SetInfo(pi, legsAnim, torsoAnim, viewAngles, moveAngles
 		return
 	end
 
-	if weaponNumber == C.WP_NUM_WEAPONS then
-		pi.pendingWeapon = C.WP_NUM_WEAPONS
+	if weaponNumber == -1 then
+		pi.pendingWeapon = -1
 		pi.weaponTimer = 0
 	elseif weaponNumber ~= C.WP_NONE then
 		pi.pendingWeapon = weaponNumber

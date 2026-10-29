@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_consolecmds.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_consolecmds.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_consolecmds.c -- text commands typed in at the local console, or
 -- executed by a key binding
 
@@ -53,12 +53,12 @@ end
 
 function G.CG_TargetCommand_f()
 	local targetNum = G.CG_CrosshairPlayer()
-	if targetNum == -1 then
+	if targetNum == 0 then
 		return
 	end
 
 	local test = string.sub(trap.Argv(1), 1, 3)
-	trap.SendClientCommand(Q.va("gc %i %i", targetNum, atoi(test)))
+	trap.SendConsoleCommand(Q.va("gc %i %i", targetNum, atoi(test)))
 end
 
 -- Keybinding command
@@ -205,7 +205,6 @@ local commands = {
 	{ cmd = "-zoom", ["function"] = viaG("CG_ZoomUp_f") },
 	{ cmd = "sizeup", ["function"] = CG_SizeUp_f },
 	{ cmd = "sizedown", ["function"] = CG_SizeDown_f },
-	{ cmd = "weapbest", ["function"] = viaG("CG_BestWeapon_f") },
 	{ cmd = "weapnext", ["function"] = viaG("CG_NextWeapon_f") },
 	{ cmd = "weapprev", ["function"] = viaG("CG_PrevWeapon_f") },
 	{ cmd = "weapon", ["function"] = viaG("CG_Weapon_f") },

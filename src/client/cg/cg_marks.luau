@@ -19,7 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_marks.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_marks.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-398 of the 0.8.8 source (mark polys); the particle system is in cg_marks2/cg_marks3.
 -- cg_marks.c -- wall marks
 
 local G = require(script.Parent.G)
@@ -36,7 +37,7 @@ G.cg_markPolys = {}
 for i = 0, C.MAX_MARK_POLYS - 1 do
 	G.cg_markPolys[i] = T.markPoly_t()
 end
-local markTotal = 0
+G.markTotal = 0
 
 local function byte(x: number): number
 	return bit32.band(Q.int(x), 255)
@@ -121,6 +122,9 @@ function G.CG_ImpactMark(markShader, origin, dir, orientation, red, green, blue,
 	local axis = { [0] = Q.vec3(0, 0, 0), [1] = Q.vec3(0, 0, 0), [2] = Q.vec3(0, 0, 0) }
 	Q.VectorNormalize2(dir, axis[0])
 	Q.PerpendicularVector(axis[1], axis[0])
+	if G.cg_leiEnhancement.integer ~= 0 then -- LEILEI HACK HACK HACK - don't spin atlas variated particles (for consistent lighting on the texture)
+		orientation = 90
+	end
 
 	Q.RotatePointAroundVector(axis[2], axis[0], axis[1], orientation)
 	Q.CrossProduct(axis[0], axis[2], axis[1])
@@ -205,7 +209,7 @@ function G.CG_ImpactMark(markShader, origin, dir, orientation, red, green, blue,
 		for j = 0, mf.numPoints - 1 do
 			T.assign(mark.verts[j], verts[j])
 		end
-		markTotal += 1
+		G.markTotal += 1
 	end
 end
 

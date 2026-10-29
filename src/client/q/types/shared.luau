@@ -12,7 +12,6 @@ local MAX_ENTITIES_IN_SNAPSHOT = 256
 local MAX_RENDER_STRINGS = 8
 local MAX_ITEM_MODELS = 4
 local GLYPHS_PER_FONT = 256
-local MAX_GAMETYPES = 14
 
 local T = {}
 
@@ -279,12 +278,6 @@ function T.refEntity_t()
 		shaderTime = 0,
 		radius = 0,
 		rotation = 0,
-		eyepos = array(2, function()
-			return vec(3)
-		end),
-		eyelook = vec(3),
-		glow = 0,
-		glowcol = 0,
 	}
 end
 
@@ -396,30 +389,6 @@ function T.gitem_t()
 		giTag = 0,
 		precaches = nil,
 		sounds = nil,
-	}
-end
-
-function T.mapinfo_result_t()
-	return {
-		minPlayers = 0,
-		maxPlayers = 0,
-		recommendedPlayers = 0,
-		minTeamSize = 0,
-		maxTeamSize = 0,
-		recommendedTeamSize = 0,
-		timeLimit = 0,
-		fragLimit = 0,
-		captureLimit = 0,
-		mpBots = "",
-		mpBotCount = 0,
-		redBots = "",
-		redBotCount = 0,
-		blueBots = "",
-		blueBotCount = 0,
-		author = "",
-		title = "",
-		description = "",
-		gametypeSupported = strings(MAX_GAMETYPES),
 	}
 end
 

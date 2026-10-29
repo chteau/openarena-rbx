@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_sppostgame.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_sppostgame.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -30,12 +30,12 @@ local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 local MAX_SCOREBOARD_CLIENTS = 8
 local AWARD_PRESENTATION_TIME = 2000
 
-local ART_MENU0 = "menu/" .. C.MENU_ART_DIR .. "/menu_0"
-local ART_MENU1 = "menu/" .. C.MENU_ART_DIR .. "/menu_1"
-local ART_REPLAY0 = "menu/" .. C.MENU_ART_DIR .. "/replay_0"
-local ART_REPLAY1 = "menu/" .. C.MENU_ART_DIR .. "/replay_1"
-local ART_NEXT0 = "menu/" .. C.MENU_ART_DIR .. "/next_0"
-local ART_NEXT1 = "menu/" .. C.MENU_ART_DIR .. "/next_1"
+local ART_MENU0 = "menu/art_blueish/menu_0"
+local ART_MENU1 = "menu/art_blueish/menu_1"
+local ART_REPLAY0 = "menu/art_blueish/replay_0"
+local ART_REPLAY1 = "menu/art_blueish/replay_1"
+local ART_NEXT0 = "menu/art_blueish/next_0"
+local ART_NEXT1 = "menu/art_blueish/next_1"
 
 local ID_AGAIN = 10
 local ID_NEXT = 11

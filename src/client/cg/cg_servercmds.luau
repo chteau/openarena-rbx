@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_servercmds.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_servercmds.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_servercmds.c -- reliably sequenced text commands sent by the server
 -- these are processed at snapshot transition time, so there will definately
 -- be a valid snapshot this frame
@@ -248,8 +248,8 @@ local function CG_ParseMappage()
 	trap.SendConsoleCommand(command)
 end
 
-local function CG_ParseDDtimetakeAt()
-	G.cgs.takeAt = atoi(G.CG_Argv(1))
+local function CG_ParseDDtimetaken()
+	G.cgs.timetaken = atoi(G.CG_Argv(1))
 end
 
 local function CG_ParseDomPointNames()
@@ -354,7 +354,7 @@ function G.CG_ParseServerinfo()
 	--By default do as normal:
 	cgs.ffa_gt = 0
 	--See if ffa gametype
-	if cgs.gametype == C.GT_LMS or cgs.gametype == C.GT_POSSESSION then
+	if cgs.gametype == C.GT_LMS then
 		cgs.ffa_gt = 1
 	end
 	trap.Cvar_Set("g_gametype", Q.va("%i", cgs.gametype))
@@ -412,7 +412,7 @@ function G.CG_SetConfigValues()
 		local s = G.CG_ConfigString(C.CS_FLAGSTATUS)
 		cgs.redflag = charAt(s, 0) - 48
 		cgs.blueflag = charAt(s, 1) - 48
-	elseif cgs.gametype == C.GT_1FCTF or cgs.gametype == C.GT_POSSESSION then
+	elseif cgs.gametype == C.GT_1FCTF then
 		local s = G.CG_ConfigString(C.CS_FLAGSTATUS)
 		cgs.flagStatus = charAt(s, 0) - 48
 	end
@@ -583,7 +583,7 @@ local function CG_ConfigStringModified()
 			-- format is rb where its red/blue, 0 is at base, 1 is taken, 2 is dropped
 			cgs.redflag = charAt(str, 0) - 48
 			cgs.blueflag = charAt(str, 1) - 48
-		elseif cgs.gametype == C.GT_1FCTF or cgs.gametype == C.GT_POSSESSION then
+		elseif cgs.gametype == C.GT_1FCTF then
 			cgs.flagStatus = charAt(str, 0) - 48
 		end
 	elseif num == C.CS_SHADERSTATE then
@@ -606,6 +606,7 @@ local function CG_MapRestart()
 
 	G.CG_InitLocalEntities()
 	G.CG_InitMarkPolys()
+	G.CG_ClearParticles()
 
 	-- make sure the "3 frags left" warnings play again
 	cg.fraglimitWarnings = 0
@@ -945,8 +946,8 @@ local function CG_ServerCommand()
 		return
 	end
 
-	if cmd == "ddTakeAt" then
-		CG_ParseDDtimetakeAt()
+	if cmd == "ddtaken" then
+		CG_ParseDDtimetaken()
 		return
 	end
 

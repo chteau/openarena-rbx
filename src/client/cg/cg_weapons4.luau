@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_weapons.c (OpenArena gamecode).
--- This part covers C lines 3428-4236 (CG_FireWeapon .. CG_Bullet).
+-- Luau port of code/cgame/cg_weapons.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 2643-3654 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -57,13 +57,6 @@ function G.CG_FireWeapon(cent)
 	-- append the flash to the weapon model
 	cent.muzzleFlashTime = G.cg.time
 
-	-- leilei - hack for multiple muzzleflashes
-	cent.muztime[cent.muzslot] = G.cg.time
-	cent.muzslot += 1
-	if cent.muzslot > 2 then
-		cent.muzslot = 0
-	end
-
 	-- lightning gun only does this this on initial press
 	if ent.weapon == C.WP_LIGHTNING then
 		if cent.pe.lightningFiring then
@@ -99,6 +92,30 @@ function G.CG_FireWeapon(cent)
 	G.CG_PredictWeaponEffects(cent)
 end
 
+local function leiFireball(origin, dir, lightColor)
+	local sprOrg, sprVel = Q.vec3(), Q.vec3()
+	-- some more fireball, fireball, fireball, fire fire!
+	Q.VectorMA(origin, 24, dir, sprOrg)
+	Q.VectorScale(dir, 64, sprVel)
+	lightColor[0] = 0.7 -- subtler explosion colors
+	lightColor[1] = 0.6
+	lightColor[2] = 0.4
+	Q.VectorMA(origin, 4, dir, sprOrg)
+	Q.VectorScale(dir, 2, sprVel)
+	Q.VectorMA(origin, 4, dir, sprOrg)
+	Q.VectorScale(dir, 42, sprVel)
+	G.CG_ParticleExplosion("explode1", sprOrg, sprVel, 700, 10, 108)
+	Q.VectorMA(origin, 4, dir, sprOrg)
+	Q.VectorScale(dir, 82, sprVel)
+	G.CG_ParticleExplosion("explode1", sprOrg, sprVel, 400, 11, 158)
+	Q.VectorMA(origin, -5, dir, sprOrg)
+	Q.VectorScale(dir, 182, sprVel)
+	G.CG_ParticleExplosion("explode1", sprOrg, sprVel, 600, 47, 88)
+	Q.VectorMA(origin, -5, dir, sprOrg)
+	Q.VectorScale(dir, 64, sprVel)
+	G.CG_ParticleExplosion("explode1", sprOrg, sprVel, 110, 72, 28)
+end
+
 --[[
 =================
 CG_MissileHitWall
@@ -119,7 +136,6 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 	-- set defaults
 	local isSprite = false
 	local duration = 600
-	local lei = G.cg_leiEnhancement.integer
 
 	if weapon == C.WP_LIGHTNING then
 		-- no explosion at LG impact, it is added with the beam
@@ -141,9 +157,9 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		radius = 64
 		light = 300
 		isSprite = true
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(11, origin, dir)
+		if G.cg_leiEnhancement.integer ~= 0 then
+			leiFireball(origin, dir, lightColor)
+			mod = 0 -- turns off the sprite (unfortunately, disables dlight)
 		end
 	elseif weapon == C.WP_GRENADE_LAUNCHER then
 		mod = media.dishFlashModel
@@ -153,9 +169,9 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		radius = 64
 		light = 300
 		isSprite = true
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(4, origin, dir)
+		if G.cg_leiEnhancement.integer ~= 0 then
+			leiFireball(origin, dir, lightColor)
+			mod = 0
 		end
 	elseif weapon == C.WP_ROCKET_LAUNCHER then
 		mod = media.dishFlashModel
@@ -169,10 +185,17 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		lightColor[0] = 1
 		lightColor[1] = 0.75
 		lightColor[2] = 0.0
+		if G.cg_oldRocket.integer == 0 then
+			-- explosion sprite animation
+			local sprOrg, sprVel = Q.vec3(), Q.vec3()
+			Q.VectorMA(origin, 24, dir, sprOrg)
+			Q.VectorScale(dir, 64, sprVel)
 
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(5, origin, dir)
+			G.CG_ParticleExplosion("explode1", sprOrg, sprVel, 1400, 20, 30)
+		end
+		if G.cg_leiEnhancement.integer ~= 0 then
+			leiFireball(origin, dir, lightColor)
+			mod = 0
 		end
 	elseif weapon == C.WP_RAILGUN then
 		mod = media.ringFlashModel
@@ -180,20 +203,12 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		sfx = media.sfx_plasmaexp
 		mark = media.energyMarkShader
 		radius = 24
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(30, origin, dir)
-		end
 	elseif weapon == C.WP_PLASMAGUN then
 		mod = media.ringFlashModel
 		shader = media.plasmaExplosionShader
 		sfx = media.sfx_plasmaexp
 		mark = media.energyMarkShader
 		radius = 16
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(6, origin, dir)
-		end
 	elseif weapon == C.WP_BFG then
 		mod = media.dishFlashModel
 		shader = media.bfgExplosionShader
@@ -201,47 +216,33 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		mark = media.burnMarkShader
 		radius = 32
 		isSprite = true
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(9, origin, dir)
-		end
 	elseif weapon == C.WP_SHOTGUN then
 		mod = media.bulletFlashModel
 		shader = media.bulletExplosionShader
 		mark = media.bulletMarkShader
 		sfx = 0
 		radius = 4
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(3, origin, dir)
-		end
 	elseif weapon == C.WP_CHAINGUN then
 		mod = media.bulletFlashModel
-		if lei == 1996 then -- leilei - q effects
-			light = 0
-			radius = 1
-			duration = 1 -- bit more instant
+		if soundType == C.IMPACTSOUND_FLESH then
+			sfx = media.sfx_chghitflesh
+		elseif soundType == C.IMPACTSOUND_METAL then
+			sfx = media.sfx_chghitmetal
 		else
-			if soundType == C.IMPACTSOUND_FLESH then
-				sfx = media.sfx_chghitflesh
-			elseif soundType == C.IMPACTSOUND_METAL then
-				sfx = media.sfx_chghitmetal
-			else
-				sfx = media.sfx_chghit
-			end
-
-			mark = media.bulletMarkShader
-			local r = bit32.band(Q.rand(), 3)
-			if r < 2 then
-				sfx = media.sfx_ric1
-			elseif r == 2 then
-				sfx = media.sfx_ric2
-			else
-				sfx = media.sfx_ric3
-			end
-
-			radius = 8
+			sfx = media.sfx_chghit
 		end
+
+		mark = media.bulletMarkShader
+		local r = bit32.band(Q.rand(), 3)
+		if r < 2 then
+			sfx = media.sfx_ric1
+		elseif r == 2 then
+			sfx = media.sfx_ric2
+		else
+			sfx = media.sfx_ric3
+		end
+
+		radius = 8
 	elseif weapon == C.WP_MACHINEGUN then
 		mod = media.bulletFlashModel
 		shader = media.bulletExplosionShader
@@ -257,10 +258,6 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		end
 
 		radius = 8
-		if lei ~= 0 then
-			duration = 10
-			trap.R_LFX_ParticleEffect(2, origin, dir)
-		end
 	else
 		-- default and WP_NAILGUN
 		if soundType == C.IMPACTSOUND_FLESH then
@@ -272,9 +269,6 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 		end
 		mark = media.holeMarkShader
 		radius = 12
-		if lei ~= 0 then
-			trap.R_LFX_ParticleEffect(10, origin, dir)
-		end
 	end
 
 	if sfx ~= 0 then
@@ -284,24 +278,22 @@ function G.CG_MissileHitWall(weapon, clientNum, origin, dir, soundType)
 	--
 	-- create the explosion
 	--
-	if lei == 0 then -- don't make it when particles are enabled
-		if mod ~= 0 then
-			local le = G.CG_MakeExplosion(origin, dir, mod, shader, duration, isSprite)
-			le.light = light
-			le.lightColor[0] = lightColor[0]
-			le.lightColor[1] = lightColor[1]
-			le.lightColor[2] = lightColor[2]
-			if weapon == C.WP_RAILGUN then
-				-- colorize with client color
-				local c1 = G.cgs.clientinfo[clientNum].color1
-				le.color[0] = c1[0]
-				le.color[1] = c1[1]
-				le.color[2] = c1[2]
-				le.refEntity.shaderRGBA[0] = le.color[0] * 0xff
-				le.refEntity.shaderRGBA[1] = le.color[1] * 0xff
-				le.refEntity.shaderRGBA[2] = le.color[2] * 0xff
-				le.refEntity.shaderRGBA[3] = 0xff
-			end
+	if mod ~= 0 then
+		local le = G.CG_MakeExplosion(origin, dir, mod, shader, duration, isSprite)
+		le.light = light
+		le.lightColor[0] = lightColor[0]
+		le.lightColor[1] = lightColor[1]
+		le.lightColor[2] = lightColor[2]
+		if weapon == C.WP_RAILGUN then
+			-- colorize with client color
+			local c1 = G.cgs.clientinfo[clientNum].color1
+			le.color[0] = c1[0]
+			le.color[1] = c1[1]
+			le.color[2] = c1[2]
+			le.refEntity.shaderRGBA[0] = le.color[0] * 0xff
+			le.refEntity.shaderRGBA[1] = le.color[1] * 0xff
+			le.refEntity.shaderRGBA[2] = le.color[2] * 0xff
+			le.refEntity.shaderRGBA[3] = 0xff
 		end
 	end
 
@@ -320,7 +312,8 @@ end
 
 function G.CG_MissileHitPlayer(weapon, origin, dir, entityNum)
 	if G.cg_leiEnhancement.integer ~= 0 then
-		trap.R_LFX_ParticleEffect(14, origin, dir)
+		G.CG_SmokePuff(origin, dir, 22, 1, 1, 1, 1.0, 900, G.cg.time, 0, 0, G.cgs.media.lbldShader1)
+		G.CG_SpurtBlood(origin, dir, 1)
 	else
 		G.CG_Bleed(origin, entityNum)
 	end
@@ -346,6 +339,19 @@ SHOTGUN TRACING
 ============================================================================
 ]]
 
+local function waterSplash(trace)
+	local kapow = Q.vec3()
+	local media = G.cgs.media
+	Q.VectorCopy(trace.plane.normal, kapow)
+
+	kapow[0] = kapow[0] * (Q.crandom() * 22)
+	kapow[1] = kapow[1] * (Q.crandom() * 22)
+	kapow[2] = kapow[2] * (Q.crandom() * 65 + 37)
+	G.CG_SmokePuff(trace.endpos, kapow, 14, 1, 1, 1, 1.0, 400, G.cg.time, 0, 0, media.lsplShader)
+	G.CG_SmokePuff(trace.endpos, kapow, 6, 1, 1, 1, 1.0, 200, G.cg.time, 0, 0, media.lsplShader)
+	G.CG_SmokePuff(trace.endpos, kapow, 10, 1, 1, 1, 1.0, 300, G.cg.time, 0, 0, media.lsplShader)
+end
+
 function G.CG_ShotgunPellet(start, finish, skipNum)
 	local tr = T.trace_t()
 	local kapow = Q.vec3()
@@ -367,9 +373,7 @@ function G.CG_ShotgunPellet(start, finish, skipNum)
 		G.CG_BubbleTrail(start, trace.endpos, 32)
 
 		if G.cg_leiEnhancement.integer ~= 0 then
-			-- Water Splash
-			kapow[0], kapow[1], kapow[2] = trace.plane.normal[0], trace.plane.normal[1], trace.plane.normal[2]
-			trap.R_LFX_ParticleEffect(19, trace.endpos, kapow)
+			waterSplash(trace)
 		end
 	elseif bit32.band(destContentType, C.CONTENTS_WATER) ~= 0 then
 		local trace = T.trace_t()
@@ -378,9 +382,7 @@ function G.CG_ShotgunPellet(start, finish, skipNum)
 		G.CG_BubbleTrail(tr.endpos, trace.endpos, 32)
 
 		if G.cg_leiEnhancement.integer ~= 0 then
-			-- Water Splash
-			kapow[0], kapow[1], kapow[2] = trace.plane.normal[0], trace.plane.normal[1], trace.plane.normal[2]
-			trap.R_LFX_ParticleEffect(19, trace.endpos, kapow)
+			waterSplash(trace)
 		end
 	end
 
@@ -391,10 +393,36 @@ function G.CG_ShotgunPellet(start, finish, skipNum)
 	if G.cg_entities[tr.entityNum].currentState.eType == C.ET_PLAYER then
 		G.CG_MissileHitPlayer(C.WP_SHOTGUN, tr.endpos, tr.plane.normal, tr.entityNum)
 	else
+		if bit32.band(tr.surfaceFlags, C.SURF_NOIMPACT) ~= 0 then
+			-- SURF_NOIMPACT will not make a flame puff or a mark
+			return
+		end
 		if bit32.band(tr.surfaceFlags, C.SURF_METALSTEPS) ~= 0 then
 			G.CG_MissileHitWall(C.WP_SHOTGUN, 0, tr.endpos, tr.plane.normal, C.IMPACTSOUND_METAL)
+			if G.cg_leiEnhancement.integer ~= 0 then
+				Q.VectorCopy(tr.plane.normal, kapow)
+
+				kapow[0] = kapow[0] * (Q.crandom() * 65 + 37)
+				kapow[1] = kapow[1] * (Q.crandom() * 65 + 37)
+				kapow[2] = kapow[2] * (Q.crandom() * 65 + 37)
+				G.CG_LeiSparks(tr.endpos, tr.plane.normal, 800, 0, 0, 7)
+				G.CG_LeiSparks(tr.endpos, tr.plane.normal, 800, 0, 0, 3)
+				G.CG_LeiSparks(tr.endpos, tr.plane.normal, 800, 0, 0, 1)
+			end
 		else
 			G.CG_MissileHitWall(C.WP_SHOTGUN, 0, tr.endpos, tr.plane.normal, C.IMPACTSOUND_DEFAULT)
+
+			if G.cg_leiEnhancement.integer ~= 0 then
+				Q.VectorCopy(tr.plane.normal, kapow)
+
+				kapow[0] = kapow[0] * (Q.crandom() * 65 + 37)
+				kapow[1] = kapow[1] * (Q.crandom() * 65 + 37)
+				kapow[2] = kapow[2] * (Q.crandom() * 65 + 37)
+				G.CG_LeiSparks(tr.endpos, tr.plane.normal, 800, 0, 0, 7)
+				G.CG_LeiSparks(tr.endpos, tr.plane.normal, 800, 0, 0, 2)
+
+				G.CG_SmokePuff(tr.endpos, kapow, 21, 1, 1, 1, 0.9, 1200, G.cg.time, 0, 0, G.cgs.media.lsmkShader2)
+			end
 		end
 	end
 end
@@ -442,11 +470,19 @@ function G.CG_ShotgunFire(es)
 	if G.cgs.glconfig.hardwareType ~= C.GLHW_RAGEPRO then
 		-- ragepro can't alpha fade, so don't even bother with smoke
 		local up = Q.vec3()
+		local forward = Q.vec3()
 
 		local contents = G.CG_PointContents(es.pos.trBase, 0)
 		if bit32.band(contents, C.CONTENTS_WATER) == 0 then
 			Q.VectorSet(up, 0, 0, 8)
-			G.CG_SmokePuff(v, up, 32, 1, 1, 1, 0.33, 900, G.cg.time, 0, C.LEF_PUFF_DONT_SCALE, G.cgs.media.shotgunSmokePuffShader)
+			if G.cg_leiEnhancement.integer ~= 0 then
+				-- Shotgun puffy
+				for _ = 1, 6 do
+					G.CG_LeiSparks(v, forward, 1500, 0, 0, 7)
+				end
+			else
+				G.CG_SmokePuff(v, up, 32, 1, 1, 1, 0.33, 900, G.cg.time, 0, C.LEF_PUFF_DONT_SCALE, G.cgs.media.shotgunSmokePuffShader)
+			end
 		end
 	end
 	G.CG_ShotgunPattern(es.pos.trBase, es.origin2, es.eventParm, es.otherEntityNum)
@@ -551,11 +587,7 @@ function G.CG_CalcMuzzlePoint(entityNum, muzzle)
 	if anim == C.LEGS_WALKCR or anim == C.LEGS_IDLECR then
 		muzzle[2] += C.CROUCH_VIEWHEIGHT
 	else
-		if G.cg_enableQ.integer ~= 0 then
-			muzzle[2] += C.QUACK_VIEWHEIGHT
-		else
-			muzzle[2] += C.DEFAULT_VIEWHEIGHT
-		end
+		muzzle[2] += C.DEFAULT_VIEWHEIGHT
 	end
 
 	Q.VectorMA(muzzle, 14, forward, muzzle)
@@ -573,6 +605,7 @@ Renders bullet effects.
 function G.CG_Bullet(finish, sourceEntityNum, normal, flesh, fleshEntityNum)
 	local trace = T.trace_t()
 	local start = Q.vec3()
+	local kapew = Q.vec3()
 	local kapow = Q.vec3()
 
 	-- if the shooter is currently valid, calc a source point and possibly
@@ -591,9 +624,7 @@ function G.CG_Bullet(finish, sourceEntityNum, normal, flesh, fleshEntityNum)
 				G.CG_BubbleTrail(start, trace.endpos, 32)
 
 				if G.cg_leiEnhancement.integer ~= 0 then
-					-- Water Splash
-					kapow[0], kapow[1], kapow[2] = trace.plane.normal[0], trace.plane.normal[1], trace.plane.normal[2]
-					trap.R_LFX_ParticleEffect(19, trace.endpos, kapow)
+					waterSplash(trace)
 				end
 			-- bubble trail from air into water
 			elseif bit32.band(destContentType, C.CONTENTS_WATER) ~= 0 then
@@ -601,9 +632,7 @@ function G.CG_Bullet(finish, sourceEntityNum, normal, flesh, fleshEntityNum)
 				G.CG_BubbleTrail(trace.endpos, finish, 32)
 
 				if G.cg_leiEnhancement.integer ~= 0 then
-					-- Water Splash
-					kapow[0], kapow[1], kapow[2] = trace.plane.normal[0], trace.plane.normal[1], trace.plane.normal[2]
-					trap.R_LFX_ParticleEffect(19, trace.endpos, kapow)
+					waterSplash(trace)
 				end
 			end
 
@@ -617,12 +646,45 @@ function G.CG_Bullet(finish, sourceEntityNum, normal, flesh, fleshEntityNum)
 	-- impact splash and mark
 	if flesh then
 		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(14, finish, normal)
+			-- Blood Hack
+			Q.VectorCopy(normal, kapow)
+
+			kapow[0] = kapow[0] * (Q.crandom() * 65 + 37)
+			kapow[1] = kapow[1] * (Q.crandom() * 65 + 37)
+			kapow[2] = kapow[2] * (Q.crandom() * 65 + 37)
+			Q.VectorCopy(kapow, kapew)
+
+			kapew[0] = kapew[0] * (Q.crandom() * 2 + 37)
+			kapew[1] = kapew[1] * (Q.crandom() * 2 + 37)
+			kapew[2] = kapew[2] * (Q.crandom() * 2 + 37)
+
+			G.CG_SmokePuff(finish, kapow, 6, 1, 1, 1, 1.0, 600, G.cg.time, 0, 0, G.cgs.media.lbldShader1)
+			G.CG_SpurtBlood(finish, kapew, 1)
+
+			if G.cg_leiSuperGoreyAwesome.integer ~= 0 then
+				G.CG_SpurtBlood(finish, kapow, -2)
+			end
 		else
 			G.CG_Bleed(finish, fleshEntityNum)
 		end
 	else
 		G.CG_MissileHitWall(C.WP_MACHINEGUN, 0, finish, normal, C.IMPACTSOUND_DEFAULT)
+
+		if G.cg_leiEnhancement.integer ~= 0 then
+			-- Smoke puff
+			Q.VectorCopy(normal, kapow)
+
+			kapow[0] = kapow[0] * (Q.crandom() * 65 + 37)
+			kapow[1] = kapow[1] * (Q.crandom() * 65 + 37)
+			kapow[2] = kapow[2] * (Q.crandom() * 65 + 37)
+			Q.VectorCopy(kapow, kapew)
+
+			kapew[0] = kapew[0] * (Q.crandom() * 65 + 37)
+			kapew[1] = kapew[1] * (Q.crandom() * 65 + 37)
+			kapew[2] = kapew[2] * (Q.crandom() * 65 + 37)
+
+			G.CG_SmokePuff(finish, kapow, 14, 1, 1, 1, 1.0, 600, G.cg.time, 0, 0, G.cgs.media.lsmkShader1)
+		end
 	end
 end
 

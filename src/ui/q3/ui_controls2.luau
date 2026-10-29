@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_controls2.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_controls2.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 --[[
 =======================================================================
@@ -36,10 +36,10 @@ local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 local BG = require(script.Parent.Parent.Parent.client.adapters.BG)
 
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local ART_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
+local ART_FRAMEL = "menu/art_blueish/frame2_l"
+local ART_FRAMER = "menu/art_blueish/frame1_r"
 
 -- control sections
 local C_MOVEMENT = 0
@@ -97,19 +97,17 @@ local ID_CHAT2 = 35
 local ID_CHAT3 = 36
 local ID_CHAT4 = 37
 local ID_VOIP_TALK = 38
-local ID_ACCURACY = 39
-local ID_WEAPBEST = 40
 
 -- all others
-local ID_FREELOOK = 41
-local ID_INVERTMOUSE = 42
-local ID_ALWAYSRUN = 43
-local ID_AUTOSWITCH = 44
-local ID_MOUSESPEED = 45
-local ID_JOYENABLE = 46
-local ID_JOYTHRESHOLD = 47
-local ID_SMOOTHMOUSE = 48
-local ID_VOIP_TEAMONLY = 49
+local ID_FREELOOK = 39
+local ID_INVERTMOUSE = 40
+local ID_ALWAYSRUN = 41
+local ID_AUTOSWITCH = 42
+local ID_MOUSESPEED = 43
+local ID_JOYENABLE = 44
+local ID_JOYTHRESHOLD = 45
+local ID_SMOOTHMOUSE = 46
+local ID_VOIP_TEAMONLY = 47
 
 local ANIM_IDLE = 0
 local ANIM_RUN = 1
@@ -181,7 +179,6 @@ local itemFields = {
 	{ "proxmine", "menuaction_s" },
 	{ "chaingun", "menuaction_s" },
 	{ "attack", "menuaction_s" },
-	{ "bestweapon", "menuaction_s" },
 	{ "prevweapon", "menuaction_s" },
 	{ "nextweapon", "menuaction_s" },
 	{ "lookup", "menuaction_s" },
@@ -196,7 +193,6 @@ local itemFields = {
 	{ "smoothmouse", "menuradiobutton_s" },
 	{ "alwaysrun", "menuradiobutton_s" },
 	{ "showscores", "menuaction_s" },
-	{ "showacc", "menuaction_s" },
 	{ "autoswitch", "menulist_s" },
 	{ "useitem", "menuaction_s" },
 	{ "chat", "menuaction_s" },
@@ -274,8 +270,6 @@ local g_bindings = {
 	bind("messagemode3", "chat - target", ID_CHAT3, ANIM_CHAT, -1),
 	bind("messagemode4", "chat - attacker", ID_CHAT4, ANIM_CHAT, -1),
 	bind("+voiprecord", "voice chat", ID_VOIP_TALK, ANIM_CHAT, chr("q")),
-	bind("+acc", "show accuracy", ID_ACCURACY, ANIM_IDLE, -1),
-	bind("weapbest", "best weapon", ID_WEAPBEST, ANIM_IDLE, -1),
 }
 
 local function cfg(name: string)
@@ -313,7 +307,6 @@ local g_weapons_controls = {
 	[0] = "attack",
 	"nextweapon",
 	"prevweapon",
-	"bestweapon",
 	"autoswitch",
 	"chainsaw",
 	"machinegun",
@@ -346,7 +339,6 @@ local g_looking_controls = {
 
 local g_misc_controls = {
 	[0] = "showscores",
-	"showacc",
 	"useitem",
 	"gesture",
 	"chat",
@@ -429,7 +421,7 @@ local function Controls_UpdateModel(anim: number)
 	s_controls.playerMoveangles[C.YAW] = s_controls.playerViewangles[C.YAW]
 	s_controls.playerLegs = C.LEGS_IDLE
 	s_controls.playerTorso = C.TORSO_STAND
-	s_controls.playerWeapon = C.WP_NUM_WEAPONS
+	s_controls.playerWeapon = -1
 	s_controls.playerChat = false
 
 	if anim == ANIM_RUN then
@@ -645,7 +637,7 @@ local function Controls_DrawKeyBinding(self: any)
 			)
 			U.UI_DrawString(
 				C.SCREEN_WIDTH * 0.50,
-				C.SCREEN_HEIGHT * 0.84,
+				C.SCREEN_HEIGHT * 0.80,
 				"Waiting for new key ... ESCAPE to cancel",
 				bit32.bor(C.UI_SMALLFONT, C.UI_CENTER, C.UI_PULSE),
 				Q.colorWhite
@@ -654,14 +646,14 @@ local function Controls_DrawKeyBinding(self: any)
 			U.UI_DrawChar(x, y, 13, bit32.bor(C.UI_CENTER, C.UI_BLINK, C.UI_SMALLFONT), U.text_color_highlight)
 			U.UI_DrawString(
 				C.SCREEN_WIDTH * 0.50,
-				C.SCREEN_HEIGHT * 0.82,
+				C.SCREEN_HEIGHT * 0.78,
 				"Press ENTER or CLICK to change",
 				bit32.bor(C.UI_SMALLFONT, C.UI_CENTER),
 				Q.colorWhite
 			)
 			U.UI_DrawString(
 				C.SCREEN_WIDTH * 0.50,
-				C.SCREEN_HEIGHT * 0.86,
+				C.SCREEN_HEIGHT * 0.82,
 				"Press BACKSPACE to clear",
 				bit32.bor(C.UI_SMALLFONT, C.UI_CENTER),
 				Q.colorWhite
@@ -672,7 +664,7 @@ local function Controls_DrawKeyBinding(self: any)
 			U.UI_DrawString(x - C.SMALLCHAR_WIDTH, y, label, bit32.bor(C.UI_RIGHT, C.UI_SMALLFONT), U.text_color_disabled)
 			U.UI_DrawString(x + C.SMALLCHAR_WIDTH, y, name, bit32.bor(C.UI_LEFT, C.UI_SMALLFONT), U.text_color_disabled)
 		else
-			U.UI_DrawString(x - C.SMALLCHAR_WIDTH, y, label, bit32.bor(C.UI_RIGHT, C.UI_SMALLFONT), U.text_color_normal)
+			U.UI_DrawString(x - C.SMALLCHAR_WIDTH, y, label, bit32.bor(C.UI_RIGHT, C.UI_SMALLFONT), controls_binding_color)
 			U.UI_DrawString(x + C.SMALLCHAR_WIDTH, y, name, bit32.bor(C.UI_LEFT, C.UI_SMALLFONT), controls_binding_color)
 		end
 	end
@@ -681,7 +673,7 @@ end
 local function Controls_StatusBar(self: any)
 	U.UI_DrawString(
 		C.SCREEN_WIDTH * 0.50,
-		C.SCREEN_HEIGHT * 0.84,
+		C.SCREEN_HEIGHT * 0.80,
 		"Use Arrow Keys or CLICK to change",
 		bit32.bor(C.UI_SMALLFONT, C.UI_CENTER),
 		Q.colorWhite
@@ -1008,7 +1000,7 @@ end
 
 local function Controls_Menu_AddPText(menutext: any, y: number, id: number, text: string): number
 	menutext.generic.type = C.MTYPE_PTEXT
-	menutext.generic.flags = bit32.bor(C.QMF_CENTER_JUSTIFY, C.QMF_PULSEIFFOCUS)
+	menutext.generic.flags = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_PULSEIFFOCUS)
 	menutext.generic.callback = Controls_MenuEvent
 	menutext.generic.id = id
 	menutext.generic.x = 152
@@ -1141,7 +1133,6 @@ local function Controls_MenuInit()
 	initAction(s_controls.proxmine, ID_WEAPON12)
 	initAction(s_controls.chaingun, ID_WEAPON13)
 	initAction(s_controls.attack, ID_ATTACK)
-	initAction(s_controls.bestweapon, ID_WEAPBEST)
 	initAction(s_controls.prevweapon, ID_WEAPPREV)
 	initAction(s_controls.nextweapon, ID_WEAPNEXT)
 	initAction(s_controls.lookup, ID_LOOKUP)
@@ -1158,7 +1149,6 @@ local function Controls_MenuInit()
 	initAction(s_controls.zoomview, ID_ZOOMVIEW)
 	initAction(s_controls.useitem, ID_USEITEM)
 	initAction(s_controls.showscores, ID_SHOWSCORES)
-	initAction(s_controls.showacc, ID_ACCURACY)
 
 	initRadio(s_controls.invertmouse, "invert mouse", ID_INVERTMOUSE)
 	initRadio(s_controls.smoothmouse, "smooth mouse", ID_SMOOTHMOUSE)
@@ -1220,10 +1210,10 @@ local function Controls_MenuInit()
 		"freelook", "centerview", "zoomview", "joyenable", "joythreshold",
 		"alwaysrun", "run", "walkforward", "backpedal", "stepleft", "stepright",
 		"moveup", "movedown", "turnleft", "turnright", "sidestep",
-		"attack", "nextweapon", "prevweapon", "bestweapon", "autoswitch", "chainsaw",
+		"attack", "nextweapon", "prevweapon", "autoswitch", "chainsaw",
 		"machinegun", "shotgun", "grenadelauncher", "rocketlauncher", "lightning",
 		"railgun", "plasma", "bfg", "grapple", "nailgun", "proxmine", "chaingun",
-		"showscores", "showacc", "useitem", "gesture", "chat", "chat2", "chat3", "chat4",
+		"showscores", "useitem", "gesture", "chat", "chat2", "chat3", "chat4",
 		"voip_talk", "voip_teamonly",
 		"back",
 	}

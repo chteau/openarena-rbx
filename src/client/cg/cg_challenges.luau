@@ -19,7 +19,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_challenges.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_challenges.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local G = require(script.Parent.G)
 local C = require(script.Parent.Parent.q.Consts)

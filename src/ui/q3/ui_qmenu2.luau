@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_qmenu.c (OpenArena gamecode).
--- This part covers lines 901-1788 (ScrollList_Init .. Menu_Cache).
+-- Luau port of code/q3_ui/ui_qmenu.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 902-1751 of the 0.8.8 source.
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -167,42 +167,6 @@ function U.ScrollList_Key(l, key)
 			end
 
 			return U.menu_move_sound
-		end
-		return U.menu_buzz_sound
-	elseif key == C.K_MWHEELUP then
-		if l.columns > 1 then
-			return U.menu_null_sound
-		end
-		if l.top > 0 then
-			-- if scrolling 3 lines would replace over half of the
-			-- displayed items, only scroll 1 item at a time.
-			local scroll = if l.height < 6 then 1 else 3
-			l.top -= scroll
-			if l.top < 0 then
-				l.top = 0
-			end
-			if g.callback ~= nil then
-				g.callback(l, C.QM_GOTFOCUS)
-			end
-			-- make scrolling silent
-			return U.menu_null_sound
-		end
-		return U.menu_buzz_sound
-	elseif key == C.K_MWHEELDOWN then
-		if l.columns > 1 then
-			return U.menu_null_sound
-		end
-		if l.top < l.numitems - l.height then
-			local scroll = if l.height < 6 then 1 else 3
-			l.top += scroll
-			if l.top > l.numitems - l.height then
-				l.top = l.numitems - l.height
-			end
-			if g.callback ~= nil then
-				g.callback(l, C.QM_GOTFOCUS)
-			end
-			-- make scrolling silent
-			return U.menu_null_sound
 		end
 		return U.menu_buzz_sound
 	elseif key == C.K_UPARROW then

@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_playermodel.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_playermodel.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
@@ -27,16 +27,16 @@ local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local MODEL_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local MODEL_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local MODEL_BACK0 = "menu/art_blueish/back_0"
+local MODEL_BACK1 = "menu/art_blueish/back_1"
 local MODEL_SELECT = "menu/art/opponents_select"
 local MODEL_SELECTED = "menu/art/opponents_selected"
-local MODEL_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame1_l"
-local MODEL_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local MODEL_PORTS = "menu/" .. C.MENU_ART_DIR .. "/player_models_ports"
-local MODEL_ARROWS = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_0"
-local MODEL_ARROWSL = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_l"
-local MODEL_ARROWSR = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_r"
+local MODEL_FRAMEL = "menu/art_blueish/frame1_l"
+local MODEL_FRAMER = "menu/art_blueish/frame1_r"
+local MODEL_PORTS = "menu/art_blueish/player_models_ports"
+local MODEL_ARROWS = "menu/art_blueish/gs_arrows_0"
+local MODEL_ARROWSL = "menu/art_blueish/gs_arrows_l"
+local MODEL_ARROWSR = "menu/art_blueish/gs_arrows_r"
 
 local LOW_MEMORY = 5 * 1024 * 1024
 
@@ -384,7 +384,7 @@ local function PlayerModel_BuildList()
 				local skinname = (string.gsub(filelist[j], "%.[^%.]*$", ""))
 
 				-- look for icon_????
-				if string.sub(skinname, 1, 5) == "icon_" then
+				if string.lower(string.sub(skinname, 1, 5)) == "icon_" then
 					s_playermodel.modelnames[s_playermodel.nummodels] =
 						Q.va("models/players/%s/%s", dirptr, skinname)
 					s_playermodel.nummodels += 1

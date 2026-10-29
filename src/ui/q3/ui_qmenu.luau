@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_qmenu.c (OpenArena gamecode).
--- Covers C lines 1-900 (through SpinControl_Draw).
+-- Luau port of code/q3_ui/ui_qmenu.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-901 of the 0.8.8 source.
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)

@@ -19,15 +19,15 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_teamorders.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_teamorders.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_FRAME = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local ART_FRAME = "menu/art_blueish/addbotframe"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
 
 local ID_LIST_BOTS = 10
 local ID_LIST_CTF_ORDERS = 11
@@ -396,14 +396,14 @@ local function UI_TeamOrdersMenu_BuildBotList()
 	local numPlayers = atoi(infoValueForKey(infoStr, "sv_maxclients"))
 	info.gametype = atoi(infoValueForKey(infoStr, "g_gametype"))
 
-	infoStr = trap.GetConfigString(C.CS_PLAYERS + cs.clientNum)
-	local playerTeam = string.sub(infoValueForKey(infoStr, "t"), 1, 1)
+	local playerTeam = "3"
 
 	local n = 0
 	while n < numPlayers and info.numBots < 9 do
-		if n ~= cs.clientNum then
-			infoStr = trap.GetConfigString(C.CS_PLAYERS + n)
-
+		infoStr = trap.GetConfigString(C.CS_PLAYERS + n)
+		if n == cs.clientNum then
+			playerTeam = string.sub(infoValueForKey(infoStr, "t"), 1, 1)
+		else
 			local isBot = atoi(infoValueForKey(infoStr, "skill"))
 			if isBot ~= 0 then
 				local botTeam = string.sub(infoValueForKey(infoStr, "t"), 1, 1)
@@ -489,7 +489,7 @@ function U.UI_TeamOrdersMenu_f()
 	-- make sure it's a team game
 	local infoStr = trap.GetConfigString(C.CS_SERVERINFO)
 	teamOrdersMenuInfo.gametype = atoi(infoValueForKey(infoStr, "g_gametype"))
-	if teamOrdersMenuInfo.gametype < C.GT_TEAM or teamOrdersMenuInfo.gametype == C.GT_LMS or teamOrdersMenuInfo.gametype == C.GT_POSSESSION then
+	if teamOrdersMenuInfo.gametype < C.GT_TEAM or teamOrdersMenuInfo.gametype ~= C.GT_LMS then
 		return
 	end
 

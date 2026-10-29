@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_main.c (OpenArena gamecode).
--- This part covers C lines 1-1047 (through CG_RegisterSounds).
+-- Luau port of code/cgame/cg_main.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-991 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -30,9 +30,6 @@ local trap = require(script.Parent.Parent.sys.Trap)
 local BG = require(script.Parent.Parent.adapters.BG)
 
 G.forceModelModificationCount = -1
-
-G.realVidWidth = 0
-G.realVidHeight = 0 -- leilei - global video hack
 
 --[[
 ================
@@ -75,6 +72,7 @@ end
 
 -- vmCvar_t globals declared outside the cvarTable
 G.cg_hudFiles = T.vmCvar_t()
+G.cg_gun_frame = T.vmCvar_t()
 
 -- { global name, cvar name, default, flags }
 local cvarDefs = {
@@ -84,7 +82,6 @@ local cvarDefs = {
 	{ "cg_zoomFov", "cg_zoomfov", "22.5", C.CVAR_ARCHIVE },
 	{ "cg_fov", "cg_fov", "90", C.CVAR_ARCHIVE },
 	{ "cg_viewsize", "cg_viewsize", "100", C.CVAR_ARCHIVE },
-	{ "cg_viewnudge", "cg_viewnudge", "0", C.CVAR_ARCHIVE },
 	{ "cg_shadows", "cg_shadows", "1", C.CVAR_ARCHIVE },
 	{ "cg_gibs", "cg_gibs", "1", C.CVAR_ARCHIVE },
 	{ "cg_draw2D", "cg_draw2D", "1", C.CVAR_ARCHIVE },
@@ -115,12 +112,9 @@ local cvarDefs = {
 	{ "cg_centertime", "cg_centertime", "3", C.CVAR_CHEAT },
 	{ "cg_runpitch", "cg_runpitch", "0.002", C.CVAR_ARCHIVE },
 	{ "cg_runroll", "cg_runroll", "0.005", C.CVAR_ARCHIVE },
-	{ "cg_bob", "cg_bob", "1", C.CVAR_ARCHIVE },
 	{ "cg_bobup", "cg_bobup", "0.005", C.CVAR_CHEAT },
 	{ "cg_bobpitch", "cg_bobpitch", "0.002", C.CVAR_ARCHIVE },
 	{ "cg_bobroll", "cg_bobroll", "0.002", C.CVAR_ARCHIVE },
-	{ "cg_bobmodel", "cg_bobmodel", "0", C.CVAR_ARCHIVE }, -- leilei
-	{ "cg_kickScale", "cg_kickScale", "1.0", C.CVAR_ARCHIVE },
 	{ "cg_swingSpeed", "cg_swingSpeed", "0.3", C.CVAR_CHEAT },
 	{ "cg_animSpeed", "cg_animspeed", "1", C.CVAR_CHEAT },
 	{ "cg_debugAnim", "cg_debuganim", "0", C.CVAR_CHEAT },
@@ -155,7 +149,7 @@ local cvarDefs = {
 	{ "cg_paused", "cl_paused", "0", C.CVAR_ROM },
 	{ "cg_blood", "com_blood", "1", C.CVAR_ARCHIVE },
 	{ "cg_alwaysWeaponBar", "cg_alwaysWeaponBar", "0", C.CVAR_ARCHIVE }, --Elimination
-	{ "cg_hitSound", "cg_hitSound", "1", C.CVAR_ARCHIVE },
+	{ "cg_hitsound", "cg_hitsound", "0", C.CVAR_ARCHIVE },
 	{ "cg_voip_teamonly", "cg_voipTeamOnly", "1", C.CVAR_ARCHIVE },
 	{ "cg_voteflags", "cg_voteflags", "*", C.CVAR_ROM },
 	{ "cg_cyclegrapple", "cg_cyclegrapple", "1", C.CVAR_ARCHIVE },
@@ -163,8 +157,6 @@ local cvarDefs = {
 	{ "cg_synchronousClients", "g_synchronousClients", "0", C.CVAR_SYSTEMINFO }, -- communicated by systeminfo
 
 	{ "cg_autovertex", "cg_autovertex", "0", C.CVAR_ARCHIVE },
-	{ "cg_enableFS", "g_enableFS", "0", C.CVAR_SERVERINFO },
-	{ "cg_enableQ", "g_enableQ", "0", C.CVAR_SERVERINFO },
 	{ "cg_enableDust", "g_enableDust", "0", C.CVAR_SERVERINFO },
 	{ "cg_enableBreath", "g_enableBreath", "0", C.CVAR_SERVERINFO },
 	{ "cg_obeliskRespawnDelay", "g_obeliskRespawnDelay", "10", C.CVAR_SERVERINFO },
@@ -175,7 +167,7 @@ local cvarDefs = {
 	{ "cg_timescaleFadeSpeed", "cg_timescaleFadeSpeed", "0", 0 },
 	{ "cg_timescale", "timescale", "1", 0 },
 	{ "cg_scorePlum", "cg_scorePlums", "1", bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE) },
-	{ "cg_obituaryOutput", "cg_obituaryOutput", "3", C.CVAR_ARCHIVE },
+	{ "cg_cameraMode", "com_cameraMode", "0", C.CVAR_CHEAT },
 
 	{ "pmove_fixed", "pmove_fixed", "0", C.CVAR_SYSTEMINFO },
 	{ "pmove_msec", "pmove_msec", "11", C.CVAR_SYSTEMINFO },
@@ -190,19 +182,6 @@ local cvarDefs = {
 	{ "cg_leiGoreNoise", "cg_leiGoreNoise", "0", C.CVAR_ARCHIVE },
 	{ "cg_leiBrassNoise", "cg_leiBrassNoise", "0", C.CVAR_ARCHIVE },
 	{ "cg_leiSuperGoreyAwesome", "cg_leiSuperGoreyAwesome", "0", C.CVAR_ARCHIVE },
-	{ "cg_leiDebug", "cg_leiDebug", "0", C.CVAR_ARCHIVE },
-	{ "cg_leiChibi", "cg_leiChibi", "0", C.CVAR_CHEAT },
-	{ "cg_leiWidescreen", "cg_leiWidescreen", "1", C.CVAR_ARCHIVE },
-	{ "cg_deathcam", "cg_deathcam", "1", C.CVAR_ARCHIVE },
-	{ "cg_cameramode", "cg_cameramode", "0", C.CVAR_CHEAT },
-	{ "cg_cameraEyes", "cg_cameraEyes", "0", C.CVAR_CHEAT },
-	{ "cg_cameraEyes_Fwd", "cg_cameraEyes_Fwd", "3", C.CVAR_CHEAT },
-	{ "cg_cameraEyes_Up", "cg_cameraEyes_Up", "3", C.CVAR_CHEAT },
-
-	{ "cg_modelEyes_Up", "cg_modelEyes_Up", "3", C.CVAR_ARCHIVE },
-	{ "cg_modelEyes_Right", "cg_modelEyes_Right", "3", C.CVAR_ARCHIVE },
-	{ "cg_modelEyes_Fwd", "cg_modelEyes_Fwd", "3", C.CVAR_ARCHIVE },
-
 	{ "cg_oldPlasma", "cg_oldPlasma", "1", C.CVAR_ARCHIVE },
 	--unlagged - client options
 	{ "cg_delag", "cg_delag", "1", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_USERINFO) },
@@ -233,11 +212,9 @@ local tail = {
 	{ "cg_crosshairColorBlue", "cg_crosshairColorBlue", "1.0", C.CVAR_ARCHIVE },
 
 	{ "cg_weaponBarStyle", "cg_weaponBarStyle", "0", C.CVAR_ARCHIVE },
-	{ "cg_weaponOrder", "cg_weaponOrder", "/1/2/4/3/6/7/8/5/9/", C.CVAR_ARCHIVE },
+	{ "cg_weaponOrder", "cg_weaponOrder", "/1/2/4/3/6/7/8/9/5/", C.CVAR_ARCHIVE },
 	{ "cg_chatBeep", "cg_chatBeep", "1", C.CVAR_ARCHIVE },
 	{ "cg_teamChatBeep", "cg_teamChatBeep", "1", C.CVAR_ARCHIVE },
-	{ "cg_muzzleflashStyle", "cg_muzzleflashStyle", "1", C.CVAR_ARCHIVE },
-	{ "cg_alternateShell", "cg_alternateShell", "0", C.CVAR_ARCHIVE },
 	{ "cg_wideScreenHud", "cg_wideScreenHud", "0", C.CVAR_ARCHIVE },
 }
 for _, def in tail do
@@ -489,15 +466,14 @@ function G.CG_RegisterSounds()
 			m.enemyTookTheFlagSound = reg("sound/teamplay/voc_enemy_1flag.wav", true)
 		end
 
+		if cgs.gametype == C.GT_1FCTF or cgs.gametype == C.GT_CTF or cgs.gametype == C.GT_CTF_ELIMINATION or buildScript then
+			m.youHaveFlagSound = reg("sound/teamplay/voc_you_flag.wav", true)
+			m.holyShitSound = reg("sound/feedback/voc_holyshit.wav", true)
+		end
+
 		if cgs.gametype == C.GT_OBELISK or buildScript then
 			m.yourBaseIsUnderAttackSound = reg("sound/teamplay/voc_base_attack.wav", true)
 		end
-	end
-
-	if cgs.gametype == C.GT_1FCTF or cgs.gametype == C.GT_CTF or cgs.gametype == C.GT_CTF_ELIMINATION
-		or cgs.gametype == C.GT_POSSESSION or buildScript then
-		m.youHaveFlagSound = reg("sound/teamplay/voc_you_flag.wav", true)
-		m.holyShitSound = reg("sound/feedback/voc_holyshit.wav", true)
 	end
 
 	m.tracerSound = reg("sound/weapons/machinegun/buletby1.wav", false)
@@ -546,7 +522,7 @@ function G.CG_RegisterSounds()
 	m.talkSound = reg("sound/player/talk.wav", false)
 	m.landSound = reg("sound/player/land1.wav", false)
 
-	m.hitSound = reg("sound/feedback/hit.wav", false)
+	m.hitSound = reg("sound/feedback/hit.wav", false) -- cg_hitsound: every value uses hit.wav
 
 	m.impressiveSound = reg("sound/feedback/impressive.wav", true)
 	m.excellentSound = reg("sound/feedback/excellent.wav", true)
@@ -573,13 +549,6 @@ function G.CG_RegisterSounds()
 		{ C.FOOTSTEP_ENERGY, "energy" },
 		{ C.FOOTSTEP_SPLASH, "splash" },
 		{ C.FOOTSTEP_METAL, "clank" },
-		{ C.FOOTSTEP_SAND, "sand" },
-		{ C.FOOTSTEP_WOOD, "wood" },
-		{ C.FOOTSTEP_GRAVEL, "gravel" },
-		{ C.FOOTSTEP_SNOW, "snow" },
-		{ C.FOOTSTEP_FOILAGE, "foilage" },
-		{ C.FOOTSTEP_ICE, "ice" },
-		{ C.FOOTSTEP_GLASS, "glass" },
 	}
 	for i = 0, 3 do
 		for _, st in steps do

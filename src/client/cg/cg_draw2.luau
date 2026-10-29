@@ -19,8 +19,8 @@ along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_draw.c (OpenArena gamecode).
--- This part covers cg_draw.c lines 1660-2768.
+-- Luau port of code/cgame/cg_draw.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1378-2461 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -29,7 +29,6 @@ local T = require(script.Parent.Parent.q.Types)
 local trap = require(script.Parent.Parent.sys.Trap)
 local BG = require(script.Parent.Parent.adapters.BG)
 
-local INT_MAX = 2147483647
 local LAG_SAMPLES = 128
 local MAX_LAGOMETER_PING = 900
 local MAX_LAGOMETER_RANGE = 300
@@ -54,8 +53,6 @@ function G.CG_DrawUpperRight(stereoFrame)
 		y = G.CG_DrawCTFoneway(y)
 	elseif cgs.gametype == C.GT_DOMINATION then
 		y = G.CG_DrawDomStatus(y)
-	elseif cgs.gametype == C.GT_POSSESSION then
-		y = G.CG_DrawPossessionString(y)
 	end
 
 	if G.cg_drawSnapshot.integer ~= 0 then
@@ -65,7 +62,7 @@ function G.CG_DrawUpperRight(stereoFrame)
 		y = G.CG_DrawFPS(y)
 	end
 	if cgs.gametype == C.GT_ELIMINATION or cgs.gametype == C.GT_CTF_ELIMINATION or cgs.gametype == C.GT_LMS then
-		y = G.CG_DrawCountdownTimer(y)
+		y = G.CG_DrawEliminationTimer(y)
 	end
 
 	y = G.CG_DrawFollowMessage(y)
@@ -159,7 +156,7 @@ function G.CG_DrawScores(y)
 
 			--Time till capture:
 			if (statusB == statusA and statusA == C.TEAM_RED) or (statusB == statusA and statusA == C.TEAM_BLUE) then
-				s = Q.va("%i", Q.idiv(cgs.takeAt - cg.time, 1000) + 1)
+				s = Q.va("%i", Q.idiv(cgs.timetaken + 10 * 1000 - cg.time, 1000) + 1)
 				w = G.CG_DrawStrlen(s) * C.BIGCHAR_WIDTH
 				G.CG_DrawBigString(x + 32 + 8 - Q.idiv(w, 2), y - 28, s, 1.0)
 			end
@@ -254,13 +251,10 @@ function G.CG_DrawPowerups(y)
 		if pw == 0 then
 			continue
 		end
-		-- don't draw if the power up has unlimited time (CTF flags)
-		if pw == INT_MAX then
-			continue
-		end
-
 		local t = pw - cg.time
-		if t <= 0 then
+		-- ZOID--don't draw if the power up has unlimited time (999 seconds)
+		-- This is true of the CTF flags
+		if t < 0 or t > 999000 then
 			continue
 		end
 
@@ -323,7 +317,7 @@ function G.CG_DrawPowerups(y)
 end
 
 function G.CG_DrawLowerRight()
-	local y = 472 - C.ICON_SIZE
+	local y = 480 - C.ICON_SIZE
 
 	if G.cgs.gametype >= C.GT_TEAM and G.cgs.ffa_gt ~= 1 and G.cg_drawTeamOverlay.integer == 2 then
 		y = G.CG_DrawTeamOverlay(y, true, false)
@@ -404,7 +398,7 @@ function G.CG_DrawTeamInfo()
 		w += C.TINYCHAR_WIDTH * 2
 
 		local hcolor
-		local team = cgs.clientinfo[cg.clientNum].team
+		local team = cg.snap.ps.persistant[C.PERS_TEAM]
 		if team == C.TEAM_RED then
 			hcolor = c4(1.0, 0.0, 0.0, 0.33)
 		elseif team == C.TEAM_BLUE then
@@ -762,20 +756,6 @@ function G.CG_DrawCenterString()
 	trap.R_SetColor(nil)
 end
 
-function G.drawCenterString(line, color)
-	local y = 100
-
-	if line == nil or color == nil then
-		return
-	end
-
-	local w = G.cg.centerPrintCharWidth * G.CG_DrawStrlen(line)
-
-	local x = Q.idiv(C.SCREEN_WIDTH - w, 2)
-
-	G.CG_DrawStringExt(x, y, line, color, false, true, G.cg.centerPrintCharWidth, Q.int(G.cg.centerPrintCharWidth * 1.5), 0)
-end
-
 function G.CG_DrawCenter1FctfString()
 	if G.cgs.gametype ~= C.GT_1FCTF then
 		return
@@ -798,7 +778,14 @@ function G.CG_DrawCenter1FctfString()
 		return
 	end
 
-	G.drawCenterString(line, color)
+	local cg = G.cg
+	local y = 100
+
+	local w = cg.centerPrintCharWidth * G.CG_DrawStrlen(line)
+
+	local x = Q.idiv(C.SCREEN_WIDTH - w, 2)
+
+	G.CG_DrawStringExt(x, y, line, color, false, true, cg.centerPrintCharWidth, Q.int(cg.centerPrintCharWidth * 1.5), 0)
 end
 
 G.lastDDSec = -100
@@ -815,31 +802,22 @@ function G.CG_DrawCenterDDString()
 	local statusB = cgs.blueflag
 
 	if not ((statusB == statusA and statusA == C.TEAM_RED) or (statusB == statusA and statusA == C.TEAM_BLUE)) then
-		G.lastDDSec = -100
 		return -- No team is dominating
 	end
 
 	local line, color
 	if statusA == C.TEAM_BLUE then
-		line = Q.va("Blue scores in %i", Q.idiv(cgs.takeAt - cg.time, 1000) + 1)
+		line = Q.va("Blue scores in %i", Q.idiv(cgs.timetaken + 10 * 1000 - cg.time, 1000) + 1)
 		color = Q.colorBlue
 	elseif statusA == C.TEAM_RED then
-		line = Q.va("Red scores in %i", Q.idiv(cgs.takeAt - cg.time, 1000) + 1)
+		line = Q.va("Red scores in %i", Q.idiv(cgs.timetaken + 10 * 1000 - cg.time, 1000) + 1)
 		color = Q.colorRed
 	else
 		G.lastDDSec = -100
 		return
 	end
 
-	if cgs.takeAt == 0 then
-		return
-	end
-
-	local sec = Q.idiv(cgs.takeAt - cg.time, 1000) + 1
-
-	if sec < 0 then
-		return
-	end
+	local sec = Q.idiv(cgs.timetaken + 10 * 1000 - cg.time, 1000) + 1
 
 	if sec ~= G.lastDDSec then
 		-- A new number is being displayed... play the sound!
@@ -849,7 +827,7 @@ function G.CG_DrawCenterDDString()
 			trap.S_StartLocalSound(cgs.media.count2Sound, C.CHAN_ANNOUNCER)
 		elseif sec == 3 then
 			trap.S_StartLocalSound(cgs.media.count3Sound, C.CHAN_ANNOUNCER)
-		elseif G.lastDDSec == -100 then
+		elseif sec == 10 then
 			trap.S_StartLocalSound(cgs.media.doublerSound, C.CHAN_ANNOUNCER)
 		end
 	end

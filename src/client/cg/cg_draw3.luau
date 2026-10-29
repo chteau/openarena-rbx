@@ -19,8 +19,8 @@ along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_draw.c (OpenArena gamecode).
--- This part covers C lines 2769-3772 (CG_DrawCrosshair .. CG_DrawLoadingScreen).
+-- Luau port of code/cgame/cg_draw.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 2462-3408 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -34,13 +34,11 @@ local ACCBOARD_HEIGHT = 20
 local ACCITEM_SIZE = 16
 
 local proxTime = 0
+local proxCounter = 0
+local proxTick = 0
 
 local function isSet(v)
 	return v ~= nil and v ~= false and v ~= 0
-end
-
-function G.trap_Cmd_ExecuteText(exec_when, text)
-	trap.Cmd_ExecuteText(exec_when, text)
 end
 
 local function crosshairShaderFor(ca)
@@ -104,7 +102,7 @@ function G.CG_DrawCrosshair()
 		end
 	end
 
-	local x = G.cg_crosshairX.integer - (G.wideAdjustX or 0)
+	local x = G.cg_crosshairX.integer
 	local y = G.cg_crosshairY.integer
 	x, y, w, h = G.CG_AdjustFrom640(x, y, w, h)
 
@@ -118,8 +116,6 @@ function G.CG_DrawCrosshair()
 		y + cg.refdef.y + 0.5 * (cg.refdef.height - h),
 		w, h, 0, 0, 1, 1, hShader
 	)
-
-	trap.R_SetColor(nil)
 end
 
 function G.CG_DrawCrosshair3D()
@@ -425,13 +421,19 @@ function G.CG_DrawProxWarning()
 	end
 
 	if proxTime == 0 then
-		proxTime = cg.time
+		proxTime = cg.time + 5000
+		proxCounter = 5
+		proxTick = 0
 	end
 
-	local proxTick = 10 - Q.idiv(cg.time - proxTime, 1000)
+	if cg.time > proxTime then
+		proxTick = proxCounter
+		proxCounter -= 1
+		proxTime = cg.time + 1000
+	end
 
 	local s
-	if proxTick > 0 and proxTick <= 5 then
+	if proxTick ~= 0 then
 		s = Q.va("INTERNAL COMBUSTION IN: %i", proxTick)
 	else
 		s = "YOU HAVE BEEN MINED"
@@ -508,8 +510,6 @@ function G.CG_DrawWarmup()
 			s = "Harvester"
 		elseif gt == C.GT_DOMINATION then
 			s = "Domination"
-		elseif gt == C.GT_POSSESSION then
-			s = "Possession"
 		else
 			s = ""
 		end
@@ -615,8 +615,6 @@ function G.CG_Draw2D(stereoFrame)
 	G.CG_DrawLowerRight()
 	G.CG_DrawLowerLeft()
 
-	G.CG_DrawFragMessage()
-
 	if not G.CG_DrawFollow() then
 		G.CG_DrawWarmup()
 	end
@@ -627,16 +625,13 @@ function G.CG_Draw2D(stereoFrame)
 		G.CG_DrawCenterDDString()
 		G.CG_DrawCenter1FctfString()
 		G.CG_DrawCenterString()
-
-		cg.accBoardShowing = G.CG_DrawAccboard()
 	end
+
+	cg.accBoardShowing = G.CG_DrawAccboard()
 end
 
-local function drawInformationUnlessMenu()
-	if G.Menus_FindByName ~= nil and G.Menus_FindByName("Loading") ~= nil then
-		return
-	end
-	G.CG_DrawInformation()
+function G.CG_DrawTourneyScoreboard()
+	G.CG_DrawOldTourneyScoreboard()
 end
 
 function G.CG_DrawActive(stereoView)
@@ -644,7 +639,7 @@ function G.CG_DrawActive(stereoView)
 
 	-- optionally draw the info screen instead
 	if cg.snap == nil then
-		drawInformationUnlessMenu()
+		G.CG_DrawInformation()
 		return
 	end
 
@@ -667,33 +662,6 @@ function G.CG_DrawActive(stereoView)
 
 	-- draw status bar and other floating elements
 	G.CG_Draw2D(stereoView)
-end
-
-function G.CG_UpdateMediaFraction(newFract)
-	G.cg.mediaFraction = newFract
-	trap.UpdateScreen()
-end
-
-function G.CG_UpdateSoundFraction(newFract)
-	G.cg.soundFraction = newFract
-	trap.UpdateScreen()
-end
-
-function G.CG_UpdateGraphicFraction(newFract)
-	G.cg.graphicFraction = newFract
-	trap.UpdateScreen()
-end
-
-function G.CG_DrawLoadingScreen()
-	local loading = nil
-	if G.Menus_FindByName ~= nil then
-		loading = G.Menus_FindByName("Loading")
-	end
-	if loading ~= nil then
-		G.Menu_Paint(loading, true)
-	else
-		G.CG_DrawInformation()
-	end
 end
 
 return G

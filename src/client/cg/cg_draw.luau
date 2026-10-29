@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_draw.c (OpenArena gamecode).
--- This part covers lines 1-1659 (up to CG_DrawUpperRight), non-MISSIONPACK.
+-- Luau port of code/cgame/cg_draw.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-1377 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -169,58 +169,6 @@ function G.CG_Draw3DModel(x, y, w, h, model, skin, origin, angles)
 	trap.R_RenderScene(refdef)
 end
 
-function G.CG_Draw3DModelEyes(x, y, w, h, model, skin, origin, angles, eyep)
-	if G.cg_draw3dIcons.integer == 0 or G.cg_drawIcons.integer == 0 then
-		return
-	end
-
-	x, y, w, h = G.CG_AdjustFrom640(x, y, w, h)
-
-	local refdef = T.refdef_t()
-	local ent = T.refEntity_t()
-	Q.AnglesToAxis(angles, ent.axis)
-	Q.VectorCopy(origin, ent.origin)
-
-	-- leilei - deal with the eyes here
-	Q.VectorCopy(eyep, ent.eyepos[0])
-
-	do
-		local angers = Q.vec3(0, 0, 0)
-		local right = Q.vec3(0, 0, 0)
-		local fawed = Q.vec3(0, 0, 0)
-		local awp = Q.vec3(0, 0, 0)
-		local ah = Q.vec3(0, 0, 0)
-		Q.VectorCopy(angles, angers)
-		angers[0] *= 2
-		angers[1] *= -2.0
-		Q.AngleVectors(angers, fawed, right, awp)
-		Q.VectorMA(origin, 1024, fawed, ah)
-		Q.VectorCopy(ah, ent.eyelook)
-	end
-
-	ent.hModel = model
-	ent.customSkin = skin
-	ent.renderfx = C.RF_NOSHADOW -- no stencil shadows
-
-	refdef.rdflags = C.RDF_NOWORLDMODEL
-
-	Q.AxisClear(refdef.viewaxis)
-
-	refdef.fov_x = 30
-	refdef.fov_y = 30
-
-	refdef.x = x
-	refdef.y = y
-	refdef.width = w
-	refdef.height = h
-
-	refdef.time = G.cg.time
-
-	trap.R_ClearScene()
-	trap.R_AddRefEntityToScene(ent)
-	trap.R_RenderScene(refdef)
-end
-
 --[[
 ================
 CG_DrawHead
@@ -254,7 +202,7 @@ function G.CG_DrawHead(x, y, w, h, clientNum, headAngles)
 		-- allow per-model tweaking
 		Q.VectorAdd(origin, ci.headOffset, origin)
 
-		G.CG_Draw3DModelEyes(x, y, w, h, ci.headModel, ci.headSkin, origin, headAngles, ci.eyepos)
+		G.CG_Draw3DModel(x, y, w, h, ci.headModel, ci.headSkin, origin, headAngles)
 	elseif G.cg_drawIcons.integer ~= 0 then
 		G.CG_DrawPic(x, y, w, h, ci.modelIcon)
 	end
@@ -648,12 +596,7 @@ function G.CG_DrawAttacker(y)
 		return y
 	end
 
-	if not cgs.clientinfo[clientNum].infoValid then
-		cg.attackerTime = 0
-		return y
-	end
-
-	local t = cg.time - cg.attackerTime
+	local t =cg.time - cg.attackerTime
 	if t > C.ATTACKER_HEAD_TIME then
 		cg.attackerTime = 0
 		return y
@@ -751,53 +694,6 @@ function G.CG_DrawFPS(y)
 	end
 
 	return y + C.BIGCHAR_HEIGHT + 4
-end
-
-function G.CG_DrawPossessionString(y)
-	local cg = G.cg
-	local cgs = G.cgs
-	local cg_entities = G.cg_entities
-
-	if cgs.gametype ~= C.GT_POSSESSION then
-		return y
-	end
-
-	local line = "Find the flag"
-	local timeUntilWon = -1
-	if cgs.fraglimit > 0 and cgs.fraglimit < 1000 then
-		timeUntilWon = cgs.fraglimit - cg.snap.ps.persistant[C.PERS_SCORE]
-	end
-	local color = Q.colorYellow
-
-	if cg.snap.ps.powerups[C.PW_NEUTRALFLAG] ~= 0 then
-		if timeUntilWon > 0 then
-			line = Q.va("Survive for %i:%02i", Q.idiv(timeUntilWon, 60), math.fmod(timeUntilWon, 60))
-		elseif timeUntilWon == 0 then
-			line = Q.va("You survived")
-			color = Q.colorGreen
-		else
-			line = Q.va("Survive!")
-		end
-	else
-		for i = 0, C.MAX_GENTITIES - 1 do
-			if
-				cg_entities[i].currentState.eType == C.ET_PLAYER
-				and bit32.band(cg_entities[i].currentState.powerups, bit32.lshift(1, C.PW_NEUTRALFLAG)) ~= 0
-			then
-				local lo = cg_entities[i].lerpOrigin
-				if lo[0] ~= 0 or lo[1] ~= 0 or lo[2] ~= 0 then
-					local distance = Q.Distance(lo, cg.snap.ps.origin)
-					line = Q.va("%d0 units to flag carrier", Q.idiv(Q.int(distance), 10))
-					color = Q.colorYellow
-				end
-			end
-		end
-	end
-
-	local w = G.CG_DrawStrlen(line) * C.SMALLCHAR_WIDTH
-	G.CG_DrawSmallStringColor(635 - w, y + 2, line, color)
-
-	return y + C.SMALLCHAR_HEIGHT + 4
 end
 
 --[[
@@ -912,10 +808,10 @@ end
 
 --[[
 =================
-CG_DrawCountdownTimer
+CG_DrawEliminationTimer
 =================
 ]]
-function G.CG_DrawCountdownTimer(y)
+function G.CG_DrawEliminationTimer(y)
 	local cg = G.cg
 	local cgs = G.cgs
 	local msec
@@ -944,7 +840,7 @@ function G.CG_DrawCountdownTimer(y)
 		local sec = Q.idiv(msec, 1000)
 		msec += 1000 -- 5-1 instead of 4-0
 		if cg.warmup == 0 then
-			local st = Q.va("New round in: %i", sec + 1)
+			local st = Q.va("Round in: %i", sec + 1)
 			if sec ~= cg.warmupCount then
 				cg.warmupCount = sec
 				if sec == 0 then
@@ -1199,106 +1095,6 @@ function G.CG_DrawFollowMessage(y)
 	G.CG_DrawSmallString(635 - w, y + 2, s, 1.0)
 
 	return y + C.SMALLCHAR_HEIGHT + 4
-end
-
-function G.CG_DrawFragMsgIcons(fi, i)
-	local x_offset
-	local hcolor = v4(1.0, 1.0, 1.0, 1.0)
-	trap.R_SetColor(hcolor)
-	local spacing = 3
-
-	if fi.attackerName ~= "" then
-		G.CG_DrawStringExt(
-			C.FRAGMSG_X,
-			C.FRAGMSG_Y + (i * C.TINYCHAR_HEIGHT),
-			fi.attackerName,
-			hcolor,
-			false,
-			false,
-			C.TINYCHAR_WIDTH,
-			C.TINYCHAR_HEIGHT,
-			0
-		)
-		x_offset = G.CG_DrawStrlen(fi.attackerName) * C.TINYCHAR_WIDTH + spacing
-	else
-		x_offset = 0
-	end
-
-	G.CG_DrawPic(
-		C.FRAGMSG_X + x_offset,
-		C.FRAGMSG_Y + (i * C.TINYCHAR_HEIGHT),
-		C.TINYCHAR_WIDTH,
-		C.TINYCHAR_HEIGHT,
-		fi.causeShader
-	)
-
-	x_offset += C.TINYCHAR_WIDTH + spacing
-
-	G.CG_DrawStringExt(
-		C.FRAGMSG_X + x_offset,
-		C.FRAGMSG_Y + (i * C.TINYCHAR_HEIGHT),
-		fi.targetName,
-		hcolor,
-		false,
-		false,
-		C.TINYCHAR_WIDTH,
-		C.TINYCHAR_HEIGHT,
-		0
-	)
-
-	if fi.teamFrag then
-		x_offset += G.CG_DrawStrlen(fi.targetName) * C.TINYCHAR_WIDTH + spacing
-		G.CG_DrawStringExt(
-			C.FRAGMSG_X + x_offset,
-			C.FRAGMSG_Y + (i * C.TINYCHAR_HEIGHT),
-			"(^1TEAMMATE^7)",
-			hcolor,
-			false,
-			false,
-			C.TINYCHAR_WIDTH,
-			C.TINYCHAR_HEIGHT,
-			0
-		)
-	end
-
-	trap.R_SetColor(nil)
-end
-
-function G.CG_DrawFragMsgText(msg, i)
-	local hcolor = v4(1.0, 1.0, 1.0, 1.0)
-	trap.R_SetColor(hcolor)
-
-	G.CG_DrawStringExt(
-		C.FRAGMSG_X,
-		C.FRAGMSG_Y + (i * C.TINYCHAR_HEIGHT),
-		msg,
-		hcolor,
-		false,
-		false,
-		C.TINYCHAR_WIDTH,
-		C.TINYCHAR_HEIGHT,
-		0
-	)
-	trap.R_SetColor(nil)
-end
-
-function G.CG_DrawFragMessage()
-	local cgs = G.cgs
-	for i = C.FRAGMSG_MAX - 1, 0, -1 do
-		if cgs.fragMsg[i].targetName ~= "" then
-			-- remove frag message after elapsed time
-			if G.cg.time > cgs.fragMsg[i].fragTime + C.FRAGMSG_FADETIME then
-				T.reset(cgs.fragMsg[i], T.fragInfo_t)
-			end
-		end
-		if cgs.fragMsg[i].targetName ~= "" then
-			if G.cg_obituaryOutput.integer == 2 then
-				G.CG_DrawFragMsgText(cgs.fragMsg[i].message, i)
-			elseif G.cg_obituaryOutput.integer >= 3 then
-				G.CG_DrawFragMsgIcons(cgs.fragMsg[i], i)
-			end
-		end
-	end
 end
 
 return G

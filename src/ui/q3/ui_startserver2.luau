@@ -19,35 +19,34 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_startserver.c (OpenArena gamecode), lines 1201-2416:
--- server options menu and bot select menu.
+-- Luau port of code/q3_ui/ui_startserver.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1221-2397 of the 0.8.8 source.
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
-local BG = require(script.Parent.Parent.Parent.client.adapters.BG)
 
 local PLAYER_SLOTS = 12
 local OPTIONS_X = 456
 
-local GAMESERVER_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local GAMESERVER_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local GAMESERVER_NEXT0 = "menu/" .. C.MENU_ART_DIR .. "/next_0"
-local GAMESERVER_NEXT1 = "menu/" .. C.MENU_ART_DIR .. "/next_1"
-local GAMESERVER_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/fight_0"
-local GAMESERVER_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/fight_1"
+local GAMESERVER_BACK0 = "menu/art_blueish/back_0"
+local GAMESERVER_BACK1 = "menu/art_blueish/back_1"
+local GAMESERVER_NEXT0 = "menu/art_blueish/next_0"
+local GAMESERVER_NEXT1 = "menu/art_blueish/next_1"
+local GAMESERVER_FIGHT0 = "menu/art_blueish/fight_0"
+local GAMESERVER_FIGHT1 = "menu/art_blueish/fight_1"
 local GAMESERVER_SELECT = "menu/art/maps_select"
 local GAMESERVER_UNKNOWNMAP = "menu/art/unknownmap"
 
-local BOTSELECT_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local BOTSELECT_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local BOTSELECT_ACCEPT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local BOTSELECT_ACCEPT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
+local BOTSELECT_BACK0 = "menu/art_blueish/back_0"
+local BOTSELECT_BACK1 = "menu/art_blueish/back_1"
+local BOTSELECT_ACCEPT0 = "menu/art_blueish/accept_0"
+local BOTSELECT_ACCEPT1 = "menu/art_blueish/accept_1"
 local BOTSELECT_SELECT = "menu/art/opponents_select"
 local BOTSELECT_SELECTED = "menu/art/opponents_selected"
-local BOTSELECT_ARROWS = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_0"
-local BOTSELECT_ARROWSL = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_l"
-local BOTSELECT_ARROWSR = "menu/" .. C.MENU_ART_DIR .. "/gs_arrows_r"
+local BOTSELECT_ARROWS = "menu/art_blueish/gs_arrows_0"
+local BOTSELECT_ARROWSL = "menu/art_blueish/gs_arrows_l"
+local BOTSELECT_ARROWSR = "menu/art_blueish/gs_arrows_r"
 
 local PLAYERGRID_COLS = 4
 local PLAYERGRID_ROWS = 4
@@ -190,39 +189,31 @@ end
 
 function U.ServerOptions_InitBotNames()
 	local so = U.s_serveroptions
-	local mapinfo = U.mapinfo
 
-	if so.gametype >= C.GT_TEAM and so.gametype ~= C.GT_LMS and so.gametype ~= C.GT_POSSESSION then
+	if so.gametype >= C.GT_TEAM and so.gametype ~= C.GT_LMS then
 		local names = so.playerNameBuffers
 		local types = so.playerType
 		names[1] = cpy("gargoyle", 16)
 		names[2] = cpy("kyonshi", 16)
 		names[3] = cpy("grism", 16)
-		if so.gametype ~= C.GT_TEAM and mapinfo.minTeamSize < 4 then
+		if so.gametype ~= C.GT_TEAM then
 			types[3].curvalue = 2
 		end
 		names[4] = cpy("merman", 16)
-		if mapinfo.minTeamSize < 5 then
-			types[4].curvalue = 2
-		end
+		types[4].curvalue = 2
 		names[5] = cpy("skelebot", 16)
 		types[5].curvalue = 2
 		names[6] = cpy("sergei", 16)
 		names[7] = cpy("assassin", 16)
 		names[8] = cpy("grunt", 16)
 		names[9] = cpy("skelebot", 16)
-		if so.gametype ~= C.GT_TEAM and mapinfo.minTeamSize < 4 then
+		if so.gametype ~= C.GT_TEAM then
 			types[9].curvalue = 2
-		else
-			types[9].curvalue = 1
 		end
 		names[10] = cpy("merman", 16)
-		if mapinfo.minTeamSize < 5 then
-			types[10].curvalue = 2
-		end
+		types[10].curvalue = 2
 		names[11] = cpy("skelebot", 16)
 		types[11].curvalue = 2
-		trap.Print(Q.va("minTeamSize: %i\n", mapinfo.minTeamSize))
 		return
 	end
 
@@ -323,8 +314,6 @@ function U.ServerOptions_SetMenuItems()
 	elseif gt == C.GT_DOMINATION then
 		flag(999, "ui_dom_capturelimit", "ui_dom_timelimit")
 		friendly("ui_dom_friendly")
-	elseif gt == C.GT_POSSESSION then
-		frag("ui_pos_scorelimit", "ui_pos_timelimit")
 	else
 		frag("ui_ffa_fraglimit", "ui_ffa_timelimit")
 	end
@@ -353,8 +342,6 @@ function U.ServerOptions_SetMenuItems()
 
 	-- set the map name
 	so.mapnamebuffer = string.upper(string.sub(U.s_startserver.mapname.string, 1, 31))
-
-	BG.MapInfoGet(U.s_startserver.mapname.string, so.gametype, U.mapinfo)
 
 	-- get the player selections initialized
 	U.ServerOptions_InitPlayerItems()
@@ -495,8 +482,6 @@ function U.ServerOptions_MenuInit(multiplayer)
 	local y = 268
 	if so.gametype < C.GT_CTF or so.gametype == C.GT_LMS then
 		limitField(so.fraglimit, "Frag Limit:", y)
-	elseif so.gametype == C.GT_POSSESSION then
-		limitField(so.fraglimit, "Seconds to win:", y)
 	else
 		limitField(so.flaglimit, "Capture Limit:", y)
 	end
@@ -506,7 +491,6 @@ function U.ServerOptions_MenuInit(multiplayer)
 
 	local hasFriendly = so.gametype >= C.GT_TEAM
 		and so.gametype ~= C.GT_LMS
-		and so.gametype ~= C.GT_POSSESSION
 		and so.gametype ~= C.GT_ELIMINATION
 		and so.gametype ~= C.GT_CTF_ELIMINATION
 
@@ -531,6 +515,11 @@ function U.ServerOptions_MenuInit(multiplayer)
 
 	y += step
 	radio(so.pure, "Pure Server:", y, U.ServerOptions_StatusBar_Pure)
+
+	if so.multiplayer then
+		y += step
+		radio(so.lan, "Optimize for LAN:", y, nil)
+	end
 
 	-- Insantgib option
 	y += step
@@ -560,9 +549,6 @@ function U.ServerOptions_MenuInit(multiplayer)
 	so.pmove.generic.statusbar = U.ServerOptions_StatusBar_Pmove
 
 	if so.multiplayer then
-		y += step
-		radio(so.lan, "Optimize for LAN:", y, nil)
-
 		y += step
 		so.hostname.generic.type = C.MTYPE_FIELD
 		so.hostname.generic.name = "Hostname:"
@@ -683,7 +669,7 @@ function U.ServerOptions_MenuInit(multiplayer)
 		end
 	end
 
-	if so.gametype < C.GT_CTF or so.gametype == C.GT_LMS or so.gametype == C.GT_POSSESSION then
+	if so.gametype < C.GT_CTF or so.gametype == C.GT_LMS then
 		U.Menu_AddItem(so.menu, so.fraglimit)
 	else
 		U.Menu_AddItem(so.menu, so.flaglimit)
@@ -814,7 +800,7 @@ function U.ServerPlayerIcon(modelAndSkin, iconNameMaxSize)
 
 	local iconName = string.sub(Q.va("models/players/%s/icon_%s.tga", model, skin), 1, iconNameMaxSize - 1)
 
-	if trap.R_RegisterShaderNoMip(iconName) == 0 and skin ~= "default" then
+	if trap.R_RegisterShaderNoMip(iconName) == 0 and Q.stricmp(skin, "default") ~= 0 then
 		iconName = string.sub(Q.va("models/players/%s/icon_default.tga", model), 1, iconNameMaxSize - 1)
 	end
 	return iconName
@@ -886,7 +872,7 @@ function U.UI_BotSelectMenu_Default(bot)
 	while n < bsi.numBots do
 		local botInfo = U.UI_GetBotInfoByNumber(n)
 		local test = Q.Info_ValueForKey(botInfo, "name")
-		if bot == test then
+		if Q.stricmp(bot, test) == 0 then
 			break
 		end
 		n += 1

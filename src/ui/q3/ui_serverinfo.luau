@@ -19,16 +19,18 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_serverinfo.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_serverinfo.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local SERVERINFO_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local SERVERINFO_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local SERVERINFO_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local SERVERINFO_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local Q = require(script.Parent.Parent.Parent.client.q.Q)
+
+local SERVERINFO_FRAMEL = "menu/art_blueish/frame2_l"
+local SERVERINFO_FRAMER = "menu/art_blueish/frame1_r"
+local SERVERINFO_BACK0 = "menu/art_blueish/back_0"
+local SERVERINFO_BACK1 = "menu/art_blueish/back_1"
 
 local serverinfo_artlist = {
 	[0] = SERVERINFO_FRAMEL,
@@ -90,7 +92,7 @@ function U.Favorites_Add()
 	local best = 0
 	for i = 0, C.MAX_FAVORITESERVERS - 1 do
 		local adrstr = trap.Cvar_VariableStringBuffer(string.format("server%d", i + 1))
-		if serverbuff == adrstr then
+		if Q.stricmp(serverbuff, adrstr) == 0 then
 			-- already in list
 			return
 		end

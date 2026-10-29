@@ -17,8 +17,8 @@ You should have received a copy of the GNU General Public License
 along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ]]
--- Luau port of code/cgame/cg_main.c (OpenArena gamecode).
--- This part covers C lines 1048-2684 (CG_RegisterGraphics .. CG_FairCvars).
+-- Luau port of code/cgame/cg_main.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 992-2348 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -98,22 +98,6 @@ function G.CG_RegisterGraphics()
 	cgs.media.tracerShader = trap.R_RegisterShader("gfx/misc/tracer")
 	cgs.media.selectShader = trap.R_RegisterShader("gfx/2d/select")
 
-	cgs.media.bfgShader = trap.R_RegisterShader("icons/iconw_bfg")
-	cgs.media.chaingunShader = trap.R_RegisterShader("icons/iconw_chaingun")
-	cgs.media.gauntletShader = trap.R_RegisterShader("icons/iconw_gauntlet")
-	cgs.media.grapplehookShader = trap.R_RegisterShader("icons/iconw_grapple")
-	cgs.media.grenadeShader = trap.R_RegisterShader("icons/iconw_grenade")
-	cgs.media.kamikazeShader = trap.R_RegisterShader("icons/iconw_kamikaze")
-	cgs.media.lightninggunShader = trap.R_RegisterShader("icons/iconw_lightning")
-	cgs.media.machinegunShader = trap.R_RegisterShader("icons/iconw_machinegun")
-	cgs.media.nailgunShader = trap.R_RegisterShader("icons/iconw_nailgun")
-	cgs.media.plasmaShader = trap.R_RegisterShader("icons/iconw_plasma")
-	cgs.media.proxlauncherShader = trap.R_RegisterShader("icons/iconw_proxlauncher")
-	cgs.media.railgunShader = trap.R_RegisterShader("icons/iconw_railgun")
-	cgs.media.rocketShader = trap.R_RegisterShader("icons/iconw_rocket")
-	cgs.media.shotgunShader = trap.R_RegisterShader("icons/iconw_shotgun")
-	cgs.media.skullShader = trap.R_RegisterShader("icons/skull_red")
-
 	for i = 0, C.NUM_CROSSHAIRS - 1 do
 		if i < 10 then
 			cgs.media.crosshairShader[i] = trap.R_RegisterShader("gfx/2d/crosshair" .. string.char(97 + i))
@@ -164,14 +148,7 @@ function G.CG_RegisterGraphics()
 		cgs.media.ddPointSkinB[C.TEAM_NONE] = trap.R_RegisterShaderNoMip("icons/noammo")
 	end
 
-	if
-		gt == C.GT_CTF
-		or gt == C.GT_CTF_ELIMINATION
-		or gt == C.GT_1FCTF
-		or gt == C.GT_POSSESSION
-		or gt == C.GT_HARVESTER
-		or buildScript
-	then
+	if gt == C.GT_CTF or gt == C.GT_CTF_ELIMINATION or gt == C.GT_1FCTF or gt == C.GT_HARVESTER or buildScript then
 		cgs.media.redFlagModel = trap.R_RegisterModel("models/flags/r_flag.md3")
 		cgs.media.blueFlagModel = trap.R_RegisterModel("models/flags/b_flag.md3")
 		cgs.media.neutralFlagModel = trap.R_RegisterModel("models/flags/n_flag.md3")
@@ -193,7 +170,7 @@ function G.CG_RegisterGraphics()
 		cgs.media.neutralFlagBaseModel = trap.R_RegisterModel("models/mapobjects/flagbase/ntrl_base.md3")
 	end
 
-	if gt == C.GT_1FCTF or gt == C.GT_POSSESSION or buildScript then
+	if gt == C.GT_1FCTF or buildScript then
 		cgs.media.neutralFlagModel = trap.R_RegisterModel("models/flags/n_flag.md3")
 		cgs.media.flagShader[0] = trap.R_RegisterShaderNoMip("icons/iconf_neutral1")
 		cgs.media.flagShader[1] = trap.R_RegisterShaderNoMip("icons/iconf_red2")
@@ -348,6 +325,8 @@ function G.CG_RegisterGraphics()
 		end
 		cgs.gameModels[i] = trap.R_RegisterModel(modelName)
 	end
+
+	G.CG_ClearParticles()
 end
 G.sb_nums = sb_nums
 
@@ -404,11 +383,6 @@ function G.CG_StartMusic()
 	trap.S_StartBackgroundTrack(parm1, parm2)
 end
 
-function G.CG_GetCVar(cvar: string): number
-	local value = trap.Cvar_VariableStringBuffer(cvar)
-	return tonumber(value) or 0
-end
-
 G.wideAdjustX = 0
 
 function G.CG_Init(serverMessageNum, serverCommandSequence, clientNum)
@@ -453,9 +427,6 @@ function G.CG_Init(serverMessageNum, serverCommandSequence, clientNum)
 
 	-- get the rendering configuration from the client system
 	trap.GetGlconfig(cgs.glconfig)
-
-	G.realVidWidth = cgs.glconfig.vidWidth
-	G.realVidHeight = cgs.glconfig.vidHeight
 
 	local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 	G.wideAdjustX = Screen.cgSetup(G.cgs, G.cg_wideScreenHud and G.cg_wideScreenHud.integer ~= 0)

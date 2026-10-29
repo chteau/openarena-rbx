@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_preferences.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_preferences.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 --[[
 =======================================================================
@@ -35,10 +35,10 @@ local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local ART_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
+local ART_FRAMEL = "menu/art_blueish/frame2_l"
+local ART_FRAMER = "menu/art_blueish/frame1_r"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
 
 local PREFERENCES_X_POS = 360
 
@@ -358,13 +358,13 @@ local function Preferences_MenuInit()
 	y = y + C.BIGCHAR_HEIGHT + 2 + 4
 	y = Preferences_Menu_AddBoolean(p.simpleitems, y, ID_SIMPLEITEMS, "Simple Items:")
 	y = Preferences_Menu_AddBoolean(p.alwaysweaponbar, y, ID_WEAPONBAR, "Always show weapons:")
-	y = Preferences_Menu_AddBoolean(p.wallmarks, y, ID_WALLMARKS, "Marks on Walls:")
-	y = Preferences_Menu_AddBoolean(p.brass, y, ID_EJECTINGBRASS, "Ejecting Brass:")
-	y = Preferences_Menu_AddBoolean(p.dynamiclights, y, ID_DYNAMICLIGHTS, "Dynamic Lights:")
-	y = Preferences_Menu_AddBoolean(p.identifytarget, y, ID_IDENTIFYTARGET, "Identify Target:")
-	y = Preferences_Menu_AddBoolean(p.highqualitysky, y, ID_HIGHQUALITYSKY, "High Quality Sky:")
-	y = Preferences_Menu_AddBoolean(p.synceveryframe, y, ID_SYNCEVERYFRAME, "Sync Every Frame:")
-	y = Preferences_Menu_AddBoolean(p.forcemodel, y, ID_FORCEMODEL, "Force Player Models:")
+	y = Preferences_Menu_AddBoolean(p.wallmarks, y, ID_WALLMARKS, "Marks on Walls:") + 2
+	y = Preferences_Menu_AddBoolean(p.brass, y, ID_EJECTINGBRASS, "Ejecting Brass:") + 2
+	y = Preferences_Menu_AddBoolean(p.dynamiclights, y, ID_DYNAMICLIGHTS, "Dynamic Lights:") + 2
+	y = Preferences_Menu_AddBoolean(p.identifytarget, y, ID_IDENTIFYTARGET, "Identify Target:") + 2
+	y = Preferences_Menu_AddBoolean(p.highqualitysky, y, ID_HIGHQUALITYSKY, "High Quality Sky:") + 2
+	y = Preferences_Menu_AddBoolean(p.synceveryframe, y, ID_SYNCEVERYFRAME, "Sync Every Frame:") + 2
+	y = Preferences_Menu_AddBoolean(p.forcemodel, y, ID_FORCEMODEL, "Force Player Models:") + 2
 
 	p.drawteamoverlay.generic.type = C.MTYPE_SPINCONTROL
 	p.drawteamoverlay.generic.name = "Draw Team Overlay:"
@@ -376,11 +376,10 @@ local function Preferences_MenuInit()
 	p.drawteamoverlay.itemnames = teamoverlay_names
 
 	y = y + C.BIGCHAR_HEIGHT + 2
-
-	y = Preferences_Menu_AddBoolean(p.delaghitscan, y, ID_DELAGHITSCAN, "Unlag hitscan:")
-	y = Preferences_Menu_AddBoolean(p.allowdownload, y, ID_ALLOWDOWNLOAD, "Automatic Downloading:")
-	y = Preferences_Menu_AddBoolean(p.chatbeep, y, ID_CHATBEEP, "Beep on chat:")
-	y = Preferences_Menu_AddBoolean(p.teamchatbeep, y, ID_TEAMCHATBEEP, "Beep on team chat:")
+	y = Preferences_Menu_AddBoolean(p.delaghitscan, y, ID_DELAGHITSCAN, "Unlag hitscan:") + 2
+	y = Preferences_Menu_AddBoolean(p.allowdownload, y, ID_ALLOWDOWNLOAD, "Automatic Downloading:") + 2
+	y = Preferences_Menu_AddBoolean(p.chatbeep, y, ID_CHATBEEP, "Beep on chat:") + 2
+	y = Preferences_Menu_AddBoolean(p.teamchatbeep, y, ID_TEAMCHATBEEP, "Beep on team chat:") + 2
 
 	p.back.generic.type = C.MTYPE_BITMAP
 	p.back.generic.name = ART_BACK0
@@ -414,8 +413,8 @@ local function Preferences_MenuInit()
 	U.Menu_AddItem(p.menu, p.drawteamoverlay)
 	U.Menu_AddItem(p.menu, p.delaghitscan)
 	U.Menu_AddItem(p.menu, p.allowdownload)
-	U.Menu_AddItem(p.menu, p.chatbeep)
 	U.Menu_AddItem(p.menu, p.teamchatbeep)
+	U.Menu_AddItem(p.menu, p.chatbeep)
 
 	U.Menu_AddItem(p.menu, p.back)
 

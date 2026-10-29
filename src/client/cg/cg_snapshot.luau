@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_snapshot.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_snapshot.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_snapshot.c -- things that happen on snapshot transition,
 -- not necessarily every single rendered frame
 
@@ -189,12 +189,12 @@ local function CG_SetNextSnap(snap)
 	end
 
 	-- if changing follow mode, don't interpolate
-	if cg.snap ~= nil and cg.nextSnap.ps.clientNum ~= cg.snap.ps.clientNum then
+	if cg.nextSnap.ps.clientNum ~= cg.snap.ps.clientNum then
 		cg.nextFrameTeleport = true
 	end
 
 	-- if changing server restarts, don't interpolate
-	if cg.snap ~= nil and bit32.band(bit32.bxor(cg.nextSnap.snapFlags, cg.snap.snapFlags), C.SNAPFLAG_SERVERCOUNT) ~= 0 then
+	if bit32.band(bit32.bxor(cg.nextSnap.snapFlags, cg.snap.snapFlags), C.SNAPFLAG_SERVERCOUNT) ~= 0 then
 		cg.nextFrameTeleport = true
 	end
 

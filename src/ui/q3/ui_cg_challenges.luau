@@ -19,7 +19,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_challenges.c (OpenArena gamecode), as the q3_ui
+-- Luau port of code/cgame/cg_challenges.c (OpenArena 0.8.8, gamecode 9e0f0c0), as the q3_ui
 -- module links it: the ui VM keeps its own copy of the challenge table.
 
 local U = require(script.Parent.U)

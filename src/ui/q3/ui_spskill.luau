@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_spskill.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_spskill.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 --[[
 =============================================================================
@@ -35,11 +35,11 @@ local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_FRAME = "menu/" .. C.MENU_ART_DIR .. "/cut_frame"
-local ART_BACK = "menu/" .. C.MENU_ART_DIR .. "/back_0.tga"
-local ART_BACK_FOCUS = "menu/" .. C.MENU_ART_DIR .. "/back_1.tga"
-local ART_FIGHT = "menu/" .. C.MENU_ART_DIR .. "/fight_0"
-local ART_FIGHT_FOCUS = "menu/" .. C.MENU_ART_DIR .. "/fight_1"
+local ART_FRAME = "menu/art_blueish/cut_frame"
+local ART_BACK = "menu/art_blueish/back_0.tga"
+local ART_BACK_FOCUS = "menu/art_blueish/back_1.tga"
+local ART_FIGHT = "menu/art_blueish/fight_0"
+local ART_FIGHT_FOCUS = "menu/art_blueish/fight_1"
 local ART_MAP_COMPLETE1 = "menu/art/level_complete1"
 local ART_MAP_COMPLETE2 = "menu/art/level_complete2"
 local ART_MAP_COMPLETE3 = "menu/art/level_complete3"

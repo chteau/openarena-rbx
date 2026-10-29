@@ -19,8 +19,8 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_weapons.c (OpenArena gamecode).
--- This part covers C lines 1-1148 (through CG_RegisterItemVisuals).
+-- Luau port of code/cgame/cg_weapons.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1-1048 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -92,11 +92,7 @@ function G.CG_MachineGunEjectBrass(cent)
 	Q.AxisCopy(Q.axisDefault, re.axis)
 	re.hModel = G.cgs.media.machinegunBrassModel
 
-	if G.cg_leiBrassNoise.integer ~= 0 then
-		le.bounceFactor = 0.6 * waterScale
-	else
-		le.bounceFactor = 0.4 * waterScale
-	end
+	le.bounceFactor = 0.4 * waterScale
 
 	le.angles.trType = C.TR_LINEAR
 	le.angles.trTime = G.cg.time
@@ -162,11 +158,7 @@ function G.CG_ShotgunEjectBrass(cent)
 
 		Q.AxisCopy(Q.axisDefault, re.axis)
 		re.hModel = G.cgs.media.shotgunBrassModel
-		if G.cg_leiBrassNoise.integer ~= 0 then
-			le.bounceFactor = 0.5
-		else
-			le.bounceFactor = 0.3
-		end
+		le.bounceFactor = 0.3
 
 		le.angles.trType = C.TR_LINEAR
 		le.angles.trTime = G.cg.time
@@ -253,47 +245,6 @@ function G.CG_RailTrail(ci, start, finish)
 		-- nudge down a bit so it isn't exactly in center
 		re.origin[2] -= 8
 		re.oldorigin[2] -= 8
-
-		-- leilei - reimplementing the rail discs that were removed in 1.30
-		if G.cg_oldRail.integer > 1 then
-			le = G.CG_AllocLocalEntity()
-			re = le.refEntity
-
-			Q.VectorCopy(start, re.origin)
-			Q.VectorCopy(finish, re.oldorigin)
-			le.leType = C.LE_FADE_RGB
-			le.startTime = G.cg.time
-			le.endTime = Q.int(G.cg.time + G.cg_railTrailTime.value)
-			le.lifeRate = 1.0 / (le.endTime - le.startTime)
-
-			re.shaderTime = G.cg.time / 1000.0
-			re.reType = C.RT_RAIL_RINGS
-			re.customShader = G.cgs.media.railRingsShader
-			re.shaderRGBA[0] = Q.int(ci.color1[0] * 255)
-			re.shaderRGBA[1] = Q.int(ci.color1[1] * 255)
-			re.shaderRGBA[2] = Q.int(ci.color1[2] * 255)
-			re.shaderRGBA[3] = 255
-
-			le.color[0] = ci.color1[0] * 0.75
-			le.color[1] = ci.color1[1] * 0.75
-			le.color[2] = ci.color1[2] * 0.75
-			le.color[3] = 1.0
-
-			re.origin[2] -= 8
-			re.oldorigin[2] -= 8
-
-			if G.cg_oldRail.integer > 2 then -- use the secondary color instead
-				re.shaderRGBA[0] = Q.int(ci.color2[0] * 255)
-				re.shaderRGBA[1] = Q.int(ci.color2[1] * 255)
-				re.shaderRGBA[2] = Q.int(ci.color2[2] * 255)
-				re.shaderRGBA[3] = 255
-
-				le.color[0] = ci.color2[0] * 0.75
-				le.color[1] = ci.color2[1] * 0.75
-				le.color[2] = ci.color2[2] * 0.75
-				le.color[3] = 1.0
-			end
-		end
 		return
 	end
 
@@ -460,9 +411,23 @@ function G.CG_LeiSmokeTrail(ent, wi)
 	end
 
 	while t <= ent.trailTime do
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(1, origin, up) -- that was easy.
+		BG.BG_EvaluateTrajectory(es.pos, t, lastPos)
+		local therando = Q.int(Q.crandom() * 4)
+
+		Q.rand() -- theradio
+		local shader
+		if therando == 3 then
+			shader = G.cgs.media.lsmkShader1
+		elseif therando == 1 then
+			shader = G.cgs.media.lsmkShader2
+		elseif therando == 2 then
+			shader = G.cgs.media.lsmkShader3
+		else
+			shader = G.cgs.media.lsmkShader4
 		end
+		local smoke = G.CG_SmokePuff(lastPos, up, 27, 1, 1, 1, 0.9, wi.wiTrailTime, t, 0, 0, shader)
+		-- use the optimized local entity add
+		smoke.leType = C.LE_MOVE_SCALE_FADE
 		t += step
 	end
 end
@@ -767,42 +732,6 @@ function G.CG_RegisterWeapon(weaponNum)
 	local base = Q.COM_StripExtension(item.world_model[0])
 	weaponInfo.flashModel = trap.R_RegisterModel(base .. "_flash.md3")
 
-	if weaponInfo.flashModel == 0 then
-		weaponInfo.flashModel = trap.R_RegisterModel("models/weapons2/shotgun/shotgun_flash.md3") -- default flash
-	end
-
-	-- leilei - additional flash styles
-	weaponInfo.flashModel_type1 = trap.R_RegisterModel(base .. "_flash1.md3")
-	weaponInfo.flashModel_type2 = trap.R_RegisterModel(base .. "_flash2.md3")
-	weaponInfo.flashModel_type2a = trap.R_RegisterModel(base .. "_flash2a.md3")
-	weaponInfo.flashModel_type3 = trap.R_RegisterModel(base .. "_flash3.md3")
-	weaponInfo.flashModel_type4 = trap.R_RegisterModel(base .. "_flash4.md3")
-	weaponInfo.flashModel_type5 = trap.R_RegisterModel(base .. "_flash5.md3")
-	weaponInfo.flashModel_type5a = trap.R_RegisterModel(base .. "_flash5a.md3")
-
-	-- leilei - revert to default flash model if we really don't have a real one.
-	if weaponInfo.flashModel_type1 == 0 then
-		weaponInfo.flashModel_type1 = trap.R_RegisterModel("models/muzzle/flash1.md3")
-	end
-	if weaponInfo.flashModel_type2 == 0 then
-		weaponInfo.flashModel_type2 = trap.R_RegisterModel("models/muzzle/flash2.md3")
-	end
-	if weaponInfo.flashModel_type2a == 0 then
-		weaponInfo.flashModel_type2a = trap.R_RegisterModel("models/muzzle/flash2a.md3")
-	end
-	if weaponInfo.flashModel_type3 == 0 then
-		weaponInfo.flashModel_type3 = trap.R_RegisterModel("models/muzzle/flash3.md3")
-	end
-	if weaponInfo.flashModel_type4 == 0 then
-		weaponInfo.flashModel_type4 = trap.R_RegisterModel("models/muzzle/flash4.md3")
-	end
-	if weaponInfo.flashModel_type5 == 0 then
-		weaponInfo.flashModel_type5 = trap.R_RegisterModel("models/muzzle/flash5.md3")
-	end
-	if weaponInfo.flashModel_type5a == 0 then
-		weaponInfo.flashModel_type5a = trap.R_RegisterModel("models/muzzle/flash5a.md3")
-	end
-
 	weaponInfo.barrelModel = trap.R_RegisterModel(base .. "_barrel.md3")
 
 	weaponInfo.handsModel = trap.R_RegisterModel(base .. "_hand.md3")
@@ -819,7 +748,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		MAKERGB(weaponInfo.flashDlightColor, 0.6, 0.6, 1.0)
 		weaponInfo.firingSound = trap.S_RegisterSound("sound/weapons/melee/fstrun.wav", false)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/melee/fstatck.wav", false)
-		weaponInfo.lfx = 0 --  no effect
 	elseif weaponNum == C.WP_LIGHTNING then
 		MAKERGB(weaponInfo.flashDlightColor, 0.6, 0.6, 1.0)
 		weaponInfo.readySound = trap.S_RegisterSound("sound/weapons/melee/fsthum.wav", false)
@@ -831,7 +759,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		media.sfx_lghit1 = trap.S_RegisterSound("sound/weapons/lightning/lg_hit.wav", false)
 		media.sfx_lghit2 = trap.S_RegisterSound("sound/weapons/lightning/lg_hit2.wav", false)
 		media.sfx_lghit3 = trap.S_RegisterSound("sound/weapons/lightning/lg_hit3.wav", false)
-		weaponInfo.lfx = 0 --  no effect
 	elseif weaponNum == C.WP_GRAPPLING_HOOK then
 		MAKERGB(weaponInfo.flashDlightColor, 0.6, 0.6, 1.0)
 		weaponInfo.missileModel = trap.R_RegisterModel("models/ammo/hook/hook.md3")
@@ -843,19 +770,16 @@ function G.CG_RegisterWeapon(weaponNum)
 		media.grappleShader = trap.R_RegisterShader("grappleRope")
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/grapple/grapfire.wav", false)
 		weaponInfo.missileSound = trap.S_RegisterSound("sound/weapons/grapple/grappull.wav", false)
-		weaponInfo.lfx = 0 --  no effect
 	elseif weaponNum == C.WP_CHAINGUN then
 		weaponInfo.firingSound = trap.S_RegisterSound("sound/weapons/vulcan/wvulfire.wav", false)
 		weaponInfo.loopFireSound = true
 		MAKERGB(weaponInfo.flashDlightColor, 1, 1, 0)
-		-- leilei -testing a looping firing sound instead of lots of flash sounds for performance reasons
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/vulcan/vulcanf1b.wav", false)
 		weaponInfo.flashSound[1] = trap.S_RegisterSound("sound/weapons/vulcan/vulcanf2b.wav", false)
 		weaponInfo.flashSound[2] = trap.S_RegisterSound("sound/weapons/vulcan/vulcanf3b.wav", false)
 		weaponInfo.flashSound[3] = trap.S_RegisterSound("sound/weapons/vulcan/vulcanf4b.wav", false)
 		weaponInfo.ejectBrassFunc = G.CG_MachineGunEjectBrass
 		media.bulletExplosionShader = trap.R_RegisterShader("bulletExplosion")
-		weaponInfo.lfx = 71
 	elseif weaponNum == C.WP_MACHINEGUN then
 		MAKERGB(weaponInfo.flashDlightColor, 1, 1, 0)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/machinegun/machgf1b.wav", false)
@@ -864,12 +788,10 @@ function G.CG_RegisterWeapon(weaponNum)
 		weaponInfo.flashSound[3] = trap.S_RegisterSound("sound/weapons/machinegun/machgf4b.wav", false)
 		weaponInfo.ejectBrassFunc = G.CG_MachineGunEjectBrass
 		media.bulletExplosionShader = trap.R_RegisterShader("bulletExplosion")
-		weaponInfo.lfx = 62
 	elseif weaponNum == C.WP_SHOTGUN then
 		MAKERGB(weaponInfo.flashDlightColor, 1, 1, 0)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/shotgun/sshotf1b.wav", false)
 		weaponInfo.ejectBrassFunc = G.CG_ShotgunEjectBrass
-		weaponInfo.lfx = 63
 	elseif weaponNum == C.WP_ROCKET_LAUNCHER then
 		weaponInfo.missileModel = trap.R_RegisterModel("models/ammo/rocket/rocket.md3")
 		weaponInfo.missileSound = trap.S_RegisterSound("sound/weapons/rocket/rockfly.wav", false)
@@ -883,7 +805,6 @@ function G.CG_RegisterWeapon(weaponNum)
 
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/rocket/rocklf1a.wav", false)
 		media.rocketExplosionShader = trap.R_RegisterShader("rocketExplosion")
-		weaponInfo.lfx = 65
 	elseif weaponNum == C.WP_PROX_LAUNCHER then
 		weaponInfo.missileModel = trap.R_RegisterModel("models/weaphits/proxmine.md3")
 		weaponInfo.missileTrailFunc = G.CG_GrenadeTrail
@@ -892,7 +813,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		MAKERGB(weaponInfo.flashDlightColor, 1, 0.70, 0)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/proxmine/wstbfire.wav", false)
 		media.grenadeExplosionShader = trap.R_RegisterShader("grenadeExplosion")
-		weaponInfo.lfx = 70
 	elseif weaponNum == C.WP_GRENADE_LAUNCHER then
 		weaponInfo.missileModel = trap.R_RegisterModel("models/ammo/grenade1.md3")
 		weaponInfo.missileTrailFunc = G.CG_GrenadeTrail
@@ -901,7 +821,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		MAKERGB(weaponInfo.flashDlightColor, 1, 0.70, 0)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/grenade/grenlf1a.wav", false)
 		media.grenadeExplosionShader = trap.R_RegisterShader("grenadeExplosion")
-		weaponInfo.lfx = 64
 	elseif weaponNum == C.WP_NAILGUN then
 		weaponInfo.ejectBrassFunc = G.CG_NailgunEjectBrass
 		weaponInfo.missileTrailFunc = G.CG_NailTrail
@@ -910,7 +829,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		weaponInfo.missileModel = trap.R_RegisterModel("models/weaphits/nail.md3")
 		MAKERGB(weaponInfo.flashDlightColor, 1, 0.75, 0)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/nailgun/wnalfire.wav", false)
-		weaponInfo.lfx = 69
 	elseif weaponNum == C.WP_PLASMAGUN then
 		weaponInfo.missileTrailFunc = G.CG_PlasmaTrail
 		weaponInfo.missileSound = trap.S_RegisterSound("sound/weapons/plasma/lasfly.wav", false)
@@ -918,7 +836,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/plasma/hyprbf1a.wav", false)
 		media.plasmaExplosionShader = trap.R_RegisterShader("plasmaExplosion")
 		media.railRingsShader = trap.R_RegisterShader("railDisc")
-		weaponInfo.lfx = 66
 	elseif weaponNum == C.WP_RAILGUN then
 		weaponInfo.readySound = trap.S_RegisterSound("sound/weapons/railgun/rg_hum.wav", false)
 		MAKERGB(weaponInfo.flashDlightColor, 1, 0.5, 0)
@@ -926,7 +843,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		media.railExplosionShader = trap.R_RegisterShader("railExplosion")
 		media.railRingsShader = trap.R_RegisterShader("railDisc")
 		media.railCoreShader = trap.R_RegisterShader("railCore")
-		weaponInfo.lfx = 67
 	elseif weaponNum == C.WP_BFG then
 		weaponInfo.readySound = trap.S_RegisterSound("sound/weapons/bfg/bfg_hum.wav", false)
 		MAKERGB(weaponInfo.flashDlightColor, 1, 0.7, 1)
@@ -934,7 +850,6 @@ function G.CG_RegisterWeapon(weaponNum)
 		media.bfgExplosionShader = trap.R_RegisterShader("bfgExplosion")
 		weaponInfo.missileModel = trap.R_RegisterModel("models/weaphits/bfg.md3")
 		weaponInfo.missileSound = trap.S_RegisterSound("sound/weapons/rocket/rockfly.wav", false)
-		weaponInfo.lfx = 68
 	else
 		MAKERGB(weaponInfo.flashDlightColor, 1, 1, 1)
 		weaponInfo.flashSound[0] = trap.S_RegisterSound("sound/weapons/rocket/rocklf1a.wav", false)

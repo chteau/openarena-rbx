@@ -20,7 +20,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/game/bg_misc.c (OpenArena gamecode).
+-- Luau port of code/game/bg_misc.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local clientRoot = script.Parent.Parent.Parent
 local qFolder = clientRoot.q
@@ -31,14 +31,6 @@ local BG = {}
 
 local function Com_Error(_level, msg)
 	error(msg, 0)
-end
-
-local function getTrap()
-	return require(clientRoot.sys.Trap)
-end
-
-local function Com_Printf(msg)
-	getTrap().Print(msg)
 end
 
 local function strequal(a, b)
@@ -347,11 +339,6 @@ function BG.BG_CanItemBeGrabbed(gametype, ent, ps)
 	elseif giType == C.IT_TEAM then
 		local tag = it.giTag
 		local team = ps.persistant[C.PERS_TEAM]
-		if gametype == C.GT_POSSESSION then
-			if tag == C.PW_NEUTRALFLAG then
-				return true
-			end
-		end
 		if gametype == C.GT_1FCTF then
 			if tag == C.PW_NEUTRALFLAG then
 				return true
@@ -441,9 +428,6 @@ BG.eventnames = {
 	"EV_PROXIMITY_MINE_STICK", "EV_PROXIMITY_MINE_TRIGGER", "EV_KAMIKAZE", "EV_OBELISKEXPLODE",
 	"EV_INVUL_IMPACT", "EV_JUICED", "EV_LIGHTNINGBOLT",
 	"EV_DEBUG_LINE", "EV_STOPLOOPINGSOUND", "EV_TAUNT",
-	"EV_FOOTSTEP_WOOD", "EV_FOOTSTEP_SNOW", "EV_FOOTSTEP_SAND", "EV_FOOTSTEP_GRAVEL",
-	"EV_FOOTSTEP_FOILAGE", "EV_FOOTSTEP_ICE", "EV_FOOTSTEP_GLASS",
-	"EV_BULLET_HIT_WOOD", "EV_BULLET_HIT_SAND", "EV_BULLET_HIT_SNOW", "EV_BULLET_HIT_GLASS",
 }
 
 -- Handles the sequence numbers
@@ -598,205 +582,6 @@ function BG.BG_TeamName(team)
 		return "Free For All"
 	end
 	return "<team>"
-end
-
-local gametypeKeys = {
-	{ "GT_FFA", "dm" },
-	{ "GT_TEAM", "team" },
-	{ "GT_TOURNAMENT", "tourney" },
-	{ "GT_CTF", "ctf" },
-	{ "GT_1FCTF", "1fctf" },
-	{ "GT_OBELISK", "obelisk" },
-	{ "GT_HARVESTER", "harvester" },
-	{ "GT_ELIMINATION", "elimination" },
-	{ "GT_CTF_ELIMINATION", "ctfelim" },
-	{ "GT_LMS", "lms" },
-	{ "GT_DOUBLE_D", "dd" },
-	{ "GT_DOMINATION", "dom" },
-	{ "GT_POSSESSION", "pos" },
-}
-
-function BG.MatchesGametype(gametype, gametypeName)
-	for _, e in ipairs(gametypeKeys) do
-		if C[e[1]] == gametype then
-			return strequal(gametypeName, e[2])
-		end
-	end
-	return false
-end
-
-local MAX_TOKEN_CHARS = 1024
-local MAPINFO_BUFFER = 4 * 1024
-local SUPPORT_GAMETYPE_PREFIX = "support_"
-
--- COM_Parse over a string: returns the next token and the position after it.
-local function parseToken(data, pos)
-	local len = #data
-	local c
-	while true do
-		while pos <= len and string.byte(data, pos) <= 32 do
-			pos += 1
-		end
-		if pos > len then
-			return "", pos
-		end
-		c = string.byte(data, pos)
-		local n = string.byte(data, pos + 1)
-		if c == 47 and n == 47 then
-			while pos <= len and string.byte(data, pos) ~= 10 do
-				pos += 1
-			end
-		elseif c == 47 and n == 42 then
-			pos += 2
-			while pos <= len and not (string.byte(data, pos) == 42 and string.byte(data, pos + 1) == 47) do
-				pos += 1
-			end
-			if pos <= len then
-				pos += 2
-			end
-		else
-			break
-		end
-	end
-
-	local token
-	if c == 34 then
-		local start = pos + 1
-		local stop = string.find(data, '"', start, true)
-		if stop == nil then
-			token = string.sub(data, start)
-			pos = len + 1
-		else
-			token = string.sub(data, start, stop - 1)
-			pos = stop + 1
-		end
-	else
-		local start = pos
-		while pos <= len and string.byte(data, pos) > 32 do
-			pos += 1
-		end
-		token = string.sub(data, start, pos - 1)
-	end
-	return string.sub(token, 1, MAX_TOKEN_CHARS - 1), pos
-end
-
-local function clearMapInfo(result)
-	result.author = ""
-	result.title = ""
-	result.description = ""
-	result.mpBots = ""
-	result.mpBotCount = 0
-	result.redBots = ""
-	result.redBotCount = 0
-	result.blueBots = ""
-	result.blueBotCount = 0
-	result.captureLimit = 0
-	result.fragLimit = 0
-	result.maxPlayers = 0
-	result.maxTeamSize = 0
-	result.minPlayers = 0
-	result.minTeamSize = 0
-	result.recommendedPlayers = 0
-	result.recommendedTeamSize = 0
-	result.timeLimit = 0
-	local supported = {}
-	for i = 0, C.GT_MAX_GAME_TYPE - 1 do
-		supported[i] = 0
-	end
-	result.gametypeSupported = supported
-end
-
-local function atoi(s)
-	local n = tonumber(string.match(s, "^%s*([%+%-]?%d+)"))
-	return n or 0
-end
-
-local stringKeys = {
-	author = "author",
-	title = "title",
-	description = "description",
-	mpbots = "mpBots",
-	redbots = "redBots",
-	bluebots = "blueBots",
-}
-
-local intKeys = {
-	mpbotcount = "mpBotCount",
-	redbotcount = "redBotCount",
-	bluebotcount = "blueBotCount",
-	capturelimit = "captureLimit",
-	fraglimit = "fragLimit",
-	maxplayers = "maxPlayers",
-	maxteamsize = "maxTeamSize",
-	minplayers = "minPlayers",
-	minteamsize = "minTeamSize",
-	recommendedplayers = "recommendedPlayers",
-	recommendedteamsize = "recommendedTeamSize",
-	timelimit = "timeLimit",
-}
-
-function BG.MapInfoGet(mapname, gametype, result)
-	clearMapInfo(result)
-	local path = string.lower(Q.va("maps/%s.info", mapname))
-
-	local trap = getTrap()
-	local len, file = trap.FS_FOpenFile(path, C.FS_READ)
-
-	if file == nil or file == 0 then
-		Com_Printf(Q.va("File %s not found\n", path))
-		return
-	end
-
-	local readLen = math.min(len or MAPINFO_BUFFER, MAPINFO_BUFFER - 1)
-	local data = trap.FS_Read(readLen, file) or ""
-	data = string.sub(data, 1, MAPINFO_BUFFER - 1)
-
-	local pos = 1
-	local mayRead = true
-	local token
-
-	while true do
-		token, pos = parseToken(data, pos)
-		if token == "" then
-			break
-		end
-		local keyBuffer = token
-		token, pos = parseToken(data, pos)
-
-		Com_Printf(Q.va('Token "%s" found, with value: "%s"\n', keyBuffer, token))
-
-		local key = string.lower(keyBuffer)
-		if key == "gametype" then
-			mayRead = false
-			if token == "" then
-				break
-			end
-			if token == "*" then
-				mayRead = true
-			else
-				mayRead = BG.MatchesGametype(gametype, token)
-			end
-		end
-		local sfield = stringKeys[key]
-		if sfield ~= nil and mayRead then
-			result[sfield] = token
-		end
-		local ifield = intKeys[key]
-		if ifield ~= nil and mayRead then
-			result[ifield] = atoi(token)
-		end
-		if string.sub(key, 1, #SUPPORT_GAMETYPE_PREFIX) == SUPPORT_GAMETYPE_PREFIX then
-			local gtName = string.sub(keyBuffer, #SUPPORT_GAMETYPE_PREFIX + 1)
-			for i = 0, C.GT_MAX_GAME_TYPE - 1 do
-				if BG.MatchesGametype(i, gtName) then
-					result.gametypeSupported[i] = string.byte(token, 1) or 0
-					break
-				end
-			end
-		end
-	end
-
-	trap.FS_FCloseFile(file)
 end
 
 return BG

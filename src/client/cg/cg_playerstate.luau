@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_playerstate.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_playerstate.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_playerstate.c -- this file acts on changes in a new playerState_t
 -- With normal play, this will be done after local prediction, but when
 -- following another player or playing back a demo, it will be checked
@@ -342,12 +342,9 @@ function G.CG_CheckLocalSounds(ps, ops)
 				if cgs.gametype < C.GT_TEAM or cgs.ffa_gt == 1 then
 					if pers[C.PERS_RANK] == 0 then
 						G.CG_AddBufferedSound(media.takenLeadSound)
-					elseif pers[C.PERS_RANK] == C.RANK_TIED_FLAG and cgs.gametype ~= C.GT_POSSESSION then
+					elseif pers[C.PERS_RANK] == C.RANK_TIED_FLAG then
 						G.CG_AddBufferedSound(media.tiedLeadSound)
-					elseif
-						pers[C.PERS_RANK] ~= C.RANK_TIED_FLAG
-						and bit32.band(opers[C.PERS_RANK], bit32.bnot(C.RANK_TIED_FLAG)) == 0
-					then
+					elseif bit32.band(opers[C.PERS_RANK], bit32.bnot(C.RANK_TIED_FLAG)) == 0 then
 						G.CG_AddBufferedSound(media.lostLeadSound)
 					end
 				end

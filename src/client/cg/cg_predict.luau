@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_predict.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_predict.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 --
 -- cg_predict.c -- this file generates cg.predictedPlayerState by either
 -- interpolating between snapshots from the server or locally predicting
@@ -261,27 +261,20 @@ local function CG_TouchItem(cent)
 	-- Special case for flags.
 	-- We don't predict touching our own flag
 	if cgs.gametype == C.GT_1FCTF then
-		if item.giType == C.IT_TEAM and item.giTag ~= C.PW_NEUTRALFLAG then
+		if item.giTag ~= C.PW_NEUTRALFLAG then
 			return
 		end
 	end
-	if cgs.gametype == C.GT_POSSESSION then
-		if item.giType == C.IT_TEAM and item.giTag == C.PW_NEUTRALFLAG then
-			canBePicked = true
-		end
-	end
-
 	if cgs.gametype == C.GT_CTF or cgs.gametype == C.GT_CTF_ELIMINATION or cgs.gametype == C.GT_HARVESTER then
-		if ps.persistant[C.PERS_TEAM] == C.TEAM_RED and item.giType == C.IT_TEAM and item.giTag == C.PW_REDFLAG then
+		if ps.persistant[C.PERS_TEAM] == C.TEAM_RED and item.giTag == C.PW_REDFLAG then
 			return
 		end
-		if ps.persistant[C.PERS_TEAM] == C.TEAM_BLUE and item.giType == C.IT_TEAM and item.giTag == C.PW_BLUEFLAG then
+		if ps.persistant[C.PERS_TEAM] == C.TEAM_BLUE and item.giTag == C.PW_BLUEFLAG then
 			return
 		end
 		-- Even in instantgib, we can predict our enemy flag
 		if
 			ps.persistant[C.PERS_TEAM] == C.TEAM_RED
-			and item.giType == C.IT_TEAM
 			and item.giTag == C.PW_BLUEFLAG
 			and (bit32.band(cgs.elimflags, C.EF_ONEWAY) == 0 or cgs.attackingTeam == C.TEAM_RED)
 		then
@@ -289,11 +282,16 @@ local function CG_TouchItem(cent)
 		end
 		if
 			ps.persistant[C.PERS_TEAM] == C.TEAM_BLUE
-			and item.giType == C.IT_TEAM
 			and item.giTag == C.PW_REDFLAG
 			and (bit32.band(cgs.elimflags, C.EF_ONEWAY) == 0 or cgs.attackingTeam == C.TEAM_BLUE)
 		then
 			canBePicked = true
+		end
+		if item.giTag == C.WP_RAILGUN then
+			canBePicked = false
+		end
+		if item.giTag == C.WP_PLASMAGUN then
+			canBePicked = false
 		end
 	end
 
@@ -635,10 +633,8 @@ function G.CG_PredictPlayerState()
 
 	if G.pmove_msec.integer < 8 then
 		trap.Cvar_Set("pmove_msec", "8")
-		trap.Cvar_Update(G.pmove_msec)
 	elseif G.pmove_msec.integer > 33 then
 		trap.Cvar_Set("pmove_msec", "33")
-		trap.Cvar_Update(G.pmove_msec)
 	end
 
 	cg_pmove.pmove_fixed = G.pmove_fixed.integer

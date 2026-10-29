@@ -21,6 +21,7 @@ local Assets = require(script.Parent.Assets)
 local ShaderFx = require(script.Parent.ShaderFx)
 local Units = require(script.Parent.Units)
 local Md3 = require(script.Parent.Md3)
+local LightGrid = require(script.Parent.LightGrid)
 local R2D = require(script.Parent.R2D)
 
 local R3D = {}
@@ -29,7 +30,6 @@ R3D.worldRoot = nil :: Instance? -- folder in workspace for the main scene
 R3D.camera = nil :: Camera? -- workspace.CurrentCamera
 R3D.noEditableMesh = false
 R3D.mapName = ""
-R3D.viewOrigin = { [0] = 0, [1] = 0, [2] = 0 }
 
 local AssetService = game:GetService("AssetService")
 
@@ -89,16 +89,15 @@ function R3D.AddLight(org, intensity: number, r: number, g: number, b: number, a
 end
 
 function R3D.LightForPoint(point, ambient, directed, dir): number
-	-- no light grid on the client yet: Roblox lights models itself
+	if LightGrid.LightForPoint(point, ambient, directed, dir) then
+		return 1
+	end
+	-- no grid (map not converted yet, or edit mode): a neutral light
 	for i = 0, 2 do
 		ambient[i], directed[i], dir[i] = 64, 128, 0
 	end
 	dir[2] = 1
 	return 0
-end
-
-function R3D.GetViewPosition(point)
-	point[0], point[1], point[2] = R3D.viewOrigin[0], R3D.viewOrigin[1], R3D.viewOrigin[2]
 end
 
 -- pools -----------------------------------------------------------------------
@@ -577,9 +576,6 @@ function R3D.RenderScene(refdef)
 		t.guiRoot = vf
 		fillTarget(t, refdef, timeSec)
 	else
-		for i = 0, 2 do
-			R3D.viewOrigin[i] = refdef.vieworg[i]
-		end
 		local cam = R3D.camera or workspace.CurrentCamera
 		if cam then
 			cam.CameraType = Enum.CameraType.Scriptable
@@ -599,6 +595,7 @@ end
 
 function R3D.LoadWorldMap(name: string)
 	R3D.mapName = name
+	LightGrid.Load(name)
 	local WorldFx = require(script.Parent.WorldFx)
 	WorldFx.Load(name)
 end

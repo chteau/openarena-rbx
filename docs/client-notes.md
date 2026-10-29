@@ -25,7 +25,8 @@ tests/                        lune tests (tests/run.luau runs them all)
 ## Porting rules (every ported file follows these)
 
 1. **Header.** Keep the C file's GPL header comment verbatim (as a `--[[ ]]`
-   block), then one line: `-- Luau port of code/<dir>/<file>.c (OpenArena gamecode).`
+   block), then one line:
+   `-- Luau port of code/<dir>/<file>.c (OpenArena 0.8.8, gamecode 9e0f0c0).`
 2. **Non-MISSIONPACK build.** Port the `#ifndef MISSIONPACK` / `#else` side
    for baseoa, drop `#ifdef MISSIONPACK` code. Drop `Q3_VM`-only code.
 3. **Modules and names.** Each module is a ModuleScript. Requires are relative
@@ -113,6 +114,56 @@ tests/                        lune tests (tests/run.luau runs them all)
     `((menucommon_s*)ptr)->flags` -> `ptr.generic.flags`. `menuframework_s.items`
     is a 0-based array of item tables. Callbacks keep C's
     `(void *ptr, int event)` and receive the item table.
+
+## Source revision: OpenArena 0.8.8
+
+The port follows `vendor/gamecode-088` (gamecode `9e0f0c0`, 2012-01-28), the
+source of the QVMs in 0.8.8's `pak6-patch088.pk3`. It was first ported from
+`vendor/gamecode` (OA master, 2025) and then aligned file by file with
+`git -C vendor/gamecode diff -w 9e0f0c0 HEAD -- code/cgame code/q3_ui`
+(and the headers, `q_shared.c`, `bg_misc.c`). `cg_marks.c` is split since
+0.8.8 carries Q3's particle system in it: `cg_marks.luau` (mark polys),
+`cg_marks2.luau` / `cg_marks3.luau` (particles).
+
+Master-only things removed:
+
+- cgame cvars: `cg_bob`, `cg_bobmodel`, `cg_kickScale`, `cg_viewnudge`,
+  `cg_muzzleflashStyle`, `cg_alternateShell`, `cg_obituaryOutput`,
+  `cg_deathcam`, `cg_cameramode`, `cg_cameraEyes*`, `cg_modelEyes_*`,
+  `cg_leiDebug`, `cg_leiChibi`, `cg_leiWidescreen`, `g_enableQ`,
+  `g_enableFS`; `cg_hitSound` is 0.8.8's `cg_hitsound` again and
+  `com_cameraMode` (`cg_cameraMode`) is back.
+- cgame features: frag messages (`CG_DrawFragMessage*`, `fragInfo_t`,
+  `FRAGMSG_*`, the frag icon shaders), eye models and eye-file parsing
+  (`CG_ParseEyesFile`, `CG_Draw3DModelEyes`, `eyepos`, `head` lerp frames),
+  floating names / sprites over the world, the SCRIPTHUD loading screen
+  (`CG_DrawLoadingScreen`, `CG_Update*Fraction`), the countdown timer and
+  possession string, `CG_BestWeapon_f`, `CG_GetCVar`, the muzzle flash
+  styles (`flashModel_type*`, `MuzzleFlashStyleQ1`), lazy weapon bob,
+  `onepiece` (`g_enableFS`) models, the engine particle syscalls
+  (`trap_R_LFX_ParticleEffect`, `trap_R_GetViewPosition`) and the `LFX_*`
+  effects; 0.8.8's own particles (`CG_ParticleExplosion`, `CG_LeiSparks`,
+  `CG_LeiPuff`, ... behind `cg_leiEnhancement`) are back in their place.
+- Layout and data: the score box starts at `480 - ICON_SIZE` (master: 472),
+  `CG_DrawOldTourneyScoreboard`, `NUM_CROSSHAIRS 99`, default team model
+  `sergei` / head `*sergei`, team names "Vim supporters" / "Emacs
+  supporters", the extra footstep and impact sounds (`FOOTSTEP_SNOW`..,
+  `IMPACTSOUND_GLASS`.., `SURF_SNOW`.., `EV_FOOTSTEP_WOOD`..), the
+  Possession gametype (`GT_POSSESSION`), map-info gametype support.
+- q3_ui: `UI_DrawBackgroundPic` (menu backgrounds are a 640x480 handle pic
+  again, so they pillarbox), `ui_browserHidePrivate`,
+  `ui_pos_scorelimit`/`ui_pos_timelimit`, the 2018 copyright line, the
+  `fixedlegs`/`fixedtorso` UI player options, the text-effect helpers,
+  and the vote, start-server, controls, video, player and challenges menus
+  as master changed them. `ui_options.c` (0.8.8 only) is not ported:
+  nothing in 0.8.8 calls `UI_SystemConfigMenu`.
+
+Kept although no C source has them: the engine layer (`sys/*`,
+`ui_roblox.luau`) and the opt-in `cg_wideScreenHud` (default 0).
+
+The release `ui.qvm` is not byte-for-byte `9e0f0c0`: it draws `^70.8.8` in
+the main menu's corner where the source says `^7OAX` (ported as the QVM
+draws it), and it lacks the `ui_writemappools` command (kept, harmless).
 
 ## Units and axes
 
@@ -241,6 +292,15 @@ trusts it (Q3 doesn't), which drew black boxes behind icons.
   accepted; map meshes by `map.json` names; sky/fog per map in
   `index.maps[name].{sky,fogs,meshes}`. The client parses the shader
   scripts from the FS pack itself (same source as `shaders.json`).
+- **light grid (feat/conv)**: `sys/LightGrid.luau` ports
+  `R_SetupEntityLightingGrid` and the colour shift of `R_LoadLightGrid`
+  (`r_mapOverBrightBits 2` over `r_overBrightBits 1`, the split conv bakes
+  lightmaps with). The place's boot code sets
+  `LightGrid.loadGrid = function(map) return lightgrid, blob end`, the
+  `map.json` `lightgrid` record (`origin`, `size`, `bounds`) and the
+  `LightGrid` blob joined from its chunk modules (`LightGrid.join`);
+  `R_LoadWorldMap` calls it. Without a grid `R_LightForPoint` returns 0 and
+  a neutral light.
 - **server votes**: q3_ui's `map`/`devmap`/`spmap` and the start-server menu
   become `callvote g_gametype N` + `callvote map X`; the server has to
   accept them.
@@ -272,9 +332,6 @@ normalised RMSE over the whole frame.
   `opengl1` renderer, running OA 0.8.8's own QVMs and pk3s
   (`OA_ENGINE=... scripts/oa-ref.sh`). Engine-side text (console, protocol)
   is ioquake3's.
-- **Vendored gamecode vs 0.8.8.** `vendor/gamecode` is OA's later master;
-  the port follows it. Visible differences against 0.8.8's QVMs are in the
-  parity table (HUD offset, menu colours/background).
 - **No EditableMesh in rbx-native's edit runtime** (`AssetService:
   CreateEditableMesh` errors there and under lune). MD3 surfaces then don't
   draw (one warning); the parity shots can't show 3D models. In a running
@@ -288,8 +345,9 @@ normalised RMSE over the whole frame.
 - **Marks** (`trap_CM_MarkFragments`) aren't clipped to the BSP's draw
   surfaces (the client has baked meshes, not surfaces): a mark is the
   projected quad on the plane it hit and can overhang an edge.
-- **Lighting of models**: `R_LightForPoint` returns a constant; conv ships
-  a light grid blob, wiring it is the remaining step.
+- **Lighting of models**: `R_LightForPoint` (`CG_LightVerts`) reads conv's
+  light grid (`sys/LightGrid.luau`, see Integration points). The md3
+  meshes themselves are still lit by Roblox, not by the grid.
 - **trap_UpdateScreen during loading**: Roblox presents only when the script
   yields; CG_Init runs in one frame, so its loading screen is built but not
   seen unless loading spans frames.

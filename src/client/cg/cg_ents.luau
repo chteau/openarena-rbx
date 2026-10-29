@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_ents.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_ents.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_ents.c -- present snapshot entities, happens every single frame
 
 local G = require(script.Parent.G)
@@ -295,7 +295,7 @@ local function CG_Item(cent)
 	-- add to refresh list
 	trap.R_AddRefEntityToScene(ent)
 
-	if wi ~= nil and wi.barrelModel ~= 0 then
+	if item.giType == C.IT_WEAPON and wi.barrelModel ~= 0 then
 		local barrel = T.refEntity_t()
 
 		barrel.hModel = wi.barrelModel
@@ -539,28 +539,6 @@ local function CG_Portal(cent)
 	trap.R_AddRefEntityToScene(ent)
 end
 
-function G.CG_CreateRotationMatrix(angles, matrix)
-	Q.AngleVectors(angles, matrix[0], matrix[1], matrix[2])
-	Q.VectorInverse(matrix[1])
-end
-
-function G.CG_TransposeMatrix(matrix, transpose)
-	for i = 0, 2 do
-		for j = 0, 2 do
-			transpose[i][j] = matrix[j][i]
-		end
-	end
-end
-
-function G.CG_RotatePoint(point, matrix)
-	local tvec = Q.vec3(0, 0, 0)
-
-	Q.VectorCopy(point, tvec)
-	point[0] = Q.DotProduct(matrix[0], tvec)
-	point[1] = Q.DotProduct(matrix[1], tvec)
-	point[2] = Q.DotProduct(matrix[2], tvec)
-end
-
 --[[
 =========================
 CG_AdjustPositionForMover
@@ -575,11 +553,6 @@ function G.CG_AdjustPositionForMover(i_n, moverNum, fromTime, toTime, out, angle
 	local oldAngles = Q.vec3(0, 0, 0)
 	local angles = Q.vec3(0, 0, 0)
 	local deltaAngles = Q.vec3(0, 0, 0)
-	local matrix = newMatrix()
-	local transpose = newMatrix()
-	local org = Q.vec3(0, 0, 0)
-	local org2 = Q.vec3(0, 0, 0)
-	local move2 = Q.vec3(0, 0, 0)
 
 	if moverNum <= 0 or moverNum >= C.ENTITYNUM_MAX_NORMAL then
 		Q.VectorCopy(i_n, out)
@@ -603,17 +576,10 @@ function G.CG_AdjustPositionForMover(i_n, moverNum, fromTime, toTime, out, angle
 	Q.VectorSubtract(origin, oldOrigin, deltaOrigin)
 	Q.VectorSubtract(angles, oldAngles, deltaAngles)
 
-	-- origin change when on a rotating object
-	G.CG_CreateRotationMatrix(deltaAngles, transpose)
-	G.CG_TransposeMatrix(transpose, matrix)
-	Q.VectorSubtract(i_n, oldOrigin, org)
-	Q.VectorCopy(org, org2)
-	G.CG_RotatePoint(org2, matrix)
-	Q.VectorSubtract(org2, org, move2)
-	Q.VectorAdd(deltaOrigin, move2, deltaOrigin)
-
 	Q.VectorAdd(i_n, deltaOrigin, out)
 	Q.VectorAdd(angles_in, deltaAngles, angles_out)
+
+	-- FIXME: origin change when on a rotating object
 end
 
 local function CG_InterpolateEntityPosition(cent)

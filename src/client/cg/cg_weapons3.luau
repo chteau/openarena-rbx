@@ -19,8 +19,8 @@ along with Foobar; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_weapons.c (OpenArena gamecode).
--- This part covers C lines 2266-3427 (CG_DrawWeaponSelect .. CG_OutOfAmmoChange).
+-- Luau port of code/cgame/cg_weapons.c (OpenArena 0.8.8, gamecode 9e0f0c0).
+-- This part covers C lines 1668-2642 of the 0.8.8 source.
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
@@ -122,8 +122,8 @@ function G.CG_DrawWeaponSelect()
 	end
 
 	local style = G.cg_weaponBarStyle.integer
-	if style == -1 then
-		-- Don't display the weapon bar.
+	if style == 0 then
+		G.CG_DrawWeaponBar0(count, bits)
 	elseif style == 1 then
 		G.CG_DrawWeaponBar1(count, bits)
 	elseif style == 2 then
@@ -138,8 +138,6 @@ function G.CG_DrawWeaponSelect()
 		G.CG_DrawWeaponBar6(count, bits, color)
 	elseif style == 7 then
 		G.CG_DrawWeaponBar7(count, bits, color)
-	else
-		G.CG_DrawWeaponBar0(count, bits)
 	end
 	trap.R_SetColor(nil)
 end
@@ -435,39 +433,6 @@ function G.CG_WeaponSelectable(i: number): boolean
 	return true
 end
 
--- Gives the best weapon with ammo based on cg_weaponOrder
--- If it cannot find a weapon WP_NONE is returned
-function G.CG_GetBestWeapon(): number
-	local ret = C.WP_NONE
-	local order = G.cg_weaponOrder.string
-	local pos = string.find(order, "/", 1, true)
-	while pos ~= nil do
-		local place = pos + 1
-		local newWeaponNumber = atoi(string.sub(order, place))
-		if G.CG_WeaponSelectable(newWeaponNumber) then
-			ret = newWeaponNumber
-		end
-		pos = string.find(order, "/", place, true)
-	end
-	return ret
-end
-
-function G.CG_BestWeapon_f()
-	local cg = G.cg
-	if cg.snap == nil then
-		return
-	end
-	if bit32.band(cg.snap.ps.pm_flags, C.PMF_FOLLOW) ~= 0 then
-		return
-	end
-
-	local newW = G.CG_GetBestWeapon()
-	if newW ~= C.WP_NONE then
-		cg.weaponSelectTime = cg.time
-		cg.weaponSelect = newW
-	end
-end
-
 function G.CG_NextWeapon_f()
 	local cg = G.cg
 	if cg.snap == nil then
@@ -588,13 +553,11 @@ end
 function G.CG_OutOfAmmoChange()
 	local cg = G.cg
 	cg.weaponSelectTime = cg.time
-	cg.weaponSelect = G.CG_GetBestWeapon()
-	if cg.weaponSelect == C.WP_NONE then
-		for i = C.MAX_WEAPONS - 1, 1, -1 do
-			if G.CG_WeaponSelectable(i) and i ~= C.WP_GRAPPLING_HOOK then
-				cg.weaponSelect = i
-				break
-			end
+
+	for i = C.MAX_WEAPONS - 1, 1, -1 do
+		if G.CG_WeaponSelectable(i) and i ~= C.WP_GRAPPLING_HOOK then
+			cg.weaponSelect = i
+			break
 		end
 	end
 end

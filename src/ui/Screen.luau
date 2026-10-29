@@ -8,12 +8,11 @@
 --
 -- q3_ui keeps 4:3 on a wider screen: xscale = yscale = vidHeight / 480 and
 -- the 640-wide area is centred (bias = half the spare width), which is what
--- OpenArena 0.8.8's menus do. Full-screen backgrounds are drawn in real
--- pixels (UI_DrawBackgroundPic) and so still fill the screen.
+-- OpenArena 0.8.8's menus do, backgrounds included (they pillarbox).
 --
 -- The cgame HUD in OpenArena 0.8.8 stretches the 640 width over the whole
 -- screen (xscale = vidWidth / 640, no bias); the reference shots in
--- docs/parity/ref show it. The gamecode this port follows later added a
+-- docs/parity/ref show it. Later OpenArena gamecode added a
 -- centred 4:3 HUD ("leilei - widescreen adjust"); `cg_wideScreenHud 1`
 -- selects that instead, 0 (default) matches 0.8.8.
 local Screen = {}

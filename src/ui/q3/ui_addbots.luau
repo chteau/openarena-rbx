@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_addbots.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_addbots.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 --[[
 =======================================================================
@@ -34,14 +34,14 @@ local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
-local ART_BACKGROUND = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
-local ART_ARROWS = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_0"
-local ART_ARROWUP = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_top"
-local ART_ARROWDOWN = "menu/" .. C.MENU_ART_DIR .. "/arrows_vert_bot"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/accept_0"
+local ART_FIGHT1 = "menu/art_blueish/accept_1"
+local ART_BACKGROUND = "menu/art_blueish/addbotframe"
+local ART_ARROWS = "menu/art_blueish/arrows_vert_0"
+local ART_ARROWUP = "menu/art_blueish/arrows_vert_top"
+local ART_ARROWDOWN = "menu/art_blueish/arrows_vert_bot"
 
 local ID_BACK = 10
 local ID_GO = 11
@@ -281,7 +281,7 @@ local function UI_AddBotsMenu_Init()
 	m.team.generic.name = "Team: "
 	m.team.generic.id = ID_TEAM
 	m.team.curvalue = 0
-	if gametype >= C.GT_TEAM and gametype ~= C.GT_LMS and gametype ~= C.GT_POSSESSION then
+	if gametype >= C.GT_TEAM and gametype ~= C.GT_LMS then
 		m.team.itemnames = teamNames2
 	else
 		m.team.itemnames = teamNames1

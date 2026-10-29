@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_gameinfo.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_gameinfo.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -151,7 +151,6 @@ local function UI_LoadArenas()
 	for i = 0, numdirs - 1 do
 		local filename = Q.va("scripts/%s", dirlist[i])
 		UI_LoadArenasFromFile(filename)
-		trap.Print(Q.va("Read %s\n", filename))
 	end
 	trap.Print(Q.va("%i arenas parsed\n", ui_numArenas))
 	if outOfMemory then
@@ -238,7 +237,7 @@ end
 
 function U.UI_GetArenaInfoByMap(map)
 	for n = 0, ui_numArenas - 1 do
-		if Q.Info_ValueForKey(ui_arenaInfos[n], "map") == map then
+		if Q.stricmp(Q.Info_ValueForKey(ui_arenaInfos[n], "map"), map) == 0 then
 			return ui_arenaInfos[n]
 		end
 	end
@@ -248,7 +247,7 @@ end
 
 function U.UI_GetSpecialArenaInfo(tag)
 	for n = 0, ui_numArenas - 1 do
-		if Q.Info_ValueForKey(ui_arenaInfos[n], "special") == tag then
+		if Q.stricmp(Q.Info_ValueForKey(ui_arenaInfos[n], "special"), tag) == 0 then
 			return ui_arenaInfos[n]
 		end
 	end
@@ -307,7 +306,7 @@ end
 function U.UI_GetBotInfoByName(name)
 	for n = 0, ui_numBots - 1 do
 		local value = Q.Info_ValueForKey(ui_botInfos[n], "name")
-		if value == name then
+		if Q.stricmp(value, name) == 0 then
 			return ui_botInfos[n]
 		end
 	end

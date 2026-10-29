@@ -1,6 +1,6 @@
 --[[
 ===========================================================================
-Copyright (C) 2009-2016 Poul Sander
+Copyright (C) 2009 Poul Sander
 
 This file is part of the Open Arena source code.
 
@@ -19,7 +19,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_votemenu_gametype.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_votemenu_gametype.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
@@ -27,11 +27,11 @@ local Q = require(script.Parent.Parent.Parent.client.q.Q)
 local T = require(script.Parent.Parent.Parent.client.q.Types)
 local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
-local VOTEMENU_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local VOTEMENU_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FIGHT0 = "menu/" .. C.MENU_ART_DIR .. "/accept_0"
-local ART_FIGHT1 = "menu/" .. C.MENU_ART_DIR .. "/accept_1"
-local ART_BACKGROUND = "menu/" .. C.MENU_ART_DIR .. "/addbotframe"
+local VOTEMENU_BACK0 = "menu/art_blueish/back_0"
+local VOTEMENU_BACK1 = "menu/art_blueish/back_1"
+local ART_FIGHT0 = "menu/art_blueish/accept_0"
+local ART_FIGHT1 = "menu/art_blueish/accept_1"
+local ART_BACKGROUND = "menu/art_blueish/addbotframe"
 
 local votemenu_Gametype_artlist = { [0] = VOTEMENU_BACK0, VOTEMENU_BACK1, ART_FIGHT0, ART_FIGHT1 }
 
@@ -49,7 +49,6 @@ local ID_CTFe = 110
 local ID_LMS = 111
 local ID_DOUBLED = 112
 local ID_DOM = 113
-local ID_POS = 114
 
 local Gametype_MENU_VERTICAL_SPACING = 19
 
@@ -67,7 +66,6 @@ local BUTTONS = {
 	{ key = "LMS", id = ID_LMS, gt = 10, text = "Last man standing" },
 	{ key = "DOUBLED", id = ID_DOUBLED, gt = 11, text = "Double Domination" },
 	{ key = "DOM", id = ID_DOM, gt = 12, text = "Domination" },
-	{ key = "POS", id = ID_POS, gt = 13, text = "Possession" },
 }
 
 local function newVotemenu()
@@ -90,21 +88,31 @@ end
 local s_votemenu_Gametype = newVotemenu()
 
 local function VoteMenu_Gametype_Event(ptr, event)
-	if event ~= C.QM_ACTIVATED then
-		return
-	end
-
 	local id = ptr.generic.id
 	if id == ID_BACK then
-		U.UI_PopMenu()
-		return
-	end
-	for _, b in BUTTONS do
-		if b.id == id then
-			trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_gametype " .. b.gt)
-			U.UI_PopMenu()
-			U.UI_PopMenu()
+		if event ~= C.QM_ACTIVATED then
 			return
+		end
+		U.UI_PopMenu()
+	elseif id == ID_GO then
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		for _, b in BUTTONS do
+			if b.id == s_votemenu_Gametype.selection then
+				trap.Cmd_ExecuteText(C.EXEC_APPEND, "callvote g_gametype " .. b.gt)
+				U.UI_PopMenu()
+				U.UI_PopMenu()
+				return
+			end
+		end
+	else
+		if event ~= C.QM_ACTIVATED then
+			return
+		end
+		if s_votemenu_Gametype.selection ~= id then
+			s_votemenu_Gametype.selection = id
+			U.UI_VoteGametypeMenuInternal()
 		end
 	end
 end
@@ -172,7 +180,7 @@ function U.UI_VoteGametypeMenuInternal()
 	s.back.generic.callback = VoteMenu_Gametype_Event
 	s.back.generic.id = ID_BACK
 	s.back.generic.x = 320 - 128
-	s.back.generic.y = y
+	s.back.generic.y = 256 + 128 - 64
 	s.back.width = 128
 	s.back.height = 64
 	s.back.focuspic = VOTEMENU_BACK1
@@ -196,7 +204,7 @@ function U.UI_VoteGametypeMenu()
 	local s = s_votemenu_Gametype
 	local serverinfo = trap.GetConfigString(C.CS_SERVERINFO)
 	local gametypeinfo = Q.Info_ValueForKey(serverinfo, "g_voteGametypes")
-	if gametypeinfo == "*" then
+	if Q.stricmp(gametypeinfo, "*") == 0 then
 		for _, b in BUTTONS do
 			s.allowed[b.key] = true
 		end
@@ -210,6 +218,7 @@ function U.UI_VoteGametypeMenu()
 
 	U.Menu_AddItem(s.menu, s.banner)
 	U.Menu_AddItem(s.menu, s.back)
+	U.Menu_AddItem(s.menu, s.go)
 	for _, b in BUTTONS do
 		U.Menu_AddItem(s.menu, s.buttons[b.key])
 	end

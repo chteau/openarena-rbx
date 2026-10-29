@@ -19,17 +19,16 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_event.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_event.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_event.c -- handle entity events at snapshot or playerstate transitions
 
 local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
 local C = require(script.Parent.Parent.q.Consts)
-local T = require(script.Parent.Parent.q.Types)
 local trap = require(script.Parent.Parent.sys.Trap)
 local BG = require(script.Parent.Parent.adapters.BG)
 
-local band, bor, bnot, bxor, lshift = bit32.band, bit32.bor, bit32.bnot, bit32.bxor, bit32.lshift
+local band, bnot, bxor, lshift = bit32.band, bit32.bnot, bit32.bxor, bit32.lshift
 
 --==========================================================================
 
@@ -74,14 +73,6 @@ function G.CG_PlaceString(rank)
 	return string.sub(t .. s, 1, 63)
 end
 
-local function pushFrag()
-	local cgs = G.cgs
-	for i = 0, C.FRAGMSG_MAX - 2 do
-		T.assign(cgs.fragMsg[i], cgs.fragMsg[i + 1])
-	end
-	T.reset(cgs.fragMsg[C.FRAGMSG_MAX - 1], T.fragInfo_t)
-end
-
 local worldMessages = {
 	[C.MOD_SUICIDE] = "suicides",
 	[C.MOD_FALLING] = "cratered",
@@ -93,34 +84,33 @@ local worldMessages = {
 	[C.MOD_TRIGGER_HURT] = "was in the wrong place",
 }
 
--- mod -> { message, message2, shader name }
+-- mod -> { message, message2 }
 local attackerMessages = {
-	[C.MOD_GRAPPLE] = { "was caught by", "", "grapplehookShader" },
-	[C.MOD_GAUNTLET] = { "was pummeled by", "", "gauntletShader" },
-	[C.MOD_MACHINEGUN] = { "was machinegunned by", "", "machinegunShader" },
-	[C.MOD_SHOTGUN] = { "was gunned down by", "", "shotgunShader" },
-	[C.MOD_GRENADE] = { "ate", "'s grenade", "grenadeShader" },
-	[C.MOD_GRENADE_SPLASH] = { "was shredded by", "'s shrapnel", "grenadeShader" },
-	[C.MOD_ROCKET] = { "ate", "'s rocket", "rocketShader" },
-	[C.MOD_ROCKET_SPLASH] = { "almost dodged", "'s rocket", "rocketShader" },
-	[C.MOD_PLASMA] = { "was melted by", "'s plasmagun", "plasmaShader" },
-	[C.MOD_PLASMA_SPLASH] = { "was melted by", "'s plasmagun", "plasmaShader" },
-	[C.MOD_RAILGUN] = { "was railed by", "", "railgunShader" },
-	[C.MOD_LIGHTNING] = { "was electrocuted by", "", "lightninggunShader" },
-	[C.MOD_BFG] = { "was blasted by", "'s BFG", "bfgShader" },
-	[C.MOD_BFG_SPLASH] = { "was blasted by", "'s BFG", "bfgShader" },
-	[C.MOD_NAIL] = { "was nailed by", "", "nailgunShader" },
-	[C.MOD_CHAINGUN] = { "got lead poisoning from", "'s Chaingun", "chaingunShader" },
-	[C.MOD_PROXIMITY_MINE] = { "was too close to", "'s Prox Mine", "proxlauncherShader" },
-	[C.MOD_KAMIKAZE] = { "falls to", "'s Kamikaze blast", "kamikazeShader" },
-	[C.MOD_JUICED] = { "was juiced by", "", "proxlauncherShader" },
-	[C.MOD_TELEFRAG] = { "tried to invade", "'s personal space", "skullShader" },
-	[C.MOD_LAVA] = { "was given a hot bath by", "", "skullShader" },
-	[C.MOD_SLIME] = { "was given a acid bath by", "", "skullShader" },
-	[C.MOD_FALLING] = { "was given a small push by", "", "skullShader" },
-	[C.MOD_TRIGGER_HURT] = { "was helped on the way by", "", "skullShader" },
-	[C.MOD_CRUSH] = { "was crushed in", "'s trap", "skullShader" },
-	[C.MOD_SUICIDE] = { "was too eager against", "", "skullShader" },
+	[C.MOD_GRAPPLE] = { "was caught by", "" },
+	[C.MOD_GAUNTLET] = { "was pummeled by", "" },
+	[C.MOD_MACHINEGUN] = { "was machinegunned by", "" },
+	[C.MOD_SHOTGUN] = { "was gunned down by", "" },
+	[C.MOD_GRENADE] = { "ate", "'s grenade" },
+	[C.MOD_GRENADE_SPLASH] = { "was shredded by", "'s shrapnel" },
+	[C.MOD_ROCKET] = { "ate", "'s rocket" },
+	[C.MOD_ROCKET_SPLASH] = { "almost dodged", "'s rocket" },
+	[C.MOD_PLASMA] = { "was melted by", "'s plasmagun" },
+	[C.MOD_PLASMA_SPLASH] = { "was melted by", "'s plasmagun" },
+	[C.MOD_RAILGUN] = { "was railed by", "" },
+	[C.MOD_LIGHTNING] = { "was electrocuted by", "" },
+	[C.MOD_BFG] = { "was blasted by", "'s BFG" },
+	[C.MOD_BFG_SPLASH] = { "was blasted by", "'s BFG" },
+	[C.MOD_NAIL] = { "was nailed by", "" },
+	[C.MOD_CHAINGUN] = { "got lead poisoning from", "'s Chaingun" },
+	[C.MOD_PROXIMITY_MINE] = { "was too close to", "'s Prox Mine" },
+	[C.MOD_KAMIKAZE] = { "falls to", "'s Kamikaze blast" },
+	[C.MOD_JUICED] = { "was juiced by", "" },
+	[C.MOD_TELEFRAG] = { "tried to invade", "'s personal space" },
+	[C.MOD_LAVA] = { "was given a hot bath by", "" },
+	[C.MOD_SLIME] = { "was given a acid bath by", "" },
+	[C.MOD_FALLING] = { "was given a small push by", "" },
+	[C.MOD_TRIGGER_HURT] = { "was helped on the way by", "" },
+	[C.MOD_CRUSH] = { "was crushed in", "'s trap" },
 }
 
 local function genderText(gender, female, neuter, male)
@@ -140,15 +130,11 @@ CG_Obituary
 local function CG_Obituary(ent)
 	local cgs = G.cgs
 	local cg = G.cg
-	local media = cgs.media
 	local mod = ent.eventParm
 	local target = ent.otherEntityNum
 	local attacker = ent.otherEntityNum2
 	local message, message2
 	local attackerInfo
-	local causeShader
-	local lastFrag = cgs.fragMsg[C.FRAGMSG_MAX - 1]
-	local outputMode = G.cg_obituaryOutput.integer
 
 	if target < 0 or target >= C.MAX_CLIENTS then
 		G.CG_Error("CG_Obituary: target out of range")
@@ -168,7 +154,6 @@ local function CG_Obituary(ent)
 	message2 = ""
 
 	-- check for single client messages
-	causeShader = media.skullShader
 	if attacker ~= C.ENTITYNUM_WORLD then
 		message = nil
 	else
@@ -179,48 +164,29 @@ local function CG_Obituary(ent)
 		local gender = ci.gender
 		if mod == C.MOD_KAMIKAZE then
 			message = "goes out with a bang"
-			causeShader = media.kamikazeShader
 		elseif mod == C.MOD_GRENADE_SPLASH then
 			message = genderText(
 				gender,
 				"tripped on her own grenade",
-				"tripped on their own grenade",
+				"tripped on its own grenade",
 				"tripped on his own grenade"
 			)
-			causeShader = media.grenadeShader
 		elseif mod == C.MOD_ROCKET_SPLASH then
-			message = genderText(gender, "blew herself up", "blew themself up", "blew himself up")
-			causeShader = media.rocketShader
+			message = genderText(gender, "blew herself up", "blew itself up", "blew himself up")
 		elseif mod == C.MOD_PLASMA_SPLASH then
-			message = genderText(gender, "melted herself", "melted themself", "melted himself")
-			causeShader = media.plasmaShader
+			message = genderText(gender, "melted herself", "melted itself", "melted himself")
 		elseif mod == C.MOD_BFG_SPLASH then
 			message = "should have used a smaller gun"
-			causeShader = media.bfgShader
 		elseif mod == C.MOD_PROXIMITY_MINE then
-			message = genderText(gender, "found her prox mine", "found their prox mine", "found his prox mine")
-			causeShader = media.proxlauncherShader
+			message = genderText(gender, "found her prox mine", "found its prox mine", "found his prox mine")
 		else
-			message = genderText(gender, "killed herself", "killed themself", "killed himself")
-			causeShader = media.skullShader
+			message = genderText(gender, "killed herself", "killed itself", "killed himself")
 		end
 	end
 
-	-- If a suicide happens while disconnecting
-	-- then we might not have a targetName
+	--If a suicide happens while disconnecting then we might not have a targetName
 	if message ~= nil and #targetName ~= 0 then
-		if outputMode == 1 or outputMode == 4 then
-			G.CG_Printf(Q.va("%s %s.\n", targetName, message))
-		end
-		if outputMode >= 2 then
-			pushFrag()
-			lastFrag.targetName = string.sub(targetName, 1, 31)
-			lastFrag.causeShader = causeShader
-			lastFrag.fragTime = cg.time
-			lastFrag.teamFrag = false
-			lastFrag.message = string.sub(Q.va("%s %s.", targetName, message), 1, 199)
-		end
-
+		G.CG_Printf(Q.va("%s %s.\n", targetName, message))
 		return
 	end
 
@@ -258,47 +224,23 @@ local function CG_Obituary(ent)
 	end
 
 	if attacker ~= C.ENTITYNUM_WORLD then
-		local entry = attackerMessages[mod]
-		if entry ~= nil then
-			message, message2, causeShader = entry[1], entry[2], media[entry[3]]
-		else
-			message = "was killed by"
-			causeShader = media.skullShader
-		end
-
 		if ent.generic1 ~= 0 then
 			message = "was killed by ^1TEAMMATE^7"
-			message2 = ""
+		else
+			local entry = attackerMessages[mod]
+			if entry ~= nil then
+				message, message2 = entry[1], entry[2]
+			else
+				message = "was killed by"
+			end
 		end
 
-		if outputMode == 1 or outputMode == 4 then
-			G.CG_Printf(Q.va("%s %s %s%s\n", targetName, message, attackerName, message2))
-		end
-		if outputMode >= 2 then
-			pushFrag()
-			lastFrag.teamFrag = ent.generic1 ~= 0
-			lastFrag.targetName = string.sub(targetName, 1, 31)
-			lastFrag.attackerName = string.sub(attackerName, 1, 31)
-			lastFrag.causeShader = causeShader
-			lastFrag.fragTime = cg.time
-			lastFrag.message = string.sub(Q.va("%s %s %s%s.", targetName, message, attackerName, message2), 1, 199)
-		end
-
+		G.CG_Printf(Q.va("%s %s %s%s\n", targetName, message, attackerName, message2))
 		return
 	end
 
 	-- we don't know what it was
-	if outputMode == 1 or outputMode == 4 then
-		G.CG_Printf(Q.va("%s died.\n", targetName))
-	end
-	if outputMode >= 2 then
-		pushFrag()
-		lastFrag.targetName = string.sub(targetName, 1, 31)
-		lastFrag.attackerName = string.sub(attackerName, 1, 31)
-		lastFrag.causeShader = media.skullShader
-		lastFrag.fragTime = cg.time
-		lastFrag.message = string.sub(Q.va("%s died.", targetName), 1, 199)
-	end
+	G.CG_Printf(Q.va("%s died.\n", targetName))
 end
 
 --==========================================================================
@@ -344,11 +286,6 @@ local function CG_UseItem(cent)
 	end
 end
 
---[[
- Function to check if a new is better according to cg_weaponOrder
- If the order is unspecified (at least one of the weapons are not specified in cg_weaponOrder) the result is false
- @return true if newWeapon is placed after currentWeapon in cg_weaponOrder. False otherwise
-]]
 local function CG_WeaponHigher(currentWeapon, newWeapon)
 	local order = G.cg_weaponOrder.string
 	local currentScore = string.find(order, Q.va("/%i/", currentWeapon), 1, true)
@@ -405,32 +342,22 @@ Returns waterlevel for entity origin
 ================
 ]]
 function G.CG_WaterLevel(cent)
-	local viewheight
+	-- get waterlevel, accounting for ducking
+	local waterlevel = 0
+	local point = Q.vec3(cent.lerpOrigin[0], cent.lerpOrigin[1], cent.lerpOrigin[2])
+	point[2] = point[2] + C.MINS_Z + 1
 	local anim = band(cent.currentState.legsAnim, bnot(C.ANIM_TOGGLEBIT))
 
 	if anim == C.LEGS_WALKCR or anim == C.LEGS_IDLECR then
-		viewheight = C.CROUCH_VIEWHEIGHT
+		point[2] = point[2] + C.CROUCH_VIEWHEIGHT
 	else
-		if G.cg_enableQ.integer ~= 0 then
-			viewheight = C.QUACK_VIEWHEIGHT
-		else
-			viewheight = C.DEFAULT_VIEWHEIGHT
-		end
+		point[2] = point[2] + C.DEFAULT_VIEWHEIGHT
 	end
 
-	--
-	-- get waterlevel, accounting for ducking
-	--
-	local waterlevel = 0
-	local point = Q.vec3(
-		cent.lerpOrigin[0],
-		cent.lerpOrigin[1],
-		cent.lerpOrigin[2] + C.MINS_Z + 1
-	)
 	local contents = G.CG_PointContents(point, -1)
 
 	if band(contents, C.MASK_WATER) ~= 0 then
-		local sample2 = viewheight - C.MINS_Z
+		local sample2 = Q.int(point[2] - C.MINS_Z)
 		local sample1 = Q.idiv(sample2, 2)
 		waterlevel = 1
 		point[2] = cent.lerpOrigin[2] + C.MINS_Z + sample1
@@ -477,7 +404,7 @@ function G.CG_PainEvent(cent, health)
 	end
 	-- play a gurp sound instead of a normal pain sound
 	local number = cent.currentState.number
-	if G.CG_WaterLevel(cent) == 3 then
+	if G.CG_WaterLevel(cent) >= 1 then
 		if band(Q.rand(), 1) ~= 0 then
 			trap.S_StartSound(nil, number, C.CHAN_VOICE, G.CG_CustomSound(number, "sound/player/gurp1.wav"))
 		else
@@ -493,13 +420,6 @@ end
 
 local footstepEvents = {
 	[C.EV_FOOTSTEP_METAL] = C.FOOTSTEP_METAL,
-	[C.EV_FOOTSTEP_SNOW] = C.FOOTSTEP_SNOW,
-	[C.EV_FOOTSTEP_WOOD] = C.FOOTSTEP_WOOD,
-	[C.EV_FOOTSTEP_SAND] = C.FOOTSTEP_SAND,
-	[C.EV_FOOTSTEP_GRAVEL] = C.FOOTSTEP_GRAVEL,
-	[C.EV_FOOTSTEP_FOILAGE] = C.FOOTSTEP_FOILAGE,
-	[C.EV_FOOTSTEP_ICE] = C.FOOTSTEP_ICE,
-	[C.EV_FOOTSTEP_GLASS] = C.FOOTSTEP_GLASS,
 	[C.EV_FOOTSPLASH] = C.FOOTSTEP_SPLASH,
 	[C.EV_FOOTWADE] = C.FOOTSTEP_SPLASH,
 	[C.EV_SWIM] = C.FOOTSTEP_SPLASH,
@@ -509,7 +429,7 @@ local function teamSoundEvent(parm)
 	local cg = G.cg
 	local cgs = G.cgs
 	local media = cgs.media
-	local team = cg.snap.ps.persistant[C.PERS_TEAM]
+	local team = cgs.clientinfo[cg.clientNum].team
 	local add = G.CG_AddBufferedSound
 
 	if parm == C.GTS_RED_CAPTURE then
@@ -740,15 +660,7 @@ function G.CG_EntityEvent(cent, position)
 		if item.giType == C.IT_POWERUP or item.giType == C.IT_TEAM then
 			trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.n_healthSound)
 		elseif item.giType == C.IT_PERSISTANT_POWERUP then
-			if item.giTag == C.PW_SCOUT then
-				trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.scoutSound)
-			elseif item.giTag == C.PW_GUARD then
-				trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.guardSound)
-			elseif item.giTag == C.PW_DOUBLER then
-				trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.doublerSound)
-			elseif item.giTag == C.PW_AMMOREGEN then
-				trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.ammoregenSound)
-			end
+			-- MISSIONPACK only
 		else
 			trap.S_StartSound(nil, es.number, C.CHAN_AUTO, trap.S_RegisterSound(item.pickup_sound, false))
 		end
@@ -789,7 +701,7 @@ function G.CG_EntityEvent(cent, position)
 	elseif event == C.EV_FIRE_WEAPON then
 		debugName("EV_FIRE_WEAPON")
 		G.CG_FireWeapon(cent)
-	elseif event >= C.EV_USE_ITEM0 and event <= C.EV_USE_ITEM15 then
+	elseif event >= C.EV_USE_ITEM0 and event <= C.EV_USE_ITEM14 then
 		debugName("EV_USE_ITEMx")
 		CG_UseItem(cent)
 
@@ -799,19 +711,11 @@ function G.CG_EntityEvent(cent, position)
 	elseif event == C.EV_PLAYER_TELEPORT_IN then
 		debugName("EV_PLAYER_TELEPORT_IN")
 		trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.teleInSound)
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(18, cent.lerpOrigin, cent.currentState.angles)
-		else
-			G.CG_SpawnEffect(position)
-		end
+		G.CG_SpawnEffect(position)
 	elseif event == C.EV_PLAYER_TELEPORT_OUT then
 		debugName("EV_PLAYER_TELEPORT_OUT")
 		trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.teleOutSound)
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(18, cent.lerpOrigin, cent.currentState.angles)
-		else
-			G.CG_SpawnEffect(position)
-		end
+		G.CG_SpawnEffect(position)
 	elseif event == C.EV_ITEM_POP then
 		debugName("EV_ITEM_POP")
 		trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.respawnSound)
@@ -819,10 +723,6 @@ function G.CG_EntityEvent(cent, position)
 		debugName("EV_ITEM_RESPAWN")
 		cent.miscTime = cg.time -- scale up from this
 		trap.S_StartSound(nil, es.number, C.CHAN_AUTO, media.respawnSound)
-
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(41, cent.lerpOrigin, cent.currentState.angles)
-		end
 	elseif event == C.EV_GRENADE_BOUNCE then
 		debugName("EV_GRENADE_BOUNCE")
 		if band(Q.rand(), 1) ~= 0 then
@@ -847,21 +747,13 @@ function G.CG_EntityEvent(cent, position)
 		G.CG_KamikazeEffect(cent.lerpOrigin)
 	elseif event == C.EV_OBELISKEXPLODE then
 		debugName("EV_OBELISKEXPLODE")
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(17, cent.lerpOrigin, cent.currentState.angles)
-		else
-			G.CG_ObeliskExplode(cent.lerpOrigin, es.eventParm)
-		end
+		G.CG_ObeliskExplode(cent.lerpOrigin, es.eventParm)
 	elseif event == C.EV_OBELISKPAIN then
 		debugName("EV_OBELISKPAIN")
 		G.CG_ObeliskPain(cent.lerpOrigin)
 	elseif event == C.EV_INVUL_IMPACT then
 		debugName("EV_INVUL_IMPACT")
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(42, cent.lerpOrigin, cent.currentState.angles)
-		else
-			G.CG_InvulnerabilityImpact(cent.lerpOrigin, cent.currentState.angles)
-		end
+		G.CG_InvulnerabilityImpact(cent.lerpOrigin, cent.currentState.angles)
 	elseif event == C.EV_JUICED then
 		debugName("EV_JUICED")
 		G.CG_InvulnerabilityJuiced(cent.lerpOrigin)
@@ -987,7 +879,7 @@ function G.CG_EntityEvent(cent, position)
 	elseif event == C.EV_DEATH1 or event == C.EV_DEATH2 or event == C.EV_DEATH3 then
 		debugName("EV_DEATHx")
 
-		if G.CG_WaterLevel(cent) == 3 then
+		if G.CG_WaterLevel(cent) >= 1 then
 			trap.S_StartSound(nil, es.number, C.CHAN_VOICE, G.CG_CustomSound(es.number, "*drown.wav"))
 		else
 			trap.S_StartSound(
@@ -1034,9 +926,6 @@ function G.CG_EntityEvent(cent, position)
 			trap.S_StartSound(nil, es.number, C.CHAN_BODY, media.gibSound)
 		end
 		G.CG_GibPlayer(cent.lerpOrigin)
-		if G.cg_leiEnhancement.integer ~= 0 then
-			trap.R_LFX_ParticleEffect(16, cent.lerpOrigin, cent.currentState.angles)
-		end
 	elseif event == C.EV_STOPLOOPINGSOUND then
 		debugName("EV_STOPLOOPINGSOUND")
 		trap.S_StopLoopingSound(es.number)

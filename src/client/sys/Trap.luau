@@ -261,12 +261,6 @@ end
 function trap.CM_LerpTag(tag, model: number, startFrame: number, endFrame: number, frac: number, name: string): boolean
 	return mod("Assets").LerpTag(tag, model, startFrame, endFrame, frac, name)
 end
-function trap.R_LFX_ParticleEffect(effect: number, origin, velocity)
-	-- OpenArena engine extension; the 0.8.8 engine doesn't implement it.
-end
-function trap.R_GetViewPosition(point)
-	mod("R3D").GetViewPosition(point)
-end
 function trap.R_inPVS(p1, p2): boolean
 	return CM().InPVS(p1, p2)
 end

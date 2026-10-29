@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/cgame/cg_effects.c (OpenArena gamecode).
+-- Luau port of code/cgame/cg_effects.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 -- cg_effects.c -- these functions generate localentities, usually as a result
 -- of event processing
 
@@ -475,7 +475,6 @@ function G.CG_Bleed(origin, entityNum)
 	ex.refEntity.rotation = Q.rand() % 360
 	ex.refEntity.radius = 24
 
-	ex.refEntity.shaderTime = ex.startTime / 1000.0 -- leilei-  fix the blood animation
 	ex.refEntity.customShader = G.cgs.media.bloodExplosionShader
 
 	-- don't show player's own blood in view
@@ -529,6 +528,11 @@ function G.CG_LaunchGib(origin, velocity, hModel)
 
 	le.leBounceSoundType = C.LEBS_BLOOD
 	le.leMarkType = C.LEMT_BLOOD
+	if G.cg_leiSuperGoreyAwesome.integer ~= 0 then
+		G.CG_SpurtBlood(origin, velocity, 7) -- LEILEI toss some extra juice
+		G.CG_SpurtBlood(origin, velocity, 22)
+		G.CG_SpurtBlood(origin, velocity, 11)
+	end
 end
 
 -- Generated a bunch of gibs launching out from the bodies location

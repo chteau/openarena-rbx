@@ -19,7 +19,7 @@ along with Open Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_challenges.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_challenges.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local Q = require(script.Parent.Parent.Parent.client.q.Q)
@@ -36,10 +36,10 @@ local ID_AWARDS = 103
 local ID_POWERUPS = 104
 local ID_FFA = 105
 
-local ART_BACK0 = "menu/" .. C.MENU_ART_DIR .. "/back_0"
-local ART_BACK1 = "menu/" .. C.MENU_ART_DIR .. "/back_1"
-local ART_FRAMEL = "menu/" .. C.MENU_ART_DIR .. "/frame2_l"
-local ART_FRAMER = "menu/" .. C.MENU_ART_DIR .. "/frame1_r"
+local ART_BACK0 = "menu/art_blueish/back_0"
+local ART_BACK1 = "menu/art_blueish/back_1"
+local ART_FRAMEL = "menu/art_blueish/frame2_l"
+local ART_FRAMER = "menu/art_blueish/frame1_r"
 
 local MAX_ENTRIES = 18
 local MAX_INT_AS_STRING = 8
@@ -57,7 +57,11 @@ local function newChallenges()
 		banner = item(),
 		framel = item(),
 		framer = item(),
-		headlines = {},
+		general = item(),
+		gametypes = item(),
+		weapons = item(),
+		awards = item(),
+		powerups = item(),
 		numberOfEntries = 0,
 		entry = {},
 		entryIntText = {},
@@ -67,9 +71,6 @@ local function newChallenges()
 		notice2 = item(),
 		back = item(),
 	}
-	for i = 0, 4 do
-		ch.headlines[i] = item()
-	end
 	for i = 0, MAX_ENTRIES - 1 do
 		ch.entry[i] = item()
 		ch.entryIntText[i] = item()
@@ -125,63 +126,50 @@ end
 
 local entryTables = {
 	[0] = {
-		{ "Kills:", "GENERAL_TOTALKILLS" },
-		{ "Deaths:", "GENERAL_TOTALDEATHS" },
+		{ "Total kills:", "GENERAL_TOTALKILLS" },
+		{ "Total deaths:", "GENERAL_TOTALDEATHS" },
 	},
-	{
-		{ "Deathmatch:", "GAMETYPES_FFA_WINS" },
-		{ "Tournament:", "GAMETYPES_TOURNEY_WINS" },
-		{ "Team Deathmatch:", "GAMETYPES_TDM_WINS" },
-		{ "Capture the flag:", "GAMETYPES_CTF_WINS" },
-		{ "One flag capture:", "GAMETYPES_1FCTF_WINS" },
-		{ "Obelisk:", "GAMETYPES_OVERLOAD_WINS" },
-		{ "Harvester:", "GAMETYPES_HARVESTER_WINS" },
-		{ "Elimination:", "GAMETYPES_ELIMINATION_WINS" },
-		{ "CTF Elimination:", "GAMETYPES_CTF_ELIMINATION_WINS" },
-		{ "Last man standing:", "GAMETYPES_LMS_WINS" },
-		{ "Double Domination:", "GAMETYPES_DD_WINS" },
-		{ "Domination:", "GAMETYPES_DOM_WINS" },
-	},
-	{
-		{ "Gauntlet:", "WEAPON_GAUNTLET_KILLS" },
-		{ "Machinegun:", "WEAPON_MACHINEGUN_KILLS" },
-		{ "Shotgun:", "WEAPON_SHOTGUN_KILLS" },
-		{ "Granade launcher:", "WEAPON_GRANADE_KILLS" },
-		{ "Rocket launcher:", "WEAPON_ROCKET_KILLS" },
-		{ "Lightning gun:", "WEAPON_LIGHTNING_KILLS" },
-		{ "Plasma gun:", "WEAPON_PLASMA_KILLS" },
-		{ "Railgun:", "WEAPON_RAIL_KILLS" },
-		{ "BFG:", "WEAPON_BFG_KILLS" },
-		{ "Grapple:", "WEAPON_GRAPPLE_KILLS" },
-		{ "Chaingun:", "WEAPON_CHAINGUN_KILLS" },
-		{ "Nailgun:", "WEAPON_NAILGUN_KILLS" },
-		{ "Mines:", "WEAPON_MINE_KILLS" },
-		{ "Push kills:", "WEAPON_PUSH_KILLS" },
-		{ "Instant rail:", "WEAPON_INSTANT_RAIL_KILLS" },
+	[1] = {},
+	[2] = {
+		{ "Gauntlet kills:", "WEAPON_GAUNTLET_KILLS" },
+		{ "Machinegun kills:", "WEAPON_MACHINEGUN_KILLS" },
+		{ "Shotgun kills:", "WEAPON_SHOTGUN_KILLS" },
+		{ "Granade kills:", "WEAPON_GRANADE_KILLS" },
+		{ "Rocket kills:", "WEAPON_ROCKET_KILLS" },
+		{ "Lightning kills:", "WEAPON_LIGHTNING_KILLS" },
+		{ "Plasmagun kills:", "WEAPON_PLASMA_KILLS" },
+		{ "Railgun kills:", "WEAPON_RAIL_KILLS" },
+		{ "Instant rail kills:", "WEAPON_INSTANT_RAIL_KILLS" },
+		{ "BFG kills:", "WEAPON_BFG_KILLS" },
+		{ "Grapple kills:", "WEAPON_GRAPPLE_KILLS" },
+		{ "Chaingun kills:", "WEAPON_CHAINGUN_KILLS" },
+		{ "Nailgun kills:", "WEAPON_NAILGUN_KILLS" },
+		{ "Proxy mine kills:", "WEAPON_MINE_KILLS" },
 		{ "Telefrags:", "WEAPON_TELEFRAG_KILLS" },
-		{ "Crushing:", "WEAPON_CRUSH_KILLS" },
+		{ "Push kills:", "WEAPON_PUSH_KILLS" },
+		{ "Crush kills:", "WEAPON_CRUSH_KILLS" },
 	},
-	{
-		{ "Gauntlet:", "WEAPON_GAUNTLET_KILLS" },
-		{ "Impressive:", "AWARD_IMPRESSIVE" },
-		{ "Excelent:", "AWARD_EXCELLENT" },
-		{ "Capture:", "AWARD_CAPTURE" },
-		{ "Assist:", "AWARD_ASSIST" },
-		{ "Defence:", "AWARD_DEFENCE" },
+	[3] = {
+		{ "Gauntlet", "WEAPON_GAUNTLET_KILLS" },
+		{ "Impressive", "AWARD_IMPRESSIVE" },
+		{ "Excellent", "AWARD_EXCELLENT" },
+		{ "Capture", "AWARD_CAPTURE" },
+		{ "Assist", "AWARD_ASSIST" },
+		{ "Defend", "AWARD_DEFENCE" },
 	},
-	{
-		{ "Quad kills:", "POWERUP_QUAD_KILL" },
-		{ "2 fast 4 U:", "POWERUP_SPEED_KILL" },
-		{ "I'm flying:", "POWERUP_FLIGHT_KILL" },
-		{ "They didn't see me:", "POWERUP_INVIS_KILL" },
-		{ "Killing machine:", "POWERUP_MULTI_KILL" },
-		{ "Counter Quad:", "POWERUP_COUNTER_QUAD" },
-		{ "Not fast enough:", "POWERUP_COUNTER_SPEED" },
-		{ "You cannot hide:", "POWERUP_COUNTER_INVIS" },
-		{ "Fall deep:", "POWERUP_COUNTER_FLIGHT" },
-		{ "Counter battlesuit:", "POWERUP_COUNTER_ENVIR" },
-		{ "Counter regen:", "POWERUP_COUNTER_REGEN" },
-		{ "Counter multi:", "POWERUP_COUNTER_MULTI" },
+	[4] = {
+		{ "Quad kills", "POWERUP_QUAD_KILL" },
+		{ "2 fast 4 U", "POWERUP_SPEED_KILL" },
+		{ "They didn't see me", "POWERUP_INVIS_KILL" },
+		{ "I'm flying", "POWERUP_FLIGHT_KILL" },
+		{ "Killing machine", "POWERUP_MULTI_KILL" },
+		{ "Counter Quad", "POWERUP_COUNTER_QUAD" },
+		{ "Not fast enough", "POWERUP_COUNTER_SPEED" },
+		{ "You cannot hide", "POWERUP_COUNTER_INVIS" },
+		{ "Fall deep", "POWERUP_COUNTER_FLIGHT" },
+		{ "Counter battlesuit", "POWERUP_COUNTER_ENVIR" },
+		{ "Counter regen", "POWERUP_COUNTER_REGEN" },
+		{ "Counter multi", "POWERUP_COUNTER_MULTI" },
 	},
 }
 
@@ -218,21 +206,20 @@ local function UI_Challenges_Init()
 	ch.framer.height = 334
 
 	local heads = {
-		[0] = { ID_GENERAL, 240 - 2 * C.PROP_HEIGHT, "GENERAL" },
-		{ ID_GAMETYPES, 240 - C.PROP_HEIGHT, "GAMETYPES" },
-		{ ID_WEAPONS, 240, "WEAPONS" },
-		{ ID_AWARDS, 240 + C.PROP_HEIGHT, "AWARDS" },
-		{ ID_POWERUPS, 240 + C.PROP_HEIGHT * 2, "POWERUPS" },
+		{ ch.general, ID_GENERAL, 240 - 1 * C.PROP_HEIGHT, "GENERAL" },
+		{ ch.weapons, ID_WEAPONS, 240, "WEAPONS" },
+		{ ch.awards, ID_AWARDS, 240 + C.PROP_HEIGHT, "AWARDS" },
+		{ ch.powerups, ID_POWERUPS, 240 + C.PROP_HEIGHT * 2, "POWERUPS" },
 	}
-	for i = 0, 4 do
-		local h = ch.headlines[i]
+	for _, hd in heads do
+		local h = hd[1]
 		h.generic.type = C.MTYPE_PTEXT
 		h.generic.flags = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_PULSEIFFOCUS)
-		h.generic.id = heads[i][1]
+		h.generic.id = hd[2]
 		h.generic.callback = UI_Challenges_Event
 		h.generic.x = 216
-		h.generic.y = heads[i][2]
-		h.string = heads[i][3]
+		h.generic.y = hd[3]
+		h.string = hd[4]
 		h.style = C.UI_RIGHT
 		h.color = U.color_red
 	end
@@ -260,7 +247,11 @@ local function UI_Challenges_Init()
 	ch.back.height = 64
 	ch.back.focuspic = ART_BACK1
 
-	ch.headlines[mainSelection].generic.flags = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_INACTIVE)
+	local inactive = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_INACTIVE)
+	local selected = ({ [0] = ch.general, [1] = ch.gametypes, [2] = ch.weapons, [3] = ch.awards, [4] = ch.powerups })[mainSelection]
+	if selected ~= nil then
+		selected.generic.flags = inactive
+	end
 
 	local list = entryTables[mainSelection]
 	if list ~= nil then
@@ -289,7 +280,7 @@ local function UI_Challenges_Init()
 		ch.entryIntText[i].generic.y = y
 		ch.entryIntText[i].style = C.UI_RIGHT
 
-		ch.entryIntString[i] = string.sub(string.format("%d", ch.entryInt[i]), 1, MAX_INT_AS_STRING - 1)
+		ch.entryIntString[i] = string.sub(string.format("%d", ch.entryInt[i]), 1, MAX_INT_AS_STRING)
 		ch.entryIntText[i].string = ch.entryIntString[i]
 		y += C.BIGCHAR_HEIGHT + 2
 		i += 1
@@ -299,9 +290,10 @@ local function UI_Challenges_Init()
 	U.Menu_AddItem(ch.menu, ch.framel)
 	U.Menu_AddItem(ch.menu, ch.framer)
 
-	for h = 0, 4 do
-		U.Menu_AddItem(ch.menu, ch.headlines[h])
-	end
+	U.Menu_AddItem(ch.menu, ch.general)
+	U.Menu_AddItem(ch.menu, ch.weapons)
+	U.Menu_AddItem(ch.menu, ch.awards)
+	U.Menu_AddItem(ch.menu, ch.powerups)
 
 	i = 0
 	while i < MAX_ENTRIES and i < ch.numberOfEntries do

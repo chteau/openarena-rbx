@@ -19,7 +19,7 @@ along with Quake III Arena source code; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 ===========================================================================
 ]]
--- Luau port of code/q3_ui/ui_main.c (OpenArena gamecode).
+-- Luau port of code/q3_ui/ui_main.c (OpenArena 0.8.8, gamecode 9e0f0c0).
 
 local U = require(script.Parent.U)
 local C = require(script.Parent.Parent.Parent.client.q.Consts)
@@ -132,9 +132,6 @@ local cvarTable = {
 	{ "ui_dom_timelimit", "ui_dom_timelimit", "30", A },
 	{ "ui_dom_friendly", "ui_dom_friendly", "0", A },
 
-	{ "ui_pos_scorelimit", "ui_pos_scorelimit", "120", A },
-	{ "ui_pos_timelimit", "ui_pos_timelimit", "20", A },
-
 	{ "ui_arenasFile", "g_arenasFile", "", bit32.bor(C.CVAR_INIT, C.CVAR_ROM) },
 	{ "ui_botsFile", "g_botsFile", "", bit32.bor(C.CVAR_INIT, C.CVAR_ROM) },
 	{ "ui_spScores1", "g_spScores1", "", bit32.bor(A, C.CVAR_ROM) },
@@ -166,21 +163,14 @@ end
 
 table.insert(cvarTable, { "ui_browserOnlyHumans", "ui_browserOnlyHumans", "0", A })
 table.insert(cvarTable, { "ui_setupchecked", "ui_setupchecked", "0", A })
-table.insert(cvarTable, { "ui_browserHidePrivate", "ui_browserHidePrivate", "1", A })
-table.insert(cvarTable, { false, "g_localTeamPref", "", 0 })
 
 local cvarTableSize = #cvarTable
 
 for _, cv in cvarTable do
-	if cv[1] ~= false then
-		U[cv[1]] = T.vmCvar_t()
-	end
+	U[cv[1]] = T.vmCvar_t()
 end
 
 local function cvarOf(cv)
-	if cv[1] == false then
-		return nil
-	end
 	return U[cv[1]]
 end
 
@@ -203,11 +193,7 @@ UI_UpdateCvars
 ]]
 function U.UI_UpdateCvars()
 	for i = 1, cvarTableSize do
-		local vmCvar = cvarOf(cvarTable[i])
-		if vmCvar == nil then
-			continue
-		end
-		trap.Cvar_Update(vmCvar)
+		trap.Cvar_Update(cvarOf(cvarTable[i]))
 	end
 end
 
