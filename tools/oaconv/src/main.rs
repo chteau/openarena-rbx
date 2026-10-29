@@ -73,6 +73,7 @@ fn run() -> Result<(), String> {
                 only: list(args.value("--only")),
                 max_pages: args.number("--max-pages")?,
                 root: oaconv::vfs::default_root(&repo),
+                overlay: Some(repo.join(oaconv::vfs::OVERLAY)).filter(|d| d.is_dir()),
             };
             args.finish()?;
             pipeline::convert(&opts)

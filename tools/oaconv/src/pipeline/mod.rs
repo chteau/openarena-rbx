@@ -18,6 +18,8 @@ pub use preview::{preview, View};
 
 pub struct Options {
     pub root: PathBuf,
+    /// Loose files searched after every pk3 (`assets/toned`), if it exists.
+    pub overlay: Option<PathBuf>,
     pub out: PathBuf,
     pub maps: Option<Vec<String>>,
     pub only: Option<Vec<String>>,
@@ -107,11 +109,15 @@ pub fn convert(o: &Options) -> Result<(), String> {
     }
     let out = &o.out;
     std::fs::create_dir_all(out).map_err(err(out.display()))?;
-    let vfs = Vfs::open(&o.root).map_err(err(o.root.display()))?;
+    let vfs =
+        Vfs::open_with_overlay(&o.root, o.overlay.as_deref()).map_err(err(o.root.display()))?;
     let shaders = ShaderSet::load(&vfs);
     let mut manifest = Manifest::load(out).unwrap_or_default();
     manifest.version = 1;
     manifest.sources = vfs.pk3s.iter().map(|p| rel(&o.root, p)).collect();
+    if vfs.overlay.is_some() {
+        manifest.sources.push(oaconv::vfs::OVERLAY.to_string());
+    }
     for (stage, prefixes) in STAGES {
         if wants(stage) && (*stage != "maps" || o.maps.is_none()) {
             manifest
