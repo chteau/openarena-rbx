@@ -25,9 +25,12 @@ TARGETS = [
     ("src/shared/structs.luau", [GC / "qcommon/q_shared.h", GC / "game/bg_public.h", GC / "game/bg_local.h"],
      ["cplane_t", "trace_t", "trajectory_t", "playerState_t", "entityState_t", "usercmd_t", "pmove_t",
       "animation_t", "pml_t", "vmCvar_t", "orientation_t", "mapinfo_result_t"], None),
-    ("src/server/g_structs.luau", [GC / "game/g_public.h", GC / "game/g_local.h"],
+    ("src/server/g_structs.luau", [GC / "game/g_public.h", GC / "game/g_local.h", GC / "game/g_admin.h",
+                                   GC / "game/g_killspree.h"],
      ["entityShared_t", "gentity_t", "playerTeamState_t", "clientSession_t", "clientPersistant_t",
-      "clientHistory_t", "gclient_t", "level_locals_t", "bot_settings_t"], "../shared/structs"),
+      "clientHistory_t", "gclient_t", "level_locals_t", "bot_settings_t", "t_mappage", "t_customvote",
+      "g_admin_level_t", "g_admin_admin_t", "g_admin_ban_t", "g_admin_command_t", "g_admin_namelog_t",
+      "g_admin_warning_t", "killspree_t", "deathspree_t", "multikill_t"], "../shared/structs"),
 ]
 
 SCALARS = {"int", "unsigned", "short", "byte", "float", "vec_t", "double", "long", "char", "signed",
@@ -93,6 +96,9 @@ def default(ctype, dims, structs, enums):
             return '""'
         return arr(inner, '""')
     if ctype == "ptr":
+        # an array of pointers: 0-based table(s) of nil slots
+        if dims:
+            return arr(dims[:-1], "{}") if len(dims) > 1 else "{}"
         return None
     if ctype == "qboolean":
         base = "false"
@@ -117,6 +123,9 @@ def arr(dims, base):
 def copy_stmt(name, ctype, dims, structs, enums, depth=0):
     """Luau statement copying src.name into dst.name with C value semantics."""
     if ctype == "ptr":
+        if dims:
+            # copy the pointer values, never what they point to
+            return f"ptrcopy(d.{name}, s.{name}, {len(dims)})"
         return f"d.{name} = s.{name}"
     if ctype == "char" and len(dims) <= 1:
         return f"d.{name} = s.{name}"
@@ -164,6 +173,12 @@ def main():
             "\tend",
             "end",
             "S.deepcopy = deepcopy",
+            "-- arrays of pointers: copy the references (depth = number of dimensions)",
+            "local function ptrcopy(d, s, depth)",
+            "\tif depth > 1 then for k, v in s do ptrcopy(d[k], v, depth - 1) end return end",
+            "\ttable.clear(d)",
+            "\tfor k, v in s do d[k] = v end",
+            "end",
             "S.arr = arr",
             "",
         ]

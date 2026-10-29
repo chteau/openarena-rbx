@@ -27,6 +27,8 @@ TARGETS = {
         GC / "game/g_local.h",
         GC / "game/g_team.h",
         GC / "game/g_public.h",
+        GC / "game/g_admin.h",
+        GC / "game/g_killspree.h",
     ],
 }
 

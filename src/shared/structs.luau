@@ -14,6 +14,12 @@ local function deepcopy(d, s)
 	end
 end
 S.deepcopy = deepcopy
+-- arrays of pointers: copy the references (depth = number of dimensions)
+local function ptrcopy(d, s, depth)
+	if depth > 1 then for k, v in s do ptrcopy(d[k], v, depth - 1) end return end
+	table.clear(d)
+	for k, v in s do d[k] = v end
+end
 S.arr = arr
 
 function S.cplane_t()
