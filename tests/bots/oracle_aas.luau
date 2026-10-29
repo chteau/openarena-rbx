@@ -21,7 +21,7 @@ while i <= #process.args do
 	i += 1
 end
 if #maps == 0 then
-	maps = { "oa_dm1", "oa_ctf2", "am_thornish", "oa_bases7" }
+	maps = { "oa_dm1", "oa_ctf2", "am_thornish", "oa_bases7", "oa_koth1", "oa_koth2" }
 end
 
 local fb = buffer.create(4)

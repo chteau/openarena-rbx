@@ -200,9 +200,12 @@ over in the place.
 
 ### This port (found by the assembly)
 
-- `oa_koth1` FFA: the bot router crashes,
+- `oa_koth1` FFA: the bot router crashed,
   `src/server/bot/botlib/be_aas_route_2:270: attempt to perform arithmetic
   (add) on number and nil` (`lune run tests/bots/sim.luau oa_koth1 4 60 0`).
+  Area 205 has 266 reversed links and `AAS_UpdateAreaRoutingCache` reads
+  its 128-entry `startareatraveltimes` once per link (fixed, see
+  `docs/bots-notes.md`).
 - First connect / FirstConnect menu: `Menu_AddItem` read fields of items
   built as `{ generic = {} }` (fixed, `ui_qmenu2.luau`), and `rate_items`
   was a local where ui_firstconnect needs the shared table (fixed).
