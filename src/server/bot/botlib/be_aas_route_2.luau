@@ -226,7 +226,9 @@ function B.AAS_UpdateAreaRoutingCache(areacache)
 	local clusterareanum = SF.AAS_ClusterAreaNum(areacache.cluster, areacache.areanum)
 	if clusterareanum >= numreachabilityareas then return end
 
-	local startareatraveltimes = B.zeros(128)
+	-- C's zeroed startareatraveltimes[128] assumes at most 128 reversed links; oa_koth1 area 205 has 266,
+	-- which C reads past the array: the start area's travel times are all 0, so size it to the links
+	local startareatraveltimes = B.zeros(math.max(128, aasworld.reversedreachability[areacache.areanum].numlinks))
 
 	local curupdate = aasworld.areaupdate[clusterareanum]
 	curupdate.areanum = areacache.areanum

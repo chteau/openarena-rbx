@@ -189,15 +189,24 @@ maps --out build/conv` (each map's `map.json` and `Aas` blob),
 
 - `tools/oracle-bots/build.sh` compiles ioquake3's botlib and collision
   model natively (`build/oracle-bots/oracle-bots`, not committed) with a
-  minimal botlib import, and extracts oa_dm1, oa_ctf2, am_thornish and
-  oa_bases7 (`.bsp` + `.aas`) and the botfiles from the pk3s.
-- `lune run tests/bots/oracle_aas.luau` replays the oracle on the four
+  minimal botlib import, and extracts oa_dm1, oa_ctf2, am_thornish,
+  oa_bases7, oa_koth1 and oa_koth2 (`.bsp` + `.aas`) and the botfiles from
+  the pk3s.
+- `AAS_UpdateAreaRoutingCache` starts from a zeroed
+  `unsigned short startareatraveltimes[128]` ("not more than 128
+  reachabilities per area allowed") and reads it once per reversed link of
+  the start area. oa_koth1's area 205 has 266, so C reads stack garbage
+  past the array (with this build, one sampled route into area 205 took 415
+  instead of 408) and the port read `nil` and crashed. The port sizes the array to
+  the start area's links; `build.sh` compiles the oracle's
+  `be_aas_route.c` with the array at 4096 so both use the zeroes C meant.
+- `lune run tests/bots/oracle_aas.luau` replays the oracle on the six
   maps and diffs bit for bit: the info line (BSP checksum, areas,
   reachabilities, clusters, portals), the whole reachability list,
   `AAS_PointAreaNum` for 2000 random points,
   `AAS_AreaRouteToGoalArea`/`AAS_AreaTravelTimeToGoalArea` for 2000 random
   area pairs and travel-flag sets, 2000 `AAS_TraceClientBBox` traces and 500
-  `AAS_PredictClientMovement` runs. 0 mismatches on all four maps.
+  `AAS_PredictClientMovement` runs. 0 mismatches on all six maps.
 - `tools/check_bots.sh [--strict] <files>`: load, member and name checks
   plus luau-lsp lint (`LUAU_LSP=<path>`).
 - `lune run tests/bots/sim.luau <map> <bots> <seconds> [g_gametype]`: a

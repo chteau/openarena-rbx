@@ -74,7 +74,7 @@ oa_dm4 ffa ok 4 15 56
 oa_dm5 ffa ok 4 13 34
 oa_dm6 ffa ok 4 11 52
 oa_dm7 ffa ok 4 10 64
-oa_koth1 ffa error: src/server/bot/botlib/be_aas_route_2:270: attempt to perform arithmetic (add) on number and nil 0 0 0
+oa_koth1 ffa ok 4 14 58
 oa_koth2 ffa ok 4 9 52
 oa_minia ffa ok 4 10 55
 oa_minia ctf ok 4 9 42

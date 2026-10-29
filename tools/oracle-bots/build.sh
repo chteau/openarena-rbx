@@ -10,13 +10,18 @@ OUT=$ROOT/build/oracle-bots
 IOQ=$ROOT/vendor/ioq3/code
 SRC=$ROOT/tools/oracle-bots
 PK3=$ROOT/vendor/oa088/openarena-0.8.8/baseoa
-MAPS=${MAPS:-"oa_dm1 oa_ctf2 am_thornish oa_bases7"}
+MAPS=${MAPS:-"oa_dm1 oa_ctf2 am_thornish oa_bases7 oa_koth1 oa_koth2"}
 mkdir -p "$OUT/obj" "$OUT/maps"
 cd "$OUT/obj"
 # plain SSE float math, no FMA contraction, no fast-math: every float op
 # rounds to single precision, which is what the Luau port reproduces
 CFLAGS="-O2 -ffp-contract=off -fno-fast-math -fno-strict-aliasing -w -DNDEBUG -DBOTLIB"
+# AAS_UpdateAreaRoutingCache reads its zeroed startareatraveltimes[128] once per
+# reversed link of the start area: oa_koth1's area 205 has 266, so C reads stack
+# garbage past the array. The oracle gets the zeroes C meant, like the port.
+sed 's/startareatraveltimes\[128\]/startareatraveltimes[4096]/' "$IOQ/botlib/be_aas_route.c" >be_aas_route.c
 for f in "$IOQ"/botlib/*.c; do
+	case $f in */be_aas_route.c) f=$PWD/be_aas_route.c ;; esac
 	gcc -c $CFLAGS -I"$IOQ/qcommon" -I"$IOQ/botlib" "$f" -o bl_$(basename "$f" .c).o
 done
 for f in cm_load cm_patch cm_polylib cm_test cm_trace q_math q_shared md4; do
