@@ -30,7 +30,7 @@ import gen_structs  # noqa: E402
 ROOT = HERE.parent
 IOQ = ROOT / "vendor/ioq3/code"
 BL = IOQ / "botlib"
-GAME = ROOT / "vendor/gamecode/code/game"
+GAME = ROOT / "vendor/gamecode-088/code/game"
 
 BOTLIB_HEADERS = [IOQ / "qcommon/q_shared.h", IOQ / "qcommon/surfaceflags.h"] + sorted(BL.glob("*.h"))
 BOTLIB_C = sorted(BL.glob("*.c"))
@@ -39,10 +39,6 @@ PUBLIC = [BL / h for h in ("botlib.h", "be_aas.h", "be_ai_char.h", "be_ai_chat.h
 AI_HEADERS = PUBLIC + [GAME / h for h in ("ai_main.h", "ai_dmq3.h", "ai_dmnet.h", "ai_team.h", "ai_chat.h",
                                          "ai_cmd.h", "ai_vcmd.h", "chars.h", "inv.h", "match.h", "syn.h")]
 GAME_CONST_HEADERS = [p for paths in gen_consts.TARGETS.values() for p in paths]
-
-# continuation lines leave tabs inside a macro body, which gen_consts' evaluator rejects
-_evaluate = gen_consts.Evaluator.__call__
-gen_consts.Evaluator.__call__ = lambda self, expr: _evaluate(self, expr.replace("\t", " "))
 
 # char-literal macros the evaluator cannot read
 gen_consts.OVERRIDES["AASID"] = (ord("S") << 24) + (ord("A") << 16) + (ord("A") << 8) + ord("E")

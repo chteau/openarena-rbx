@@ -58,7 +58,7 @@ class Evaluator:
         self.known = known
 
     def __call__(self, expr):
-        e = expr.strip()
+        e = " ".join(expr.split())  # `\` continuations leave tabs in the body
         if not e or '"' in e or "'" in e:
             return None
         isfloat = bool(re.search(r"\d\.\d*f\b|\d+f\b", e))

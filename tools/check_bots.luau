@@ -1,5 +1,4 @@
--- Static checks for ported bot modules, run inside build/overlay by
--- tools/check_bots.sh:
+-- Static checks for ported bot modules, run by tools/check_bots.sh:
 -- 1. the module loads;
 -- 2. every BC./SB. (botlib) or C./S. (bot AI) / Q./QS./BG. member it uses exists;
 -- 3. every B.Name it uses is defined by some botlib file and every G.Name
@@ -28,7 +27,7 @@ local mods = {
 local loaded = {}
 local function mod(base)
 	if loaded[base] == nil then
-		loaded[base] = (require :: any)("./" .. mods[base])
+		loaded[base] = (require :: any)("../" .. mods[base])
 	end
 	return loaded[base]
 end
@@ -63,16 +62,16 @@ local function scan(dir, ns, out)
 end
 scan("src/server/bot/botlib", "B", definedB)
 scan("src/server", "G", definedG)
-for k in require("./src/server/bot/botlib/b_local") do
+for k in require("../src/server/bot/botlib/b_local") do
 	definedB[k] = true
 end
-local okG, G = pcall(require, "./src/server/g_local")
+local okG, G = pcall(require, "../src/server/g_local")
 if okG then
 	-- names the game module creates at load time (the cvar table loop in g_main ...)
 	for _, name in fs.readDir("src/server") do
 		if string.match(name, "^g_.*%.luau$") then
 			pcall(function()
-				return (require :: any)("./src/server/" .. string.gsub(name, "%.luau$", ""))
+				return (require :: any)("../src/server/" .. string.gsub(name, "%.luau$", ""))
 			end)
 		end
 	end
@@ -91,7 +90,7 @@ end
 for _, file in files do
 	local src = fs.readFile(file)
 	local ok, err = pcall(function()
-		return (require :: any)("./" .. string.gsub(file, "%.luau$", ""))
+		return (require :: any)("../" .. string.gsub(file, "%.luau$", ""))
 	end)
 	if not ok then
 		print(string.format("%s: load error: %s", file, tostring(err)))
