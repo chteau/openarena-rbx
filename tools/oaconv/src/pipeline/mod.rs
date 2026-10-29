@@ -186,6 +186,10 @@ pub fn convert(o: &Options) -> Result<(), String> {
         "map_meshes": sum("meshes"),
         "map_triangles": sum("triangles"),
         "atlas_pages": sum("atlas_pages"),
+        "images_converted": manifest.textures["count"],
+        "md3_models": manifest.models["md3"],
+        "sound_clips": manifest.sounds["clips"],
+        "audio_files": count(UploadKind::Audio),
         "uploads": { "Model": count(UploadKind::Model), "Image": count(UploadKind::Image), "Audio": count(UploadKind::Audio) },
         "upload_bytes": manifest.uploads.iter().map(|u| u.bytes).sum::<u64>(),
     });

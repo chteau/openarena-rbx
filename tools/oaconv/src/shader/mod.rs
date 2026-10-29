@@ -10,7 +10,7 @@ use crate::vfs::Vfs;
 mod classify;
 mod parse;
 
-pub use classify::classify;
+pub use classify::{classify, stage_animated};
 pub use parse::{parse_text, tokenize};
 
 /// How the port draws a surface using this shader.

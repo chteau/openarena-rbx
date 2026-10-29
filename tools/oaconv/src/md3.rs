@@ -245,7 +245,8 @@ fn parse_surface(r: &Reader, at: usize, num_frames: usize) -> Result<(Md3Surface
 
 /// Decodes a stored lat/lng normal as the engine does (`R_LatLongToNormal`-style tables).
 pub fn decode_normal(latlng: u16) -> [f32; 3] {
-    let k = 2.0 * std::f32::consts::PI / 255.0;
+    // tr_surface.c: lat * (FUNCTABLE_SIZE/256) into a 1024-entry sine table, i.e. 2*PI/256 per step.
+    let k = 2.0 * std::f32::consts::PI / 256.0;
     let lat = ((latlng >> 8) & 255) as f32 * k;
     let lng = (latlng & 255) as f32 * k;
     [lat.cos() * lng.sin(), lat.sin() * lng.sin(), lng.cos()]
@@ -346,6 +347,7 @@ pub fn static_meshes(md3: &Md3, frame: usize, prefix: &str) -> Vec<Mesh> {
                 class: ShaderClass::Opaque,
                 shader: s.shaders.first().cloned().unwrap_or_default(),
                 texture: None,
+                overlay: false,
                 positions: xyz
                     .iter()
                     .map(|p| {

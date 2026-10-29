@@ -21,9 +21,9 @@ Surfaces follow each other at `ofsEnd`.
 ## Decoding
 
 - Position: `i16 * 1/64` Quake units.
-- Normal: `lat = ((n>>8)&255) * 2π/255`, `lng = (n&255) * 2π/255`;
+- Normal: `lat = ((n>>8)&255) * 2π/256`, `lng = (n&255) * 2π/256`;
   `x = cos(lat)*sin(lng)`, `y = sin(lat)*sin(lng)`, `z = cos(lng)`
-  (the engine uses a 256-step table with the same convention).
+  (tr_surface.c indexes a 1024-entry sine table with `lat * 4`, the same thing).
 - Quake to Roblox: `(x, y, z) -> (x, z, -y) / 8` studs.
 - Frame lerp (`RB_SurfaceMesh`/`LerpMeshVertexes`): `p = old*(1-b) + new*b` on
   positions after scaling by 1/64; normals are lerped likewise and renormalised.

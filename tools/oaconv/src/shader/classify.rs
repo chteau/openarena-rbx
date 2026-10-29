@@ -6,7 +6,8 @@ fn first_is(tokens: &[String], names: &[&str]) -> bool {
     tokens.first().is_some_and(|t| names.contains(&t.as_str()))
 }
 
-fn stage_animated(s: &Stage) -> bool {
+/// A stage the client must animate (not bakeable).
+pub fn stage_animated(s: &Stage) -> bool {
     s.maps.len() > 1
         || s.video.is_some()
         || s.tc_mods

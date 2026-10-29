@@ -16,6 +16,9 @@ pub struct Mesh {
     pub shader: String,
     /// Build-relative PNG this mesh is textured with.
     pub texture: Option<String>,
+    /// Drawn over a baked copy of the same triangles: only the shader's
+    /// animated stages, added on top (see docs/conv-notes.md).
+    pub overlay: bool,
     /// Quake units and axes.
     pub positions: Vec<[f32; 3]>,
     pub normals: Vec<[f32; 3]>,
@@ -34,6 +37,7 @@ pub struct MeshInfo {
     pub class: ShaderClass,
     pub shader: String,
     pub texture: Option<String>,
+    pub overlay: bool,
     pub triangles: usize,
     pub center: [f32; 3],
     pub size: [f32; 3],
@@ -71,6 +75,7 @@ impl Mesh {
                     class: self.class,
                     shader: self.shader.clone(),
                     texture: self.texture.clone(),
+                    overlay: self.overlay,
                     ..Default::default()
                 };
                 for &i in tris {

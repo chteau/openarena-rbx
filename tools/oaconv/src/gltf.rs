@@ -157,6 +157,7 @@ pub fn write_glb(meshes: &[Mesh]) -> (Vec<u8>, Vec<MeshInfo>) {
             class: m.class,
             shader: m.shader.clone(),
             texture: m.texture.clone(),
+            overlay: m.overlay,
             triangles: m.tri_count(),
             center,
             size: [max[0] - min[0], max[1] - min[1], max[2] - min[2]],

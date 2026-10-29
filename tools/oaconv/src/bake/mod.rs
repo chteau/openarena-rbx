@@ -18,7 +18,7 @@ use serde_json::{json, Value};
 use crate::bsp::curve::{subdivide_patch, R_SUBDIVISIONS};
 use crate::bsp::{Bsp, DrawVert, MST_PATCH, MST_PLANAR, MST_TRIANGLE_SOUP};
 use crate::mesh::{Mesh, MAX_TRIS};
-use crate::shader::{Shader, ShaderClass, ShaderSet};
+use crate::shader::{stage_animated, Shader, ShaderClass, ShaderSet};
 use crate::vfs::Vfs;
 
 use chart::{BVert, Tri};
@@ -42,7 +42,7 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             max_pages: 16,
-            max_density: 1.0,
+            max_density: 2.0,
             min_density: 1.0 / 16.0,
             page: 1024,
             pad: 2,
@@ -94,7 +94,10 @@ fn surfaces(bsp: &Bsp) -> Vec<Surface> {
             let Some(ds) = bsp.shaders.get(s.shader_num as usize) else {
                 continue;
             };
-            if ds.surface_flags & SURF_NODRAW != 0 {
+            // ParseMesh skips patches whose lump shader is nodraw: q3map2 -patchmeta
+            // keeps them for collision and draws their triangle-soup copy instead.
+            // Planar faces and soups are drawn whatever the lump flags say.
+            if s.surface_type == MST_PATCH && ds.surface_flags & SURF_NODRAW != 0 {
                 continue;
             }
             let verts = bsp.surface_verts(s);
@@ -219,58 +222,81 @@ pub fn bake_map(map: &str, bsp: &Bsp, shaders: &ShaderSet, vfs: &Vfs, s: &Settin
             .or_insert_with(|| shaders.resolve(&bsp.shaders[surf.shader].name, lit, vfs))
             .clone();
         *class_tris.entry(shader.class).or_default() += surf.tris.len();
-        match shader.class {
-            ShaderClass::Nodraw => {}
-            ShaderClass::Opaque => {
-                let program = *program_of.entry((surf.shader, lit)).or_insert_with(|| {
-                    programs.push(Program::compile(&shader, lit, |name| cache.get(vfs, name)));
-                    programs.len() - 1
-                });
-                let pieces = match surf.grid {
-                    Some((w, h)) => chart::patch(&surf.verts, w, h, &surf.tris),
-                    None if surf.normal != [0.0; 3] => {
-                        chart::planar(&surf.verts, &surf.tris, surf.normal)
-                    }
-                    None => chart::soup(&surf.verts, &surf.tris),
-                };
-                let lightmap = if lit { surf.lightmap } else { -1 };
-                charts.extend(
-                    pieces
-                        .into_iter()
-                        .filter(|p| !p.is_empty())
-                        .map(|tris| Chart {
-                            model: surf.model,
-                            program,
-                            lightmap,
-                            tris,
-                        }),
-                );
-            }
-            class => {
-                let texture = first_image(&shader, vfs);
-                if let Some(t) = &texture {
-                    images.insert(t.clone());
+        if shader.class == ShaderClass::Nodraw {
+            continue;
+        }
+        // Opaque shaders bake whole; an animated one whose first stage is a
+        // static opaque layer bakes its static stages and keeps the rest as an overlay.
+        let baked_part = match shader.class {
+            ShaderClass::Opaque => Some(shader.clone()),
+            ShaderClass::Animated => static_base(&shader),
+            _ => None,
+        };
+        if let Some(base) = &baked_part {
+            let program = *program_of.entry((surf.shader, lit)).or_insert_with(|| {
+                programs.push(Program::compile(base, lit, |name| cache.get(vfs, name)));
+                programs.len() - 1
+            });
+            let pieces = match surf.grid {
+                Some((w, h)) => chart::patch(&surf.verts, w, h, &surf.tris),
+                None if surf.normal != [0.0; 3] => {
+                    chart::planar(&surf.verts, &surf.tris, surf.normal)
                 }
-                let mesh = loose
-                    .entry((surf.model, class, shader.name.clone()))
-                    .or_insert_with(|| Mesh {
-                        name: format!("{}_{}", prefix(surf.model), sanitize(&shader.name)),
-                        class,
-                        shader: shader.name.clone(),
-                        texture: texture.as_deref().map(image_output),
-                        ..Default::default()
-                    });
-                let base = mesh.positions.len() as u32;
-                for v in &surf.verts {
-                    mesh.positions.push(v.xyz);
-                    mesh.normals.push(v.normal);
-                    mesh.uvs.push(v.st);
-                    mesh.colors.push(vertex_light(v));
-                }
-                mesh.indices
-                    .extend(surf.tris.iter().flat_map(|t| t.map(|i| i + base)));
+                None => chart::soup(&surf.verts, &surf.tris),
+            };
+            let lightmap = if lit { surf.lightmap } else { -1 };
+            charts.extend(
+                pieces
+                    .into_iter()
+                    .filter(|p| !p.is_empty())
+                    .map(|tris| Chart {
+                        model: surf.model,
+                        program,
+                        lightmap,
+                        tris,
+                    }),
+            );
+            if shader.class == ShaderClass::Opaque {
+                continue;
             }
         }
+        let overlay = baked_part.is_some();
+        let texture = if overlay {
+            let dynamic = Shader {
+                stages: shader
+                    .stages
+                    .iter()
+                    .filter(|s| stage_animated(s))
+                    .cloned()
+                    .collect(),
+                ..Default::default()
+            };
+            first_image(&dynamic, vfs)
+        } else {
+            first_image(&shader, vfs)
+        };
+        if let Some(t) = &texture {
+            images.insert(t.clone());
+        }
+        let mesh = loose
+            .entry((surf.model, shader.class, shader.name.clone()))
+            .or_insert_with(|| Mesh {
+                name: format!("{}_{}", prefix(surf.model), sanitize(&shader.name)),
+                class: shader.class,
+                shader: shader.name.clone(),
+                texture: texture.as_deref().map(image_output),
+                overlay,
+                ..Default::default()
+            });
+        let base = mesh.positions.len() as u32;
+        for v in &surf.verts {
+            mesh.positions.push(v.xyz);
+            mesh.normals.push(v.normal);
+            mesh.uvs.push(v.st);
+            mesh.colors.push(vertex_light(v));
+        }
+        mesh.indices
+            .extend(surf.tris.iter().flat_map(|t| t.map(|i| i + base)));
     }
 
     // Texel density: as high as the page budget allows, within bounds.
@@ -388,6 +414,30 @@ pub fn bake_map(map: &str, bsp: &Bsp, shaders: &ShaderSet, vfs: &Vfs, s: &Settin
     }
 }
 
+/// The static stages of an animated shader whose first stage is a static,
+/// opaque layer: what can be baked under the client-animated overlay.
+fn static_base(shader: &Shader) -> Option<Shader> {
+    let first = shader.stages.first()?;
+    let opaque = first
+        .blend
+        .as_ref()
+        .is_none_or(|b| b[0] == "gl_one" && b[1] == "gl_zero");
+    if !opaque || stage_animated(first) {
+        return None;
+    }
+    let stages = shader
+        .stages
+        .iter()
+        .filter(|s| !stage_animated(s))
+        .cloned()
+        .collect();
+    Some(Shader {
+        stages,
+        class: ShaderClass::Opaque,
+        ..shader.clone()
+    })
+}
+
 /// Merges identical vertices (baked triangles arrive unshared).
 fn weld(m: Mesh) -> Mesh {
     let mut index: HashMap<[u32; 12], u32> = HashMap::new();
@@ -396,6 +446,7 @@ fn weld(m: Mesh) -> Mesh {
         class: m.class,
         shader: m.shader,
         texture: m.texture,
+        overlay: m.overlay,
         ..Default::default()
     };
     let remap: Vec<u32> = (0..m.positions.len())
@@ -417,4 +468,86 @@ fn weld(m: Mesh) -> Mesh {
         .collect();
     out.indices = m.indices.iter().map(|&i| remap[i as usize]).collect();
     out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::testdata;
+
+    #[test]
+    fn real_maps_bake_within_roblox_limits() {
+        let Some(vfs) = testdata::vfs() else { return };
+        let shaders = ShaderSet::load(vfs);
+        let s = Settings::default();
+        for map in ["oa_dm1", "oa_ctf2", "am_thornish"] {
+            let bsp = testdata::bsp(map).unwrap();
+            let baked = bake_map(map, &bsp, &shaders, vfs, &s);
+            assert!(
+                !baked.pages.is_empty() && baked.pages.len() <= s.max_pages,
+                "{map}"
+            );
+            for p in &baked.pages {
+                assert!(p.width() <= 1024 && p.height() <= 1024);
+            }
+            let lit: u64 = baked
+                .pages
+                .iter()
+                .flat_map(|p| p.pixels())
+                .map(|p| p.0[0] as u64 + p.0[1] as u64)
+                .sum();
+            assert!(lit > 0, "{map}: atlas is black");
+            for m in &baked.meshes {
+                assert!(m.tri_count() <= MAX_TRIS && m.tri_count() > 0, "{}", m.name);
+                assert!(m.indices.iter().all(|&i| (i as usize) < m.positions.len()));
+                assert_eq!(m.positions.len(), m.uvs.len());
+                if m.shader == "atlas" {
+                    assert!(
+                        m.uvs.iter().flatten().all(|&v| (0.0..=1.0).contains(&v)),
+                        "{}",
+                        m.name
+                    );
+                }
+            }
+            // Every submodel with drawable surfaces gets meshes of its own (movers).
+            let world_tris: usize = baked
+                .meshes
+                .iter()
+                .filter(|m| m.name.starts_with("world_"))
+                .map(Mesh::tri_count)
+                .sum();
+            assert!(world_tris > 1000, "{map}: {world_tris}");
+            let names: BTreeSet<&str> = baked.meshes.iter().map(|m| m.name.as_str()).collect();
+            assert_eq!(names.len(), baked.meshes.len(), "mesh names must be unique");
+        }
+    }
+
+    #[test]
+    fn animated_shader_with_static_base_splits() {
+        let stage = |maps: &str, tcmod: bool| crate::shader::Stage {
+            maps: vec![maps.into()],
+            tc_mods: if tcmod {
+                vec![vec!["scroll".into(), "1".into(), "0".into()]]
+            } else {
+                vec![]
+            },
+            ..Default::default()
+        };
+        let shader = Shader {
+            stages: vec![
+                stage("a", false),
+                stage("$lightmap", false),
+                stage("glow", true),
+            ],
+            class: ShaderClass::Animated,
+            ..Default::default()
+        };
+        let base = static_base(&shader).unwrap();
+        assert_eq!(base.stages.len(), 2);
+        let scrolling_base = Shader {
+            stages: vec![stage("lava", true)],
+            ..shader
+        };
+        assert!(static_base(&scrolling_base).is_none());
+    }
 }

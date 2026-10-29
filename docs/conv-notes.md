@@ -1,0 +1,156 @@
+# Converter notes
+
+Decisions, trade-offs and known limits of `tools/oaconv`, with the evidence
+behind them. Formats live in `docs/formats/`.
+
+## Usage
+
+```sh
+cd tools/oaconv
+export CARGO_TARGET_DIR=/mnt/data/Documents/Dev/openarena-rbx-wt/target-conv
+cargo build --release
+B=$CARGO_TARGET_DIR/release/oaconv
+$B convert --repo ../..                       # everything into build/
+$B convert --repo ../.. --only maps --maps oa_dm1,oa_ctf2
+$B preview --map oa_dm1 --spawn 0             # software render of the baked map
+$B upload --build ../../build --dry-run       # what would go up, no key needed
+```
+
+`--only` takes `maps, models, images, sounds, shaders`; a partial run
+replaces only that stage's entries in `build/manifest.json`.
+
+## Sources
+
+The VFS mirrors the engine search path: `baseoa/*.pk3` sorted, then
+`missionpack/*.pk3` sorted, later entries overriding earlier ones,
+case-insensitive. `pak2-players-mature.pk3` is never opened. 144 paths are
+overridden by missionpack. Images resolve like `R_FindImageFile` (name as
+given, then `.tga`, `.jpg`, `.png`). Every map found under `maps/*.bsp` is
+converted: 72 maps.
+
+## Lighting and the bake
+
+World surfaces whose shader is static are baked into atlas pages: per texel,
+every stage of the shader is evaluated as the fixed-function renderer would
+(`tcMod scale/transform`, `rgbGen identity/identityLighting/vertex/
+exactVertex/const`, `alphaGen`, blend factors, 8-bit clamp after each stage),
+with trilinear sampling whose footprint comes from the texel's st Jacobian.
+
+Overbright follows ioquake3 with OpenArena's defaults (`r_overBrightBits 1`,
+`mapOverBrightBits 2`): lightmap and vertex bytes are shifted by 1 bit with
+`R_ColorShiftLightingBytes`' hue-preserving clamp, `identityLight` is 0.5,
+and the final ×2 the engine gets from the gamma ramp is applied to the baked
+texel, so the atlas holds displayed colours. Checked against fullscreen
+ioquake3 screenshots of the real data (ioq3 screenshots include the gamma
+ramp): oa_dm1 matches within 1-2 levels per channel, oa_ctf2's floor reads
+37,24,24 against 39,27,28 in the game.
+
+### Density trade-off
+
+Roblox images top out at 1024² here (we keep that cap so every page is one
+upload), and every page is one Image upload. The bake searches a density per
+map: start at 2 texels per world unit, shrink by 0.9 until the charts pack
+into the page budget (budget = pages × 1024² × 0.7 fill).
+
+| `--max-pages` | atlas pages, 72 maps | sharpness | notes |
+|---|---|---|---|
+| 16 (default) | 988 (median 14/map, max 16) | median 1.97 world units/texel (0.87 .. 6.52) | 0.86 GB of PNG |
+| 32 | 1880 | ×1.41 sharper | ~2 GB of uploads, too many Image uploads for one account in one go |
+
+At 16 pages the atlas is blurrier than the source textures up close (a
+128-unit wall tile with a 256 px texture gets ~65 texels); the light, colour
+and layout match the game. Raise `--max-pages` per map for showcase maps.
+
+### Which surfaces are baked
+
+- Opaque static shaders: baked.
+- Animated shaders whose first stage is a static opaque base (env-mapped
+  steel, scrolling glows over a wall): the static stages are baked and an
+  extra **overlay mesh** (`overlay: true` in the manifest) carries only the
+  animated stages for the client to draw on top. Without this, oa_ctf2's
+  env-mapped floor fell back to vertex light and came out 2.4× too bright.
+- Sky, alpha-test, blend, deform and fully animated shaders: not baked. They
+  keep their tiled texture (uploaded) with vertex light in the vertex colour
+  as the fallback, and `shader` names what the client must animate. In
+  triangles over all maps: opaque 635,953, animated 60,321, blend 21,443,
+  alpha_test 14,612, deform 11,812, sky 2,880.
+- Patches: the engine skips `MST_PATCH` surfaces whose lump shader has
+  `SURF_NODRAW` (q3map2 `-patchmeta` collision copies). We do the same; they
+  were the black patches on am_thornish. Planar and soup surfaces ignore the
+  lump flag, as `ParseFace`/`ParseTriSurf` do.
+
+Two maps reference images missing from every pk3 (`oa_bases3p3ta`:
+`textures/evil8_lights/e8tinylight.blend.tga`; `sleekgrinder`:
+`textures/base_light/xceil1_39*.tga`). The game draws those as the default
+image too; they are listed under `stats.missing_images`.
+
+### Movers
+
+Brush models other than the world (doors, platforms) are baked at their BSP
+position, which is where the game draws them before `func_*` logic moves
+them. A `func_door` with spawnflag `START_OPEN` is drawn open in the game but
+closed in our preview (seen at oa_dm1's corridor end); the entity data has
+what the gamecode needs to move it.
+
+## Meshes
+
+At most 20,000 triangles per mesh (MeshPart limit), at most 18 MB per `.glb`
+(Open Cloud's cap is 20 MB per upload; the writer errors past it). Largest
+map glb: 2.39 MB. 2,339 meshes over 72 maps, 244 of them overlays.
+
+The importer's handling of glTF node names and origins is unverified until
+the first real upload. `manifest.json` records per mesh its name, class,
+shader, texture, triangle count and its **bounding-box center and size in
+studs, Roblox axes** (`(x, z, -y) / 8`), so assembly should place each
+MeshPart by those rather than trust where the importer puts it.
+
+## Models
+
+Every MD3 becomes a `.oam3` buffer plus Luau modules (all frames,
+`docs/formats/md3.md`) and a frame-0 glb. Static (one-frame) map objects
+also go into `md3/static_bundle_N.glb` for upload; animated ones (players,
+weapons) are driven at runtime from the buffers. Skins and `animation.cfg`
+go into `models.json`. The MD3 normal is decoded with `2π/256` per step as
+`tr_surface.c` does.
+
+## Images
+
+Every image is converted to PNG at most 1024 px on a side, keeping alpha
+(2,945 images, 5 downscaled, 0 failed). Only images something draws unbaked
+are uploaded: everything outside `textures/`, plus world textures used by
+non-opaque shaders or by a non-baked map mesh: 1,704 of them. With the
+988 atlas pages that makes 2,692 Image uploads.
+
+## Sound
+
+608 effects are packed into 3 OGG atlases of at most 420 s (Open Cloud
+caps audio at 7 minutes) with 0.25 s of silence after each clip;
+`sound_index.json` and `SoundIndex.luau` map each OA path to
+`{ atlas, start, length }` in seconds. 7 music tracks are uploaded
+separately. That is 10 Audio uploads, within the 100 per month an
+ID-verified account gets (10 otherwise, which is exactly enough with no
+retries). Needs `ffmpeg` on PATH.
+
+## Upload
+
+`oaconv upload` reads `build/manifest.json` and uploads every entry not
+already in `build/assets.lock.json` with the same sha256, saving the lock
+after each asset, so a stopped run resumes. Models go up as `.glb`
+(`model/gltf-binary`, imported as a Model of MeshParts), images through
+`rbx_cloud`'s image path, audio through its own multipart request. The key
+comes from `RBX_API_KEY` or rbxstudio's stored key. `--only Model|Image|Audio`
+and `--limit N` split the run; `--dry-run` prints the plan without a key.
+
+Limits it relies on (creator-docs, `usage-assets.md`): 20 MB per upload,
+audio up to 7 minutes, images under 8000×8000, audio upload quota per month
+as above.
+
+## Not done here, and why
+
+- Client-side drawing of overlays, skies, blend/deform/animated shaders and
+  movers: that is runtime work (cgame port); the converter ships what it
+  needs (shader names, textures, vertex light, `shaders.json`).
+- Importer behaviour (names, pivots, MeshPart splitting) cannot be checked
+  without uploading, which is Chee's step.
+- `islandctf` has no `.aas` in the pk3s, so bots cannot navigate it; its
+  `map.json` says so.

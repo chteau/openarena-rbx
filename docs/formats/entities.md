@@ -1,7 +1,12 @@
 # Entities
 
-`entities.json` is produced by `bsp::entities::summarize`; the Luau form is
-`return ` + `to_luau(json)`.
+`entities.json` is produced by `bsp::entities::summarize`. In `build/maps/<map>/`
+it ships twice: `entities.json`, and the same JSON bytes as chunked buffer
+modules `luau/Entities_NNN.luau` + index `luau/Entities.luau` (format in
+`luau-blobs.md`); the game joins the chunks and runs `HttpService:JSONDecode`
+on `buffer.tostring` of the result. Large maps' literals pass Roblox's 200k
+character script limit, which is why the JSON goes through buffers rather
+than one Luau table literal.
 
 ## Shape
 
@@ -27,7 +32,9 @@ spawn, item, weapon, ammo, powerup, holdable, flag, mover, trigger, jumppad,
 teleporter, target, teleport_dest, light, misc, domination, harvester,
 obelisk, other.
 
-## Luau
+## Luau literals (`to_luau`)
+
+Used for small tables such as `build/SoundIndex.luau`.
 
 Strings escape `\`, `"`, newline, and other control bytes as `\ddd`. Arrays
 are `{a, b}`, objects `{["key"] = v}`, null is `nil`, numbers as serde_json

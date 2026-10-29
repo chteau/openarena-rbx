@@ -196,9 +196,10 @@ fn raster(
         img: RgbaImage::from_pixel(w, h, Rgba([0, 0, 0, 255])),
         depth: vec![f32::NEG_INFINITY; (w * h) as usize],
     };
+    // Overlays only carry stages the client animates; the preview shows the bake.
     let blend_pass = |m: &&Mesh| m.class == ShaderClass::Blend;
-    let opaque = meshes.iter().filter(|m| !blend_pass(m));
-    let blended = meshes.iter().filter(blend_pass);
+    let opaque = meshes.iter().filter(|m| !m.overlay && !blend_pass(m));
+    let blended = meshes.iter().filter(|m| !m.overlay && blend_pass(m));
     for m in opaque.chain(blended) {
         let two_sided = matches!(
             m.class,
