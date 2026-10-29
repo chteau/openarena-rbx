@@ -50,5 +50,3 @@ images/textures/oquartz/blood2.png
 images/textures/oquartz/blood3.png
 images/textures/oquartz/blood4.png
 images/textures/oquartz/blood.png
-# Angelyss hnt skins ship nude in pak6-patch085; held until the toned build replaces them.
-images/models/players/hnt/
