@@ -11,6 +11,7 @@ local Net = require(script.Parent.Net)
 local Clock = require(script.Parent.Clock)
 local Console = require(script.Parent.Console)
 local R2D = require(script.Parent.R2D)
+local Assets = require(script.Parent.Assets)
 local R3D = require(script.Parent.R3D)
 local Snd = require(script.Parent.Snd)
 local FS = require(script.Parent.FS)
@@ -236,6 +237,13 @@ function Client.UpdateScreen()
 	R2D.BeginFrame()
 	R3D.BeginFrame()
 	local uiFullscreen = U ~= nil and Client.uiActive and U.UI_IsFullscreen()
+	-- SCR_DrawScreenField: wide screens get their sides cleared to black
+	-- unless they are displaying game renderings
+	if (uiFullscreen or Net.state < C.CA_LOADING) and R2D.width * 480 > R2D.height * 640 then
+		R2D.SetColor({ [0] = 0, [1] = 0, [2] = 0, [3] = 1 })
+		R2D.DrawStretchPic(0, 0, R2D.width, R2D.height, 0, 0, 0, 0, Assets.RegisterShader("white", false))
+		R2D.SetColor(nil)
+	end
 	local loading = G ~= nil and G.cg ~= nil and G.cg.infoScreenText ~= nil and G.cg.infoScreenText ~= ""
 		and Net.state == C.CA_PRIMED
 	if loading then

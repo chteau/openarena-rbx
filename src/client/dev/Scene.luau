@@ -66,7 +66,7 @@ local function playerInfo(name: string, model: string, bot: boolean?): string
 	local s = "n\\" .. name .. "\\t\\0\\model\\" .. model .. "\\hmodel\\" .. model
 		.. "\\c1\\4\\c2\\5\\hc\\100\\w\\0\\l\\0\\tt\\0\\tl\\0"
 	if bot then
-		s ..= "\\skill\\2"
+		s ..= "\\skill\\4"
 	end
 	return s
 end
@@ -141,7 +141,7 @@ local function giveAll(snap)
 		ps.ammo[w] = 999
 	end
 	ps.stats[C.STAT_WEAPONS] = all
-	ps.stats[C.STAT_ARMOR] = 198
+	ps.stats[C.STAT_ARMOR] = 200
 end
 
 function Scene.hud()

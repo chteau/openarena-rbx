@@ -200,6 +200,8 @@ the axis is converted, never the Euler angles.
   to the screen like OA 0.8.8 (`xscale = w/640`, no bias); `cg_wideScreenHud 1`
   (new, archived, default 0) switches to leilei's 4:3-centred layout.
   q3_ui always centres 4:3 (`uis.bias`).
+  As in ioquake3's `SCR_DrawScreenField`, `Client.UpdateScreen` clears a
+  wide screen to black under a full-screen menu, so the menus pillarbox.
 - A stretch pic is one `ImageLabel` per shader stage: UVs map to
   `ImageRectOffset/Size`, `R_SetColor` x `rgbGen/alphaGen` to
   `ImageColor3/ImageTransparency`. UVs past 0..1 are cut into one label per
@@ -308,7 +310,10 @@ trusts it (Q3 doesn't), which drew black boxes behind icons.
 ## Parity (docs/parity)
 
 Reference shots come from OA 0.8.8's own QVMs and data (see "Walls" for the
-engine), `scripts/oa-ref.sh <name> <console commands>`; ours come from
+engine), `scripts/oa-ref.sh <name> <console commands>` (for the in-game shots:
+`devmap oa_dm1`, `wait 200`, then `give all` or `addbot sergei`,
+`setviewpos 6000 6000 6000 0`, `cg_draw3dIcons 0`, `cg_drawGun 0`,
+`r_drawworld 0`, `r_clear 1`, and `+scores` for the scoreboard); ours come from
 `scripts/parity.py`, which pushes the modules into a running rbx-native
 editor over MCP, runs a fixture from `src/client/dev/Scene.luau` and takes
 `screen_capture`. Ours is drawn at 640x360 (the editor viewport is 962x453
@@ -320,9 +325,9 @@ normalised RMSE over the whole frame.
 
 | shot | RMSE | what differs |
 |---|---|---|
-| `hud_side` (FFA, `give all`, `cg_draw3dIcons 0`) | 0.039 | score box 8 virtual units higher (the vendored gamecode's `CG_DrawLowerRight` starts at `472 - ICON_SIZE`; 0.8.8's QVM uses 480); 3D head is the 2D icon in edit mode (no EditableMesh); console text is in real pixels, so at half size it is twice as big relative to the screen |
-| `scores_side` (FFA, 2 players, `+scores`) | 0.055 | same console/score box notes; otherwise item for item |
-| `menu_side` (main menu) | 0.117 | no 3D banner model (edit mode); background is the baked composite at time 0 and fills 16:9 (the vendored code draws it at `vidWidth`, 0.8.8's QVM pillarboxes); no MISSION PACK item (no missionpack mod on Roblox); copyright year and colours follow the vendored gamecode (2018 colour set); the cursor shows at (0,0) until the mouse moves; "Protocol: 68" in the reference comes from ioquake3 (our client reports 71, so it isn't drawn) |
+| `hud_side` (FFA, `give all`, `cg_draw3dIcons 0`) | 0.033 | item for item; the 3D head is the 2D icon in edit mode (no EditableMesh); console text is in real pixels, so at half size it is twice as big relative to the screen |
+| `scores_side` (FFA, a skill 4 bot, `+scores`) | 0.055 | the same console note; otherwise item for item |
+| `menu_side` (main menu) | 0.107 | no 3D banner model (edit mode); the background is the baked composite at time 0 (frozen `tcMod scroll`); no MISSION PACK item (no missionpack mod on Roblox); the cursor shows at (0,0) until the mouse moves; "Protocol: 68" in the reference comes from ioquake3 (our client reports 71, so it isn't drawn) |
 
 ## Walls
 
@@ -331,7 +336,12 @@ normalised RMSE over the whole frame.
   references use an ioquake3 client built from `vendor/ioq3` with the
   `opengl1` renderer, running OA 0.8.8's own QVMs and pk3s
   (`OA_ENGINE=... scripts/oa-ref.sh`). Engine-side text (console, protocol)
-  is ioquake3's.
+  is ioquake3's. The build needs only the SDL2 runtime: cmake's `SDL2_DIR`
+  can point at a two-line `SDL2Config.cmake` naming
+  `code/thirdparty/SDL2-*/include` and the system `libSDL2-2.0.so.0`.
+  The editor binary has to include the MCP server (rbx-native from late
+  October 2026 on, Settings > Beta features > MCP server, or
+  `{"enabled":["mcp-server"]}` in `<config>/rbx-native/beta.json`).
 - **No EditableMesh in rbx-native's edit runtime** (`AssetService:
   CreateEditableMesh` errors there and under lune). MD3 surfaces then don't
   draw (one warning); the parity shots can't show 3D models. In a running
