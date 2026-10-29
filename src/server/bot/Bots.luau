@@ -71,6 +71,10 @@ function Bots.Install(adapter)
 	require("./ai_cmd_2")
 	require("./ai_cmd_3")
 	require("./ai_vcmd")
+end
+
+-- the end of SV_Init
+function Bots.Init()
 	SVB.SV_BotInitCvars()
 	SVB.SV_BotInitBotLib()
 end

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Pack OpenArena's botfiles/ (bot characters, chats, item and weapon
 weights, synonyms, match templates) into one Luau buffer blob, in the
-converter's format (conv branch docs/formats/luau-blobs.md): chunk modules
+converter's format (docs/formats/luau-blobs.md): chunk modules
 build/botfiles/luau/Botfiles_NNN.luau and the index Botfiles.luau.
 
 Blob layout (little-endian): "OABF", u32 count, then per file

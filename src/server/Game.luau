@@ -23,11 +23,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ]]
 --!native
 -- Entry point of the server side: loads every ported game file
--- (g_*.luau, bg_alloc, the bot stubs) and the engine (sv/*), wires the
+-- (g_*.luau, bg_alloc), the engine (sv/*) and the bots (bot/*), wires the
 -- shared modules' hooks to the engine, and exposes the API a host uses:
 --
 --   local Game = require(path.to.Game)
---   Game.Init({ loadMap = function(name) -> lumps, mapExists = ..., files = {...} })
+--   Game.Init({ loadMap = function(name) -> lumps, mapExists = ..., files = {...}, botfiles = blob })
 --   Game.Command("map oa_dm1")          -- or any console command / cvar
 --   Game.Frame(msec)                    -- call every host tick
 --   SV.SV_DirectConnect / SV_PacketEvent / SV_Disconnect from a transport
@@ -39,7 +39,6 @@ local G = require("./g_local")
 
 -- the game module, in g_*.c order
 require("./bg_alloc")
-require("./ai_stubs")
 require("./g_active_1")
 require("./g_active_2")
 require("./g_admin_1")
@@ -89,6 +88,20 @@ local Fs = require("./sv/fs")
 local MSG = require("../shared/net/msg")
 local QS = require("../shared/q_shared")
 local C = require("./g_defs")
+local Bots = require("./bot/Bots")
+
+-- the bot AI and botlib (ai_*.c, g_syscalls' bot traps, sv_bot.c)
+Bots.Install(require("./bot/BotGame").FromEngine({
+	SV = SV,
+	W = require("./sv/sv_world"),
+	Cvar = Cvar,
+	Fs = Fs,
+	Collision = require("../shared/Collision"),
+	G = G,
+	C = C,
+	structs = require("../shared/structs"),
+}))
+SV.Bots = Bots
 
 local Game = {
 	G = G,
@@ -98,6 +111,7 @@ local Game = {
 	Fs = Fs,
 	MSG = MSG,
 	C = C,
+	Bots = Bots,
 }
 
 -- q_shared's engine calls go to the game module's versions
@@ -110,12 +124,17 @@ QS.Com_Error = function(level: number, text: string)
 end
 
 export type InitOptions = {
-	-- returns the parsed BSP lumps for maps/<name>.bsp (Collision.LoadMap input)
+	-- returns the parsed BSP lumps for maps/<name>.bsp (Collision.LoadMap
+	-- input), with `checksum` = map.json's `checksum` (Com_BlockChecksum of
+	-- the .bsp, sv_mapChecksum) and `aas` = the map's joined Aas blob, if any
 	loadMap: (name: string) -> any,
 	-- optional: whether maps/<name>.bsp exists (the "map" command checks it)
 	mapExists: ((name: string) -> boolean)?,
 	-- optional: files to mount, path -> contents (scripts/*.arena, ...)
 	files: { [string]: string }?,
+	-- optional: the joined Botfiles blob (tools/pack-botfiles.py), mounted
+	-- as botfiles/*
+	botfiles: buffer?,
 	-- optional: the names of the maps the place carries; each shows up as
 	-- an (empty) maps/<name>.bsp so the game's existence checks, map
 	-- votes and rotation see it
@@ -144,6 +163,9 @@ function Game.Init(opts: InitOptions)
 		for path, data in opts.files do
 			Fs.Mount(path, data)
 		end
+	end
+	if opts.botfiles then
+		Bots.MountBotfiles(opts.botfiles, Fs.Mount)
 	end
 	if opts.maps then
 		for _, name in opts.maps do

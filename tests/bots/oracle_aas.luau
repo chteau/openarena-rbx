@@ -1,6 +1,6 @@
 -- Replays the C oracle's AAS queries (tools/oracle-bots) through the Luau
 -- botlib and diffs every output bit for bit.
---   (cd build/overlay && lune run tests/bots/oracle_aas.luau [maps...] [--n N])
+--   lune run tests/bots/oracle_aas.luau [maps...] [--n N]
 local process = require("@lune/process")
 local B = require("../../src/server/bot/botlib/botlib")
 local BC = require("../../src/server/bot/botlib/consts")

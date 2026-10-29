@@ -1,6 +1,6 @@
 -- Headless bot match: N bots on a map through the real server (pmove,
 -- items, weapons), reporting what they did and what thinking cost.
---   (cd build/overlay && lune run tests/bots/sim.luau [map] [bots] [seconds] [g_gametype])
+--   lune run tests/bots/sim.luau [map] [bots] [seconds] [g_gametype]
 local process = require("@lune/process")
 local Host = require("./simhost")
 local C = require("../../src/shared/consts")
@@ -134,6 +134,6 @@ for _, i in bots do
 end
 local n = #bots * h.frames
 print(string.format("cost: bots %.3f ms/bot/frame (%.2f s total), server total %.3f ms/frame (game %.3f + bots %.3f)",
-	h.botMs / n, h.botMs / 1000, (h.botMs + h.gameMs) / h.frames, h.gameMs / h.frames, h.botMs / h.frames))
+	h.botMs / n, h.botMs / 1000, h.gameMs / h.frames, (h.gameMs - h.botMs) / h.frames, h.botMs / h.frames))
 
 print("sim: done")

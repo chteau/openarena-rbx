@@ -4,26 +4,23 @@
   src/server/bot/botlib/consts.luau   every #define/enum botlib sees (ioquake3
                                       q_shared.h, surfaceflags.h, botlib/*.h)
   src/server/bot/botlib/structs.luau  every botlib struct (headers and .c files)
-  src/server/bot/ai_consts.luau       the bot AI's own headers (OpenArena
+  src/server/bot/ai_consts.luau       the bot AI's own headers (OpenArena 0.8.8
                                       ai_*.h, chars.h, inv.h, match.h, syn.h)
                                       plus botlib's public headers, minus what
                                       the game module's g_defs already has
   src/server/bot/ai_structs.luau      bot_state_t & co. and botlib's public
                                       structs, layered over g_structs
 
-Reuses the game side's tools/gen_consts.py and tools/gen_structs.py (same
-directory once the branches are merged; set GAME_TOOLS to the feat/game
-worktree's tools/ before that).
+Reuses tools/gen_consts.py and tools/gen_structs.py.
 
 Usage: tools/gen_bot_defs.py
 """
-import os
 import re
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, os.environ.get("GAME_TOOLS", str(HERE)))
+sys.path.insert(0, str(HERE))
 import gen_consts  # noqa: E402
 import gen_structs  # noqa: E402
 

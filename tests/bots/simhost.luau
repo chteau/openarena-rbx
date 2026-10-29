@@ -1,14 +1,17 @@
 -- Headless server with bots for the lune tests: the game branch's server
 -- (src/server/Game, its engine and pmove) with the bot port installed the
--- way docs/bots-notes.md describes, BSPs from build/maps (game branch),
--- the .aas files from the converter's Aas blob modules (conv branch
--- build/maps/<map>/luau), botfiles from tools/pack-botfiles.py's blob, and
--- OA's scripts from the pk3s.
+-- way Game.luau installs it, BSPs from build/maps, each map's checksum and
+-- .aas from the converter's output (build/conv/maps/<map>/map.json and its
+-- Aas blob modules), botfiles from tools/pack-botfiles.py's blob, and OA's
+-- scripts from the pk3s.
 local fs = require("@lune/fs")
 local process = require("@lune/process")
 local stdio = require("@lune/stdio")
 local BSP = require("../../src/shared/cm/bsp")
-local checksum = require("./md4")
+local serde = require("@lune/serde")
+
+-- oaconv convert --only maps --out build/conv
+local CONV = "build/conv/maps"
 
 local M = {}
 
@@ -44,38 +47,29 @@ end
 
 function M.new(opts: { maps: { string }, quiet: boolean?, log: { string }? })
 	local Game = require("../../src/server/Game")
-	local W = require("../../src/server/sv/sv_world")
-	local Collision = require("../../src/shared/Collision")
-	local structs = require("../../src/shared/structs")
-	local Bots = require("../../src/server/bot/Bots")
-	local BotGame = require("../../src/server/bot/BotGame")
+	local Bots = Game.Bots
 	local clock = 0
-	local files = pk3Files()
 	local botfiles = assert(blob("build/botfiles/luau", "Botfiles"), "run tools/pack-botfiles.py first")
-	Bots.MountBotfiles(botfiles, function(path, data)
-		files[path] = data
-	end)
-	for _, map in opts.maps do
-		local aas = blob("build/conv-maps/" .. map .. "/luau", "Aas")
-		if aas then
-			files["maps/" .. map .. ".aas"] = buffer.tostring(aas)
-		end
-	end
 	Game.Init({
+		-- the BSP for the clip map; the checksum and the .aas come from the
+		-- converter's map.json and Aas blob, as on Roblox
 		loadMap = function(name: string)
 			local path = "build/maps/" .. name .. ".bsp"
 			if not fs.isFile(path) then
 				return nil
 			end
-			local data = buffer.fromstring(fs.readFile(path))
-			local lumps = BSP.parse(data)
-			lumps.checksum = checksum(data)
+			local lumps = BSP.parse(buffer.fromstring(fs.readFile(path)))
+			local conv = CONV .. "/" .. name
+			local info = serde.decode("json", fs.readFile(conv .. "/map.json"))
+			lumps.checksum = info.checksum
+			lumps.aas = blob(conv .. "/luau", "Aas")
 			return lumps
 		end,
 		mapExists = function(name: string): boolean
 			return fs.isFile("build/maps/" .. name .. ".bsp")
 		end,
-		files = files,
+		files = pk3Files(),
+		botfiles = botfiles,
 		print = function(text: string)
 			if opts.log then
 				table.insert(opts.log, text)
@@ -88,20 +82,18 @@ function M.new(opts: { maps: { string }, quiet: boolean?, log: { string }? })
 			return clock
 		end,
 	})
-	Bots.Install(BotGame.FromEngine({
-		SV = Game.SV, W = W, Cvar = Game.Cvar, Fs = Game.Fs, Collision = Collision,
-		G = Game.G, C = Game.C, structs = structs,
-	}))
-	Bots.InitGameProgs()
 	local host = { Game = Game, Bots = Bots, G = Game.G, SV = Game.SV, botMs = 0, gameMs = 0, frames = 0 }
-	-- one server tick: the bots think (SV_BotFrame) then the game runs, as
-	-- ioquake3's dedicated SV_Frame does
+	-- SV_Frame runs SV_BotFrame itself; time it apart from the rest
+	local botFrame = Bots.Frame
+	Bots.Frame = function(time: number)
+		local t = os.clock()
+		botFrame(time)
+		host.botMs += (os.clock() - t) * 1000
+	end
+	-- one host tick of the server (gameMs includes the bots)
 	function host.frame(msec: number)
 		clock += msec
 		local t = os.clock()
-		Bots.Frame(Game.SV.sv.time)
-		host.botMs += (os.clock() - t) * 1000
-		t = os.clock()
 		Game.Frame(msec)
 		host.gameMs += (os.clock() - t) * 1000
 		host.frames += 1
