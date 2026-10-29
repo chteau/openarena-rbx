@@ -204,6 +204,16 @@ mod tests {
                 if key.ends_with(".md") {
                     continue;
                 }
+                // Angelyss ships without these two; they're Neko's, verbatim.
+                if let Some(part) = key.strip_prefix("models/players/angelyss/") {
+                    if part == "upper.md3" || part == "head.md3" {
+                        assert!(!base.exists(key), "{key} now ships in a pk3");
+                        let neko = format!("models/players/neko/{part}");
+                        assert_eq!(vfs.read(key), base.read(&neko), "{key}");
+                        n += 1;
+                        continue;
+                    }
+                }
                 assert!(base.exists(key), "{key} is not in any pk3");
                 assert_eq!(vfs.read(key).unwrap(), std::fs::read(path).unwrap());
                 assert_ne!(vfs.read(key), base.read(key), "{key} is unchanged");

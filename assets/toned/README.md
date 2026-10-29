@@ -78,3 +78,11 @@ The non-mature pk3s ship her `lower*.md3`, skins and textures but no
 mature pk3 `upper.md3` holds only tags (byte for byte neko's `upper.md3`)
 and `head.md3` is a one-unit dummy. Copying neko's `upper.md3`/`head.md3`
 would make her playable without any mature geometry; that is not done here.
+
+## Angelyss upper and head
+
+The non-mature 0.8.8 pk3s ship Angelyss without `upper.md3` and `head.md3`
+(her whole body is in `lower.md3`), so she can't load. Both files here are
+straight copies of Neko's from `pak6-patch088.pk3`: Neko's `upper.md3` is
+byte-identical to the one in the mature pk3 (tags only), and her `head.md3`
+is a small stand-in inside the head, like the mature one.
