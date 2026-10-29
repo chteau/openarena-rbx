@@ -32,7 +32,7 @@ def sweep_cell(m, gt):
     return r.split(' (')[0]
 
 
-maps = sorted(os.listdir(os.path.join(B, 'maps')))
+maps = sorted(d for d in os.listdir(os.path.join(B, 'maps')) if os.path.isdir(os.path.join(B, 'maps', d)))
 print('| map | mesh | atlas pages uploaded | aas | FFA sweep | CTF sweep |')
 print('|---|---|---|---|---|---|')
 used = {}
