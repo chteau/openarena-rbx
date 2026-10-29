@@ -7,7 +7,7 @@ use serde_json::{json, Value};
 
 use oaconv::bake::{bake_map, Settings};
 use oaconv::bsp::collision::CollisionMap;
-use oaconv::bsp::{entities, lightgrid, Bsp};
+use oaconv::bsp::{checksum::block_checksum, entities, lightgrid, Bsp};
 use oaconv::luau::write_buffer_modules;
 use oaconv::manifest::{write_json, Manifest, UploadKind};
 use oaconv::shader::ShaderSet;
@@ -36,8 +36,8 @@ fn convert_map(vfs: &Vfs, shaders: &ShaderSet, out: &Path, name: &str, s: &Setti
     let dir = out.join("maps").join(name);
     std::fs::create_dir_all(&dir).map_err(err(dir.display()))?;
     let source = format!("maps/{name}.bsp");
-    let bsp = Bsp::parse(&vfs.read(&source).ok_or(format!("{source} unreadable"))?)
-        .map_err(err(&source))?;
+    let bsp_bytes = vfs.read(&source).ok_or(format!("{source} unreadable"))?;
+    let bsp = Bsp::parse(&bsp_bytes).map_err(err(&source))?;
     let mut uploads = Uploads::new();
 
     let baked = bake_map(name, &bsp, shaders, vfs, s);
@@ -94,6 +94,7 @@ fn convert_map(vfs: &Vfs, shaders: &ShaderSet, out: &Path, name: &str, s: &Setti
         "name": name,
         "source": vfs.source(&source),
         "dir": format!("maps/{name}"),
+        "checksum": block_checksum(&bsp_bytes),
         "glb": mesh_files,
         "atlas": atlas,
         "texel_density": baked.density,

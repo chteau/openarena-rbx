@@ -57,7 +57,7 @@ it for the round trip.
 | Collision | `maps/<map>/luau/Collision*` | `docs/formats/collision.md` |
 | Entities | `maps/<map>/luau/Entities*` | UTF-8 JSON, `docs/formats/entities.md` |
 | Light grid | `maps/<map>/luau/LightGrid*` | raw BSP light grid lump: 8 bytes per cell (ambient rgb, directed rgb, lat, lng), x fastest then y then z; `map.json` `lightgrid` gives `origin` and cell `size` in Quake units and `bounds` as cell counts per axis, as `R_LoadLightGrid` derives them |
-| Bot navigation | `maps/<map>/luau/Aas*` | the map's `.aas` file, unchanged |
+| Bot navigation | `maps/<map>/luau/Aas*` | the map's `.aas` file, unchanged; `map.json` `checksum` is `Com_BlockChecksum` of the `.bsp` (`sv_mapChecksum`), which botlib checks against the `.aas` header |
 | MD3 frames | `md3/<dir>/luau/<stem>*` | `docs/formats/md3.md` |
 
 `SoundIndex.luau` is not a blob: it is a plain Luau table literal
