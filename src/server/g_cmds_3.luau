@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_cmds.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_cmds.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_cmds.c, part 3 of 3: voting, viewpos, mappage and the ClientCommand dispatcher.
+-- Luau port of OpenArena 0.8.8's g_cmds.c (gamecode 9e0f0c0), part 3 of 3: voting, viewpos, mappage and the ClientCommand dispatcher.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -55,7 +55,6 @@ SF.gameNames = {
 	"Last Man Standing",
 	"Double Domination",
 	"Domination",
-	"Possession",
 }
 
 function G.Cmd_Where_f(ent)
@@ -195,20 +194,12 @@ function G.Cmd_CallVote_f(ent)
 
 	-- if there is still a vote to be executed
 	if level.voteExecuteTime ~= 0 then
-		-- don't start a vote when map change or restart is in progress
-		if QS.Q_stricmpn(level.voteString, "map", 3) == 0
-			or QS.Q_stricmpn(level.voteString, "nextmap", 7) == 0 then
-			G.trap_SendServerCommand(ent.index, "print \"Vote after map change.\n\"")
-			return
-		end
-
 		level.voteExecuteTime = 0
 		G.trap_SendConsoleCommand(C.EXEC_APPEND, QS.va("%s\n", level.voteString))
 	end
 
 	level.voteKickClient = -1 -- not a client
 	level.voteKickType = 0 -- not a ban
-	level.voteDisplayString = ""
 
 	-- special case for g_gametype, check for bad values
 	if QS.Q_strequal(arg1, "g_gametype") then
@@ -233,7 +224,7 @@ function G.Cmd_CallVote_f(ent)
 			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s %d; map_restart; set nextmap \"%s\"", arg1, i, s)
 			level.voteDisplayString = QS.Com_sprintf(C.MAX_STRING_CHARS, "Change gametype to: %s?", SF.gameNames[i])
 		else
-			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s %d; map_restart", arg1, i)
+			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s %d; mao_restart", arg1, i)
 			level.voteDisplayString = QS.Com_sprintf(C.MAX_STRING_CHARS, "Change gametype to: %s?", SF.gameNames[i])
 		end
 	elseif QS.Q_strequal(arg1, "map") then
@@ -369,7 +360,7 @@ function G.Cmd_CallVote_f(ent)
 	end
 
 	ent.client.pers.voteCount = ent.client.pers.voteCount + 1
-	G.trap_SendServerCommand(-1, QS.va("print \"%s called a vote (%s).\n\"", ent.client.pers.netname, G.whiteListedStr(level.voteDisplayString)))
+	G.trap_SendServerCommand(-1, QS.va("print \"%s called a vote.\n\"", ent.client.pers.netname))
 
 	-- start the voting, the caller automatically votes yes
 	level.voteTime = level.time
@@ -463,7 +454,7 @@ function G.Cmd_CallTeamVote_f(ent)
 	end
 	arg2 = QS.Q_strncpyz(arg2, C.MAX_STRING_TOKENS)
 
-	if hasSepChar(arg2) then
+	if string.find(arg1, ";", 1, true) ~= nil or string.find(arg2, ";", 1, true) ~= nil then
 		G.trap_SendServerCommand(ent.index, "print \"Invalid vote string.\n\"")
 		return
 	end
@@ -617,6 +608,15 @@ function G.Cmd_SetViewpos_f(ent)
 	G.TeleportPlayer(ent, origin, angles)
 end
 
+--[[
+=================
+Cmd_Stats_f
+=================
+]]
+-- 0.8.8 keeps it with its whole body commented out (the AAS coverage
+-- printout) and never registers it
+function G.Cmd_Stats_f(ent) end
+
 function G.Cmd_GetMappage_f(ent)
 	local arg = G.trap_Argv(1)
 	local page = G.getMappage(QS.atoi(arg))
@@ -686,15 +686,7 @@ end
 -- it against the table.
 function G.ClientCommand(clientNum)
 	local ent = G.g_entities[clientNum]
-	if ent.client == nil or ent.client.pers.connected ~= C.CON_CONNECTED then
-		if ent.client ~= nil and ent.client.pers.localClient then
-			-- Handle early team command sent by UI when starting a local
-			-- team play game.
-			local cmd = G.trap_Argv(0)
-			if QS.Q_stricmp(cmd, "team") == 0 then
-				G.Cmd_Team_f(ent)
-			end
-		end
+	if ent.client == nil then
 		return -- not fully in game yet
 	end
 
@@ -704,7 +696,7 @@ function G.ClientCommand(clientNum)
 
 	local i = 0
 	while i < numCmds do
-		if QS.Q_strequal(cmd, cmds[i].cmdName) then
+		if QS.Q_stricmp(cmd, cmds[i].cmdName) == 0 then
 			break
 		end
 		i = i + 1

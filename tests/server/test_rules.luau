@@ -1,9 +1,10 @@
 -- Game rule unit tests (lune run tests/server/test_rules.luau): the
--- damage / armor / quad formulas, item respawn timers and the CTF capture
--- and return flows, run on the real game code with fake clients. Expected
--- values are computed here from the C formulas (g_combat.c CheckArmor,
--- g_weapon.c, g_items.c RESPAWN_* and LaunchItem's 30 s flag return), not by
--- calling the port.
+-- damage / armor / quad formulas, item respawn timers, the CTF capture
+-- and return flows and the 0.8.8 numbering, run on the real game code with
+-- fake clients. Expected values are computed here from OpenArena 0.8.8's C
+-- (gamecode 9e0f0c0: g_combat.c CheckArmor, g_weapon.c, g_items.c
+-- RESPAWN_* and LaunchItem's 30 s flag return, g_main.c's cvar defaults),
+-- not by calling the port.
 local W = require("./world")
 local K = require("../../src/shared/consts")
 local S = require("../../src/shared/structs")
@@ -261,6 +262,29 @@ do
 	eq(G.teamgame.blueStatus, K.FLAG_DROPPED, "still dropped after 29 s")
 	w:run(1.5)
 	eq(G.teamgame.blueStatus, K.FLAG_ATBASE, "auto-returned after 30 s")
+end
+
+-- 4. 0.8.8 numbering and modes (bg_public.h, g_main.c): the client and
+-- the wire format index stats and gametypes by these numbers
+do
+	eq(K.STAT_HOLDABLE_ITEM, 1, "STAT_HOLDABLE_ITEM")
+	eq(K.STAT_PERSISTANT_POWERUP, 2, "STAT_PERSISTANT_POWERUP comes before STAT_WEAPONS")
+	eq(K.STAT_WEAPONS, 3, "STAT_WEAPONS")
+	eq(K.STAT_MAX_HEALTH, 7, "STAT_MAX_HEALTH is last")
+	eq(K.GT_DOMINATION, 12, "GT_DOMINATION")
+	eq(K.GT_MAX_GAME_TYPE, 13, "no Possession gametype")
+	eq(K.EV_TAUNT_PATROL, 82, "EV_TAUNT_PATROL is the last event")
+	eq(K.EV_FOOTSTEP_SNOW, nil, "no extra footstep / bullet-hit events")
+	eq(#require("../../src/shared/BG").eventnames, 75, "eventnames[] ends at EV_TAUNT, as in 0.8.8's bg_misc.c")
+	eq(K.MAX_TOTALANIMATIONS, 37, "no OA3 torso / strafe animations")
+	local w = W.new()
+	w:command("set g_gametype 13")
+	w:command("map oa_dm1")
+	w:run(0.5)
+	eq(w.G.g_gametype.integer, 0, "g_gametype 13 is out of range and falls back to FFA")
+	eq(w.Game.Cvar.VariableString("g_voteGametypes"), "/0/1/3/4/5/6/7/8/9/10/11/12/", "g_voteGametypes default")
+	eq(w.Game.Cvar.VariableString("g_voteNames"), "/map_restart/nextmap/map/g_gametype/kick/clientkick/g_doWarmup/timelimit/fraglimit/shuffle/", "g_voteNames default has shuffle")
+	eq(w.Game.Cvar.FindVar("g_enableQ"), nil, "no g_enableQ")
 end
 
 print(string.format("rules: %d passed, %d failed", passes, failures))

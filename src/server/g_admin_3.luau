@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_admin.c, part 3 of 4).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_admin.c, part 3 of 4).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_admin.c (part 3): ban, unban, adjustban, putteam, map, mute, listadmins, listplayers, showbans.
+-- Luau port of OpenArena 0.8.8's g_admin.c (gamecode 9e0f0c0) (part 3): ban, unban, adjustban, putteam, map, mute, listadmins, listplayers, showbans.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -121,7 +121,7 @@ function G.G_admin_ban(ent, skiparg)
 			skip = true
 		end
 		if not skip then
-			if QS.Q_strequal(QS.va("%d", namelog[i].slot), search) then
+			if QS.Q_stricmp(QS.va("%d", namelog[i].slot), search) == 0 then
 				logmatches = 1
 				logmatch = i
 				exactmatch = true
@@ -134,7 +134,7 @@ function G.G_admin_ban(ent, skiparg)
 	i = 0
 	while not exactmatch and i < C.MAX_ADMIN_NAMELOGS and namelog[i] ~= nil do
 		if not namelog[i].banned then
-			if QS.Q_strequal(namelog[i].ip, search) then
+			if QS.Q_stricmp(namelog[i].ip, search) == 0 then
 				logmatches = 1
 				logmatch = i
 				exactmatch = true
@@ -524,7 +524,7 @@ function G.G_admin_mute(ent, skiparg)
 	end
 	vic = G.g_entities[pids[0]]
 	if vic.client.pers.muted == true then
-		if QS.Q_strequal(cmd, "mute") then
+		if QS.Q_stricmp(cmd, "mute") == 0 then
 			G.G_admin_print(ent, "^3!mute: ^7player is already muted\n")
 			return true
 		end
@@ -539,7 +539,7 @@ function G.G_admin_mute(ent, skiparg)
 			)
 		)
 	else
-		if QS.Q_strequal(cmd, "unmute") then
+		if QS.Q_stricmp(cmd, "unmute") == 0 then
 			G.G_admin_print(ent, "^3!unmute: ^7player is not currently muted\n")
 			return true
 		end
@@ -687,13 +687,13 @@ function G.G_admin_listplayers(ent, skiparg)
 			n3 = ""
 			local j = 0
 			while j < C.MAX_ADMIN_ADMINS and G.g_admin_admins[j] ~= nil do
-				if QS.Q_strequal(G.g_admin_admins[j].guid, p.pers.guid) then
+				if QS.Q_stricmp(G.g_admin_admins[j].guid, p.pers.guid) == 0 then
 					if ent ~= nil and G.G_admin_permission(G.g_entities[i], ADMF_INCOGNITO) then
 						break
 					end
 					l = G.g_admin_admins[j].level
 					n3 = G.G_SanitiseString(G.g_admin_admins[j].name, C.MAX_NAME_LENGTH)
-					if not QS.Q_strequal(n2, n3) then
+					if QS.Q_stricmp(n2, n3) ~= 0 then
 						n = G.g_admin_admins[j].name
 					end
 					break

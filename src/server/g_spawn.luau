@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_spawn.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_spawn.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_spawn.c. Parses the entity string and spawns gentities.
+-- Luau port of OpenArena 0.8.8's g_spawn.c (gamecode 9e0f0c0). Parses the entity string and spawns gentities.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -54,7 +54,7 @@ function G.G_SpawnString(key, defaultString, out)
 	end
 
 	for i = 0, G.level.numSpawnVars - 1 do
-		if QS.Q_strequal(key, G.level.spawnVars[i][0]) then
+		if QS.Q_stricmp(key, G.level.spawnVars[i][0]) == 0 then
 			return true, G.level.spawnVars[i][1]
 		end
 	end
@@ -137,13 +137,11 @@ local spawns = {
 	spawnEntry("info_player_deathmatch", SP("SP_info_player_deathmatch")),
 	spawnEntry("info_player_intermission", SP("SP_info_player_intermission")),
 	--Double Domination player spawn:
-	spawnEntry("info_player_dd", SP("SP_info_player_deathmatch")),
-	spawnEntry("info_player_dd_red", SP("SP_info_player_deathmatch")),
-	spawnEntry("info_player_dd_blue", SP("SP_info_player_deathmatch")),
+	spawnEntry("info_player_dd", SP("SP_info_player_dd")),
+	spawnEntry("info_player_dd_red", SP("SP_info_player_dd_red")),
+	spawnEntry("info_player_dd_blue", SP("SP_info_player_dd_blue")),
 	--Standard Domination point spawn:
 	spawnEntry("domination_point", SP("SP_domination_point")),
-	spawnEntry("info_player_dom_red", SP("SP_info_player_deathmatch")),
-	spawnEntry("info_player_dom_blue", SP("SP_info_player_deathmatch")),
 
 	spawnEntry("info_null", SP("SP_info_null")),
 	spawnEntry("info_notnull", SP("SP_info_notnull")), -- use target_position instead
@@ -305,7 +303,7 @@ in a gentity
 ]]
 function G.G_ParseField(key, value, ent)
 	for _, f in fields do
-		if QS.Q_strequal(f.name, key) then
+		if QS.Q_stricmp(f.name, key) == 0 then
 			-- found it
 			local holder = ent
 			local fname = f.field
@@ -340,9 +338,8 @@ end
 
 local gametypeNames = {
 	[0] = "ffa", "tournament", "single", "team", "ctf", "oneflag", "obelisk", "harvester",
-	"elimination", "ctf", "lms", "dd", "dom", "pos",
+	"elimination", "ctf", "lms", "dd", "dom",
 }
-local NUM_GAMETYPE_NAMES = 14
 
 --[[
 ===================
@@ -400,7 +397,7 @@ function G.G_SpawnGEntityFromSpawnVars()
 
 	local found, value = G.G_SpawnString("!gametype", nil)
 	if found then
-		if G.g_gametype.integer >= C.GT_FFA and G.g_gametype.integer < NUM_GAMETYPE_NAMES then
+		if G.g_gametype.integer >= C.GT_FFA and G.g_gametype.integer < C.GT_MAX_GAME_TYPE then
 			local gametypeName = gametypeNames[G.g_gametype.integer]
 
 			local s = QS.strstr(value, gametypeName)
@@ -413,7 +410,7 @@ function G.G_SpawnGEntityFromSpawnVars()
 
 	found, value = G.G_SpawnString("gametype", nil)
 	if found then
-		if G.g_gametype.integer >= C.GT_FFA and G.g_gametype.integer < NUM_GAMETYPE_NAMES then
+		if G.g_gametype.integer >= C.GT_FFA and G.g_gametype.integer < C.GT_MAX_GAME_TYPE then
 			local gametypeName = gametypeNames[G.g_gametype.integer]
 
 			local s = QS.strstr(value, gametypeName)
@@ -516,7 +513,7 @@ Every map should have exactly one worldspawn.
 ]]
 function G.SP_worldspawn()
 	local _, s = G.G_SpawnString("classname", "")
-	if not QS.Q_strequal(s, "worldspawn") then
+	if QS.Q_stricmp(s, "worldspawn") ~= 0 then
 		G.G_Error("SP_worldspawn: The first entity isn't 'worldspawn'")
 	end
 
@@ -525,7 +522,7 @@ function G.SP_worldspawn()
 
 	G.trap_SetConfigstring(C.CS_LEVEL_START_TIME, QS.va("%i", G.level.startTime))
 
-	if G.g_music.string ~= "" and not QS.Q_strequal(G.g_music.string, "none") then
+	if G.g_music.string ~= "" and QS.Q_stricmp(G.g_music.string, "none") ~= 0 then
 		G.trap_SetConfigstring(C.CS_MUSIC, G.g_music.string)
 	else
 		_, s = G.G_SpawnString("music", "")
@@ -540,17 +537,11 @@ function G.SP_worldspawn()
 	_, s = G.G_SpawnString("gravity", "800")
 	G.trap_Cvar_Set("g_gravity", s)
 
-	_, s = G.G_SpawnString("enableFS", "0")
-	G.trap_Cvar_Set("g_enableFS", s)
-
 	_, s = G.G_SpawnString("enableDust", "0")
 	G.trap_Cvar_Set("g_enableDust", s)
 
 	_, s = G.G_SpawnString("enableBreath", "0")
 	G.trap_Cvar_Set("g_enableBreath", s)
-
-	_, s = G.G_SpawnString("enableQ", "0")
-	G.trap_Cvar_Set("g_enableQ", s)
 
 	G.g_entities[C.ENTITYNUM_WORLD].s.number = C.ENTITYNUM_WORLD
 	G.g_entities[C.ENTITYNUM_WORLD].r.ownerNum = C.ENTITYNUM_NONE

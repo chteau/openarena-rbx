@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_team.c, part 2 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_team.c, part 2 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_team.c, part 2: domination, double domination and flag touch logic.
+-- Luau port of OpenArena 0.8.8's g_team.c (gamecode 9e0f0c0), part 2: domination, double domination and flag touch logic.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -35,7 +35,6 @@ local SF = G.FileStatics("g_team")
 
 local INT_MAX = 2147483647
 local S_COLOR_WHITE = "^7"
-local MAX_RANDOM_SET_SIZE = 128
 -- challenges.h award numbers are absent from g_defs; same values as the logged award ids
 local AWARD_CAPTURE = 4
 local AWARD_ASSIST = 5
@@ -116,13 +115,16 @@ function G.Team_DD_makeA2team(target, team)
 	local it
 	G.Team_DD_RemovePointAgfx()
 	it = nil
-	if team == C.TEAM_NONE or target == nil then
+	if team == C.TEAM_NONE then
 		return
-	elseif team == C.TEAM_RED then
+	end
+	if team == C.TEAM_RED then
 		it = BG.BG_FindItem("Point A (Red)")
-	elseif team == C.TEAM_BLUE then
+	end
+	if team == C.TEAM_BLUE then
 		it = BG.BG_FindItem("Point A (Blue)")
-	elseif team == C.TEAM_FREE then
+	end
+	if team == C.TEAM_FREE then
 		it = BG.BG_FindItem("Point A (White)")
 	end
 	if it == nil then
@@ -137,12 +139,12 @@ function G.Team_DD_makeA2team(target, team)
 	G.FinishSpawningItem(G.ddA)
 end
 
-function SF.Team_DD_makeB2team(target, team)
+function G.Team_DD_makeB2team(target, team)
 	local it
 
 	G.Team_DD_RemovePointBgfx()
 	it = nil
-	if team == C.TEAM_NONE or target == nil then
+	if team == C.TEAM_NONE then
 		return
 	end
 	if team == C.TEAM_RED then
@@ -166,11 +168,11 @@ function SF.Team_DD_makeB2team(target, team)
 	G.FinishSpawningItem(G.ddB)
 end
 
-function SF.Team_ResetFlags()
+function G.Team_ResetFlags()
 	if G.g_gametype.integer == C.GT_CTF or G.g_gametype.integer == C.GT_CTF_ELIMINATION then
 		G.Team_ResetFlag(C.TEAM_RED)
 		G.Team_ResetFlag(C.TEAM_BLUE)
-	elseif G.g_gametype.integer == C.GT_1FCTF or G.g_gametype.integer == C.GT_POSSESSION then
+	elseif G.g_gametype.integer == C.GT_1FCTF then
 		G.Team_ResetFlag(C.TEAM_FREE)
 	end
 end
@@ -253,10 +255,13 @@ function G.Team_ReturnFlag(team)
 		end
 	else
 		G.PrintMsg(nil, "The %s flag has returned!\n", G.TeamName(team))
-		if G.g_gametype.integer == C.GT_CTF then
+		if G.g_gametype.integer == C.GT_CTF_ELIMINATION then
 			G.G_LogPrintf("CTF: %i %i %i: The %s flag was returned!\n", -1, team, 2, G.TeamName(team))
-		elseif G.g_gametype.integer == C.GT_CTF_ELIMINATION then
-			G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: The %s flag was returned!\n", G.level.roundNumber, -1, team, 2, G.TeamName(team))
+		else
+			-- 0.8.8 tests GT_CTF_ELIMINATION twice, so this branch never runs
+			if G.g_gametype.integer == C.GT_CTF_ELIMINATION then
+				G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: The %s flag was returned!\n", G.level.roundNumber, -1, team, 2, G.TeamName(team))
+			end
 		end
 	end
 end
@@ -313,7 +318,7 @@ function G.Team_SpawnDoubleDominationPoints()
 	ent = nil
 	ent = G.G_Find(ent, "classname", "team_CTF_blueflag")
 	if ent ~= nil then
-		SF.Team_DD_makeB2team(ent, C.TEAM_FREE)
+		G.Team_DD_makeB2team(ent, C.TEAM_FREE)
 	end
 	return 1
 end
@@ -323,7 +328,7 @@ function G.Team_RemoveDoubleDominationPoints()
 	G.level.pointStatusB = C.TEAM_NONE
 	G.updateDDpoints()
 	G.Team_DD_makeA2team(nil, C.TEAM_NONE)
-	SF.Team_DD_makeB2team(nil, C.TEAM_NONE)
+	G.Team_DD_makeB2team(nil, C.TEAM_NONE)
 	return 1
 end
 
@@ -347,7 +352,7 @@ function G.Team_TouchDoubleDominationPoint(ent, other, team)
 
 	if level.pointStatusA == otherTeam and level.pointStatusB == otherTeam then
 		otherDominating = true
-		if level.time - level.timeTaken > (G.g_ddCaptureTime.integer - C.DD_CLOSE) * 1000 then
+		if level.time - level.timeTaken > (10 - C.DD_CLOSE) * 1000 then
 			isClose = true
 		end
 	end
@@ -390,7 +395,7 @@ function G.Team_TouchDoubleDominationPoint(ent, other, team)
 		end
 		level.pointStatusB = clientTeam
 		G.PrintMsg(nil, "%s" .. S_COLOR_WHITE .. " (%s) took control of B!\n", cl.pers.netname, G.TeamName(clientTeam))
-		SF.Team_DD_makeB2team(ent, clientTeam)
+		G.Team_DD_makeB2team(ent, clientTeam)
 		G.G_LogPrintf("DD: %i %i %i: %s took point B for %s!\n", cl.ps.clientNum, clientTeam, 1, cl.pers.netname, G.TeamName(clientTeam))
 		score = C.DD_POINT_CAPTURE
 		if otherDominating then
@@ -421,7 +426,7 @@ function G.Team_TouchOurFlag(ent, other, team)
 	local cl = other.client
 	local enemy_flag
 
-	if G.g_gametype.integer == C.GT_1FCTF or G.g_gametype.integer == C.GT_POSSESSION then
+	if G.g_gametype.integer == C.GT_1FCTF then
 		enemy_flag = C.PW_NEUTRALFLAG
 	else
 		if cl.sess.sessionTeam == C.TEAM_RED then
@@ -539,7 +544,7 @@ function G.Team_TouchOurFlag(ent, other, team)
 			end
 		end
 	end
-	SF.Team_ResetFlags()
+	G.Team_ResetFlags()
 
 	G.CalculateRanks()
 
@@ -626,9 +631,6 @@ function G.Pickup_Team(ent, other)
 		G.PrintMsg(other, "Don't know what team the flag is on.\n")
 		return 0
 	end
-	if G.g_gametype.integer == C.GT_POSSESSION then
-		return G.Possession_TouchFlag(other)
-	end
 	if G.g_gametype.integer == C.GT_1FCTF then
 		if team == C.TEAM_FREE then
 			return G.Team_TouchEnemyFlag(ent, other, cl.sess.sessionTeam)
@@ -703,41 +705,6 @@ function G.Team_GetLocationMsg(ent, loclen)
 		return true, QS.Com_sprintf(loclen, "%c%c%s" .. S_COLOR_WHITE, string.byte(QS.Q_COLOR_ESCAPE), best.count + string.byte("0"), best.message)
 	end
 	return true, QS.Com_sprintf(loclen, "%s", best.message)
-end
-
---[[---------------------------------------------------------------------------]]
-
-function G.SelectRandomEntityFilter(classname, filter)
-	local count = 0
-	local spot = nil
-	local spots = {}
-
-	while true do
-		spot = G.G_Find(spot, "classname", classname)
-		if spot == nil then
-			break
-		end
-		local skip = false
-		if filter ~= nil then
-			if not filter(spot) then
-				skip = true
-			end
-		end
-		if not skip then
-			spots[count] = spot
-			count += 1
-			if count == MAX_RANDOM_SET_SIZE then
-				break
-			end
-		end
-	end
-
-	if count == 0 then
-		return nil
-	end
-
-	local selection = Q.imod(Q.rand(), count)
-	return spots[selection]
 end
 
 return nil

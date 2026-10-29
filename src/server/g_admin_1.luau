@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_admin.c, part 1 of 4).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_admin.c, part 1 of 4).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_admin.c (part 1): admin command table, permission checks,
+-- Luau port of OpenArena 0.8.8's g_admin.c (gamecode 9e0f0c0) (part 1): admin command table, permission checks,
 -- config writing, default levels, admin log and admin listing.
 
 local G = require("./g_local")
@@ -178,6 +178,12 @@ G.g_admin_cmds = {
 		["function"] = "display a (partial) list of active bans",
 		syntax = "(^5start at ban#^7) (^5name|IP^7)",
 	},
+	--KK-OAX
+	{
+		cmd = "shuffle", handler = cmdHandler("G_admin_shuffle"), flag = "f",
+		["function"] = "Shuffles the teams",
+		syntax = "",
+	},
 	{
 		cmd = "slap", handler = cmdHandler("G_admin_slap"), flag = "S",
 		["function"] = "Reduces the health of the selected player by the damage specified",
@@ -247,7 +253,7 @@ function G.G_admin_permission(ent, flag)
 
 	i = 0
 	while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-		if QS.Q_strequal(ent.client.pers.guid, G.g_admin_admins[i].guid) then
+		if QS.Q_stricmp(ent.client.pers.guid, G.g_admin_admins[i].guid) == 0 then
 			flags = G.g_admin_admins[i].flags
 			p = 0
 			while charAt(flags, p) ~= 0 do
@@ -333,7 +339,7 @@ function G.G_admin_name_check(ent, name, len)
 
 	name2 = G.G_SanitiseString(name, C.MAX_NAME_LENGTH)
 
-	if QS.Q_strequal(name2, "UnnamedPlayer") then
+	if QS.Q_stricmp(name2, "UnnamedPlayer") == 0 then
 		return true, err
 	end
 
@@ -349,7 +355,7 @@ function G.G_admin_name_check(ent, name, len)
 		end
 
 		testName = G.G_SanitiseString(client.pers.netname, C.MAX_NAME_LENGTH)
-		if QS.Q_strequal(name2, testName) then
+		if QS.Q_stricmp(name2, testName) == 0 then
 			err = QS.Com_sprintf(len, "The name '%s^7' is already in use", name)
 			return false, err
 		end
@@ -366,7 +372,7 @@ function G.G_admin_name_check(ent, name, len)
 			continue
 		end
 		testName = G.G_SanitiseString(G.g_admin_admins[i].name, C.MAX_NAME_LENGTH)
-		if QS.Q_strequal(name2, testName) and not QS.Q_strequal(ent.client.pers.guid, G.g_admin_admins[i].guid) then
+		if QS.Q_stricmp(name2, testName) == 0 and QS.Q_stricmp(ent.client.pers.guid, G.g_admin_admins[i].guid) ~= 0 then
 			err = QS.Com_sprintf(len, "The name '%s^7' belongs to an admin, "
 				.. "please use another name", name)
 			return false, err
@@ -381,7 +387,7 @@ function SF.admin_higher_guid(admin_guid, victim_guid)
 
 	local i = 0
 	while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-		if QS.Q_strequal(admin_guid, G.g_admin_admins[i].guid) then
+		if QS.Q_stricmp(admin_guid, G.g_admin_admins[i].guid) == 0 then
 			alevel = G.g_admin_admins[i].level
 			break
 		end
@@ -389,7 +395,7 @@ function SF.admin_higher_guid(admin_guid, victim_guid)
 	end
 	i = 0
 	while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-		if QS.Q_strequal(victim_guid, G.g_admin_admins[i].guid) then
+		if QS.Q_stricmp(victim_guid, G.g_admin_admins[i].guid) == 0 then
 			if alevel < G.g_admin_admins[i].level then
 				return false
 			end
@@ -591,7 +597,7 @@ function G.G_admin_level(ent)
 
 	local i = 0
 	while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-		if QS.Q_strequal(G.g_admin_admins[i].guid, ent.client.pers.guid) then
+		if QS.Q_stricmp(G.g_admin_admins[i].guid, ent.client.pers.guid) == 0 then
 			return G.g_admin_admins[i].level
 		end
 		i += 1
@@ -609,7 +615,7 @@ function SF.admin_command_permission(ent, command)
 	level = ent.client.pers.adminLevel
 	local i = 0
 	while i < C.MAX_ADMIN_COMMANDS and G.g_admin_commands[i] ~= nil do
-		if QS.Q_strequal(command, G.g_admin_commands[i].command) then
+		if QS.Q_stricmp(command, G.g_admin_commands[i].command) == 0 then
 			local j = 0
 			while G.g_admin_commands[i].levels[j] ~= -1 do
 				if G.g_admin_commands[i].levels[j] == level then
@@ -655,7 +661,7 @@ function SF.admin_log(admin, cmd, skiparg)
 	if admin ~= nil then
 		local i = 0
 		while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-			if QS.Q_strequal(G.g_admin_admins[i].guid, admin.client.pers.guid) then
+			if QS.Q_stricmp(G.g_admin_admins[i].guid, admin.client.pers.guid) == 0 then
 				a = G.g_admin_admins[i]
 				flags = QS.Q_strncpyz(a.flags, C.MAX_ADMIN_FLAGS * 2)
 				local j = 0
@@ -680,7 +686,7 @@ function SF.admin_log(admin, cmd, skiparg)
 		end
 	end
 
-	if victim ~= nil and not QS.Q_strequal(cmd, "attempted") then
+	if victim ~= nil and QS.Q_stricmp(cmd, "attempted") ~= 0 then
 		str = QS.Com_sprintf(C.MAX_STRING_CHARS,
 			"%3i:%i%i: %i: %s: %s: %s: %s: %s: %s: \"%s\"\n",
 			min,
@@ -794,7 +800,7 @@ function SF.admin_listadmins(ent, start, search)
 					continue
 				end
 				name2 = G.G_SanitiseString(vic.client.pers.netname, C.MAX_NAME_LENGTH)
-				if QS.Q_strequal(vic.client.pers.guid, G.g_admin_admins[i].guid) and
+				if QS.Q_stricmp(vic.client.pers.guid, G.g_admin_admins[i].guid) == 0 and
 					QS.strstr(name2, search) ~= nil then
 					dup = true
 					break

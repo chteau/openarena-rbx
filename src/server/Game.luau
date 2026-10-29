@@ -56,7 +56,6 @@ require("./g_cmds_3")
 require("./g_cmds_ext")
 require("./g_combat_1")
 require("./g_combat_2")
-require("./g_elimination")
 require("./g_fileops")
 require("./g_items")
 require("./g_killspree")
@@ -68,7 +67,6 @@ require("./g_missile")
 require("./g_mover_1")
 require("./g_mover_2")
 require("./g_playerstore")
-require("./g_possession")
 require("./g_session")
 require("./g_spawn")
 require("./g_svcmds")
@@ -90,7 +88,6 @@ local Cmd = require("./sv/cmd")
 local Fs = require("./sv/fs")
 local MSG = require("../shared/net/msg")
 local QS = require("../shared/q_shared")
-local BG = require("../shared/BG")
 local C = require("./g_defs")
 
 local Game = {
@@ -103,15 +100,14 @@ local Game = {
 	C = C,
 }
 
--- q_shared's and bg_misc's engine calls go to the game module's versions
--- (Com_Printf/Com_Error in g_main.c) and to the virtual file system
+-- q_shared's engine calls go to the game module's versions
+-- (Com_Printf/Com_Error in g_main.c)
 QS.Com_Printf = function(text: string)
 	G.Com_Printf("%s", text)
 end
 QS.Com_Error = function(level: number, text: string)
 	G.Com_Error(level, "%s", text)
 end
-BG.trap_FS_ReadFile = Fs.ReadFile
 
 export type InitOptions = {
 	-- returns the parsed BSP lumps for maps/<name>.bsp (Collision.LoadMap input)

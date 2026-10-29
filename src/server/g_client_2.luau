@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_client.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_client.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_client.c, part 2 of 2 (ClientUserinfoChanged .. ClientDisconnect).
+-- Luau port of OpenArena 0.8.8's g_client.c (gamecode 9e0f0c0), part 2 of 2 (ClientUserinfoChanged .. ClientDisconnect).
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -74,6 +74,12 @@ function G.ClientUserinfoChanged(clientNum)
 	-- check for malformed or illegal info strings
 	if not QS.Info_Validate(userinfo) then
 		userinfo = "\\name\\badinfo"
+	end
+
+	-- check for local client
+	s = QS.Info_ValueForKey(userinfo, "ip")
+	if s == "localhost" then
+		client.pers.localClient = true
 	end
 
 	-- check the item prediction
@@ -208,9 +214,9 @@ function G.ClientUserinfoChanged(clientNum)
 		and bit32.band(G.g_entities[clientNum].r.svFlags, C.SVF_BOT) ~= 0
 	then
 		s = QS.Info_ValueForKey(userinfo, "team")
-		if QS.Q_strequal(s, "red") or QS.Q_strequal(s, "r") then
+		if QS.Q_stricmp(s, "red") == 0 or QS.Q_stricmp(s, "r") == 0 then
 			team = C.TEAM_RED
-		elseif QS.Q_strequal(s, "blue") or QS.Q_strequal(s, "b") then
+		elseif QS.Q_stricmp(s, "blue") == 0 or QS.Q_stricmp(s, "b") == 0 then
 			team = C.TEAM_BLUE
 		else
 			-- pick the team with the least number of players
@@ -239,20 +245,20 @@ function G.ClientUserinfoChanged(clientNum)
 
 	-- colors
 	if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt == 0 and G.g_instantgib.integer ~= 0 then
-		if client.sess.sessionTeam == C.TEAM_RED then
+		if team == C.TEAM_RED then
 			c1 = "4"
 			c2 = "4"
-		elseif client.sess.sessionTeam == C.TEAM_BLUE then
+		elseif team == C.TEAM_BLUE then
 			c1 = "1"
 			c2 = "1"
 		end
 	else
-		c1 = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "color1"), C.MAX_INFO_STRING)
-		c2 = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "color2"), C.MAX_INFO_STRING)
+		c1 = QS.Info_ValueForKey(userinfo, "color1")
+		c2 = QS.Info_ValueForKey(userinfo, "color2")
 	end
 
-	redTeam = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "g_redteam"), C.MAX_INFO_STRING)
-	blueTeam = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "g_blueteam"), C.MAX_INFO_STRING)
+	redTeam = QS.Info_ValueForKey(userinfo, "g_redteam")
+	blueTeam = QS.Info_ValueForKey(userinfo, "g_blueteam")
 
 	-- send over a subset of the userinfo keys so other clients can
 	-- print scoreboards, display models, and play custom sounds
@@ -260,7 +266,7 @@ function G.ClientUserinfoChanged(clientNum)
 		s = QS.va(
 			"n\\%s\\t\\%i\\model\\%s\\hmodel\\%s\\c1\\%s\\c2\\%s\\hc\\%i\\w\\%i\\l\\%i\\skill\\%s\\tt\\%d\\tl\\%d",
 			client.pers.netname,
-			client.sess.sessionTeam,
+			team,
 			model,
 			headModel,
 			c1,
@@ -341,7 +347,7 @@ function G.ClientConnect(clientNum, firstTime, isBot)
 	value = QS.Info_ValueForKey(userinfo, "ip")
 	client.pers.ip = QS.Q_strncpyz(value, 40)
 
-	if G.G_FilterPacket(value) and QS.Q_strequal(value, "localhost") then
+	if G.G_FilterPacket(value) and QS.Q_stricmp(value, "localhost") == 0 then
 		G.G_Printf("Player with IP: %s is banned\n", value)
 		return "You are banned from this server."
 	end
@@ -361,7 +367,7 @@ function G.ClientConnect(clientNum, firstTime, isBot)
 		value = QS.Info_ValueForKey(userinfo, "password")
 		if
 			G.g_password.string ~= ""
-			and not QS.Q_strequal(G.g_password.string, "none")
+			and QS.Q_stricmp(G.g_password.string, "none") ~= 0
 			and G.g_password.string ~= value
 		then
 			return "Invalid password"
@@ -376,7 +382,7 @@ function G.ClientConnect(clientNum, firstTime, isBot)
 
 		for j = 0, G.level.maxclients - 1 do
 			if G.level.clients[j].pers.connected ~= C.CON_DISCONNECTED then
-				if QS.Q_strequal(client.pers.guid, G.level.clients[j].pers.guid) then
+				if QS.Q_stricmp(client.pers.guid, G.level.clients[j].pers.guid) == 0 then
 					if not G.G_ClientIsLagging(G.level.clients[j]) then
 						G.trap_SendServerCommand(j, "cp \"Your GUID is not secure\"")
 						return "Duplicate GUID"
@@ -395,11 +401,11 @@ function G.ClientConnect(clientNum, firstTime, isBot)
 
 	client.pers.connected = C.CON_CONNECTING
 
-	-- check for local client
-	value = QS.Info_ValueForKey(userinfo, "ip")
-	if value == "localhost" then
-		client.pers.localClient = true
+	-- read or initialize the session data
+	if firstTime or G.level.newSession then
+		G.G_InitSessionData(client, userinfo)
 	end
+	G.G_ReadSessionData(client)
 
 	if isBot then
 		ent.r.svFlags = bit32.bor(ent.r.svFlags, C.SVF_BOT)
@@ -408,11 +414,6 @@ function G.ClientConnect(clientNum, firstTime, isBot)
 			return "BotConnectfailed"
 		end
 	end
-	-- read or initialize the session data
-	if firstTime or G.level.newSession then
-		G.G_InitSessionData(client, userinfo)
-	end
-	G.G_ReadSessionData(client)
 
 	--KK-OAX Swapped these in order...seemed to help the connection process.
 	-- get and distribute relevent paramters
@@ -714,14 +715,15 @@ function G.ClientSpawn(ent)
 			and (G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION)
 		)
 	then
-		spawnPoint = SF.SelectSpectatorSpawnPoint(spawn_origin, spawn_angles)
+		spawnPoint = G.SelectSpectatorSpawnPoint(spawn_origin, spawn_angles)
 	elseif G.g_gametype.integer == C.GT_DOUBLE_D then
 		--Double Domination uses special spawn points:
 		spawnPoint = G.SelectDoubleDominationSpawnPoint(client.sess.sessionTeam, spawn_origin, spawn_angles)
-	elseif G.g_gametype.integer == C.GT_DOMINATION then
-		--Domination uses special spawn points:
-		spawnPoint = G.SelectDominationSpawnPoint(client.sess.sessionTeam, spawn_origin, spawn_angles)
-	elseif G.g_gametype.integer >= C.GT_CTF and G.g_ffa_gt == 0 then
+	elseif
+		G.g_gametype.integer >= C.GT_CTF
+		and G.g_ffa_gt == 0
+		and G.g_gametype.integer ~= C.GT_DOMINATION
+	then
 		-- all base oriented team games use the CTF spawn points
 		spawnPoint = G.SelectCTFSpawnPoint(
 			client.sess.sessionTeam,
@@ -730,19 +732,37 @@ function G.ClientSpawn(ent)
 			spawn_angles
 		)
 	else
-		local filters
-		if bit32.band(ent.r.svFlags, C.SVF_BOT) ~= 0 then
-			filters = C.FL_NO_BOTS
-		else
-			filters = C.FL_NO_HUMANS
-		end
-		-- the first spawn should be at a good looking spot
-		if not client.pers.initialSpawn and client.pers.localClient then
-			client.pers.initialSpawn = true
-			spawnPoint = SF.SelectInitialSpawnPoint(spawn_origin, spawn_angles, filters)
-		else
-			-- don't spawn near existing origin if possible
-			spawnPoint = G.SelectSpawnPoint(client.ps.origin, spawn_origin, spawn_angles, filters)
+		while true do
+			-- the first spawn should be at a good looking spot
+			if not client.pers.initialSpawn and client.pers.localClient then
+				client.pers.initialSpawn = true
+				spawnPoint = G.SelectInitialSpawnPoint(spawn_origin, spawn_angles)
+			else
+				-- don't spawn near existing origin if possible
+				spawnPoint = G.SelectSpawnPoint(client.ps.origin, spawn_origin, spawn_angles)
+			end
+
+			-- Tim needs to prevent bots from spawning at the initial point
+			-- on q3dm0...
+			local isBotEnt = bit32.band(ent.r.svFlags, C.SVF_BOT) ~= 0
+			local skip = false
+			if bit32.band(spawnPoint.flags, C.FL_NO_BOTS) ~= 0 and isBotEnt then
+				--Sago: seek a spawn point faraway from the currently found one
+				local old_origin = Q.vec3()
+				Q.VectorCopy(spawn_origin, old_origin)
+				spawnPoint = G.SelectSpawnPoint(old_origin, spawn_origin, spawn_angles)
+				if bit32.band(spawnPoint.flags, C.FL_NO_BOTS) ~= 0 and isBotEnt then
+					skip = true
+				end
+			end
+			-- just to be symetric, we have a nohumans option...
+			if not skip and bit32.band(spawnPoint.flags, C.FL_NO_HUMANS) ~= 0 and not isBotEnt then
+				skip = true
+			end
+
+			if not skip then
+				break
+			end
 		end
 	end
 	client.pers.teamState.state = C.TEAM_ACTIVE
@@ -897,6 +917,10 @@ function G.ClientSpawn(ent)
 			client.ps.stats[C.STAT_WEAPONS] = bit32.bor(client.ps.stats[C.STAT_WEAPONS], bit32.lshift(1, C.WP_BFG))
 			client.ps.ammo[C.WP_BFG] = G.g_elimination_bfg.integer
 		end
+		if G.g_elimination_grapple.integer ~= 0 then
+			client.ps.stats[C.STAT_WEAPONS] =
+				bit32.bor(client.ps.stats[C.STAT_WEAPONS], bit32.lshift(1, C.WP_GRAPPLING_HOOK))
+		end
 		if G.g_elimination_nail.integer > 0 then
 			client.ps.stats[C.STAT_WEAPONS] = bit32.bor(client.ps.stats[C.STAT_WEAPONS], bit32.lshift(1, C.WP_NAILGUN))
 			client.ps.ammo[C.WP_NAILGUN] = G.g_elimination_nail.integer
@@ -930,11 +954,6 @@ function G.ClientSpawn(ent)
 	if G.g_rockets.integer ~= 0 then
 		client.ps.stats[C.STAT_WEAPONS] = bit32.lshift(1, C.WP_ROCKET_LAUNCHER)
 		client.ps.ammo[C.WP_ROCKET_LAUNCHER] = 999
-	end
-
-	if G.g_grapple.integer ~= 0 then
-		client.ps.stats[C.STAT_WEAPONS] =
-			bit32.bor(client.ps.stats[C.STAT_WEAPONS], bit32.lshift(1, C.WP_GRAPPLING_HOOK))
 	end
 
 	G.G_SetOrigin(ent, spawn_origin)

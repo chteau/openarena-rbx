@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_main.c, part 2 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_main.c, part 2 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_main.c (part 2). Shutdown, player counting / ranking, intermission, logging.
+-- Luau port of OpenArena 0.8.8's g_main.c (gamecode 9e0f0c0) (part 2). Shutdown, player counting / ranking, intermission, logging.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -32,20 +32,6 @@ local QS = require("../shared/q_shared")
 local BG = require("../shared/BG")
 
 local SF = G.FileStatics("g_main")
-
--- challenges.h award ids (not exported by g_defs)
-local GAMETYPES_FFA_WINS = 200
-local GAMETYPES_TOURNEY_WINS = 201
-local GAMETYPES_LMS_WINS = 202
-local GAMETYPES_CTF_WINS = 203
-local GAMETYPES_1FCTF_WINS = 204
-local GAMETYPES_OVERLOAD_WINS = 205
-local GAMETYPES_HARVESTER_WINS = 206
-local GAMETYPES_ELIMINATION_WINS = 207
-local GAMETYPES_CTF_ELIMINATION_WINS = 208
-local GAMETYPES_DD_WINS = 209
-local GAMETYPES_DOM_WINS = 210
-local GAMETYPES_POS_WINS = 211
 
 --[[
 =================
@@ -425,10 +411,6 @@ function G.CalculateRanks()
 	if G.g_humanplayers.integer ~= humanplayers then --Presume all spectators are humans!
 		G.trap_Cvar_Set("g_humanplayers", QS.va("%i", humanplayers))
 	end
-	if humanplayers > level.max_humanplayers then
-		G.G_LogPrintf("Info: There has been at least %i humans now\n", humanplayers)
-		level.max_humanplayers = humanplayers
-	end
 end
 
 --[[
@@ -454,77 +436,6 @@ function G.SendScoreboardMessageToAllClients()
 			G.DeathmatchScoreboardMessage(G.g_entities[i])
 			G.EliminationMessage(G.g_entities[i])
 		end
-	end
-end
-
-function SF.WriteAccForAllClients()
-	local level = G.level
-	for i = 0, level.maxclients - 1 do
-		if level.clients[i].pers.connected == C.CON_CONNECTED then
-			G.LogAcc(i)
-		end
-	end
-end
-
-function SF.SendVictoryChallenge()
-	local level = G.level
-	local award = 0
-	local gt = G.g_gametype.integer
-
-	if level.max_humanplayers < 2 or level.hadBots then
-		return
-	end
-
-	if gt == C.GT_FFA then
-		award = GAMETYPES_FFA_WINS
-	elseif gt == C.GT_TOURNAMENT then
-		award = GAMETYPES_TOURNEY_WINS
-	elseif gt == C.GT_LMS then
-		award = GAMETYPES_LMS_WINS
-	elseif gt == C.GT_CTF then
-		award = GAMETYPES_CTF_WINS
-	elseif gt == C.GT_1FCTF then
-		award = GAMETYPES_1FCTF_WINS
-	elseif gt == C.GT_OBELISK then
-		award = GAMETYPES_OVERLOAD_WINS
-	elseif gt == C.GT_HARVESTER then
-		award = GAMETYPES_HARVESTER_WINS
-	elseif gt == C.GT_ELIMINATION then
-		award = GAMETYPES_ELIMINATION_WINS
-	elseif gt == C.GT_CTF_ELIMINATION then
-		award = GAMETYPES_CTF_ELIMINATION_WINS
-	elseif gt == C.GT_DOUBLE_D then
-		award = GAMETYPES_DD_WINS
-	elseif gt == C.GT_DOMINATION then
-		award = GAMETYPES_DOM_WINS
-	elseif gt == C.GT_POSSESSION then
-		award = GAMETYPES_POS_WINS
-	else
-		return
-	end
-	if gt ~= C.GT_FFA and gt ~= C.GT_TOURNAMENT and gt ~= C.GT_LMS and gt ~= C.GT_POSSESSION then
-		--Team games
-		for i = 0, level.maxclients - 1 do
-			local cl = level.clients[i]
-
-			if cl.sess.sessionTeam == C.TEAM_SPECTATOR then
-				continue
-			end
-			if cl.pers.connected ~= C.CON_CONNECTED then
-				continue
-			end
-
-			if cl.sess.sessionTeam == C.TEAM_RED and level.teamScores[C.TEAM_RED] > level.teamScores[C.TEAM_BLUE] then
-				G.ChallengeMessage(G.g_entities[cl.ps.clientNum], award)
-			end
-
-			if cl.sess.sessionTeam == C.TEAM_BLUE and level.teamScores[C.TEAM_RED] < level.teamScores[C.TEAM_BLUE] then
-				G.ChallengeMessage(G.g_entities[cl.ps.clientNum], award)
-			end
-		end
-	else
-		--FFA games
-		G.ChallengeMessage(G.g_entities[level.sortedClients[0]], award)
 	end
 end
 
@@ -556,6 +467,22 @@ function G.SendDDtimetakenMessageToAllClients()
 	for i = 0, level.maxclients - 1 do
 		if level.clients[i].pers.connected == C.CON_CONNECTED then
 			G.DoubleDominationScoreTimeMessage(G.g_entities[i])
+		end
+	end
+end
+
+--[[
+========================
+SendAttackingTeamMessageToAllClients
+
+Used for CTF Elimination oneway
+========================
+]]
+function G.SendAttackingTeamMessageToAllClients()
+	local level = G.level
+	for i = 0, level.maxclients - 1 do
+		if level.clients[i].pers.connected == C.CON_CONNECTED then
+			G.AttackingTeamMessage(G.g_entities[i])
 		end
 	end
 end
@@ -643,7 +570,7 @@ function G.FindIntermissionPoint()
 	-- find the intermission spot
 	local ent = G.G_Find(nil, "classname", "info_player_intermission")
 	if ent == nil then -- the map creator forgot to put in an intermission point...
-		G.SelectSpawnPoint(Q.vec3_origin, level.intermission_origin, level.intermission_angle, 0)
+		G.SelectSpawnPoint(Q.vec3_origin, level.intermission_origin, level.intermission_angle)
 	else
 		Q.VectorCopy(ent.s.origin, level.intermission_origin)
 		Q.VectorCopy(ent.s.angles, level.intermission_angle)
@@ -776,7 +703,7 @@ function G.ExitLevel()
 		end
 	end
 
-	if QS.Q_strequal(nextmap, "map_restart 0") and not QS.Q_strequal(d1, "") then
+	if QS.Q_stricmp(nextmap, "map_restart 0") == 0 and QS.Q_stricmp(d1, "") ~= 0 then
 		G.trap_Cvar_Set("nextmap", "vstr d2")
 		G.trap_SendConsoleCommand(C.EXEC_APPEND, "vstr d1\n")
 	else

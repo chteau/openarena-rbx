@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_main.c, part 3 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_main.c, part 3 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_main.c (part 3). Exit rules, per-frame checks, G_RunFrame.
+-- Luau port of OpenArena 0.8.8's g_main.c (gamecode 9e0f0c0) (part 3). Exit rules, per-frame checks, G_RunFrame.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -42,10 +42,6 @@ function G.LogExit(string_)
 	G.G_LogPrintf("Exit: %s\n", string_)
 
 	level.intermissionQueued = level.time
-
-	SF.WriteAccForAllClients()
-
-	SF.SendVictoryChallenge()
 
 	-- this will keep the clients from playing any voice sounds
 	-- that will get cut off when the queued intermission starts
@@ -273,7 +269,7 @@ function G.CheckExitRules()
 		end
 	end
 
-	if (G.g_gametype.integer >= C.GT_CTF and G.g_ffa_gt == 0) and G.g_capturelimit.integer ~= 0 then
+	if (G.g_gametype.integer >= C.GT_CTF and G.g_ffa_gt < 1) and G.g_capturelimit.integer ~= 0 then
 		if level.teamScores[C.TEAM_RED] >= G.g_capturelimit.integer then
 			G.trap_SendServerCommand(-1, "print \"Red hit the capturelimit.\n\"")
 			G.LogExit("Capturelimit hit.")
@@ -285,6 +281,105 @@ function G.CheckExitRules()
 			G.LogExit("Capturelimit hit.")
 			return
 		end
+	end
+end
+
+--LMS - Last man Stading functions:
+function G.StartLMSRound()
+	local level = G.level
+	local countsLiving = G.TeamLivingCount(-1, C.TEAM_FREE)
+	if countsLiving < 2 then
+		G.trap_SendServerCommand(-1, "print \"Not enough players to start the round\n\"")
+		level.roundNumberStarted = level.roundNumber - 1
+		level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+		return
+	end
+
+	--If we are enough to start a round:
+	level.roundNumberStarted = level.roundNumber --Set numbers
+
+	G.G_LogPrintf("LMS: %i %i %i: Round %i has started!\n", level.roundNumber, -1, 0, level.roundNumber)
+
+	G.SendEliminationMessageToAllClients()
+	G.EnableWeapons()
+end
+
+--the elimination start function
+function G.StartEliminationRound()
+	local level = G.level
+	local countsLiving = {}
+	countsLiving[C.TEAM_BLUE] = G.TeamLivingCount(-1, C.TEAM_BLUE)
+	countsLiving[C.TEAM_RED] = G.TeamLivingCount(-1, C.TEAM_RED)
+	if countsLiving[C.TEAM_BLUE] == 0 or countsLiving[C.TEAM_RED] == 0 then
+		G.trap_SendServerCommand(-1, "print \"Not enough players to start the round\n\"")
+		level.roundNumberStarted = level.roundNumber - 1
+		level.roundRespawned = false
+		--Remember that one of the teams is empty!
+		level.roundRedPlayers = countsLiving[C.TEAM_RED]
+		level.roundBluePlayers = countsLiving[C.TEAM_BLUE]
+		level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+		return
+	end
+
+	--If we are enough to start a round:
+	level.roundNumberStarted = level.roundNumber --Set numbers
+	level.roundRedPlayers = countsLiving[C.TEAM_RED]
+	level.roundBluePlayers = countsLiving[C.TEAM_BLUE]
+	if G.g_gametype.integer == C.GT_CTF_ELIMINATION then
+		G.Team_ReturnFlag(C.TEAM_RED)
+		G.Team_ReturnFlag(C.TEAM_BLUE)
+	end
+	if G.g_gametype.integer == C.GT_ELIMINATION then
+		G.G_LogPrintf("ELIMINATION: %i %i %i: Round %i has started!\n", level.roundNumber, -1, 0, level.roundNumber)
+	elseif G.g_gametype.integer == C.GT_CTF_ELIMINATION then
+		G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: Round %i has started!\n", level.roundNumber, -1, -1, 4, level.roundNumber)
+	end
+	G.SendEliminationMessageToAllClients()
+	if G.g_elimination_ctf_oneway.integer ~= 0 then
+		G.SendAttackingTeamMessageToAllClients() --Ensure that evaryone know who should attack.
+	end
+	G.EnableWeapons()
+end
+
+--things to do at end of round:
+function G.EndEliminationRound()
+	local level = G.level
+	G.DisableWeapons()
+	level.roundNumber += 1
+	level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+	G.SendEliminationMessageToAllClients()
+	G.CalculateRanks()
+	level.roundRespawned = false
+	if G.g_elimination_ctf_oneway.integer ~= 0 then
+		G.SendAttackingTeamMessageToAllClients()
+	end
+end
+
+--Things to do if we don't want to move the roundNumber
+function G.RestartEliminationRound()
+	local level = G.level
+	G.DisableWeapons()
+	level.roundNumberStarted = level.roundNumber - 1
+	level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+	if level.intermissiontime == 0 then
+		G.SendEliminationMessageToAllClients()
+	end
+	level.roundRespawned = false
+	if G.g_elimination_ctf_oneway.integer ~= 0 then
+		G.SendAttackingTeamMessageToAllClients()
+	end
+end
+
+--Things to do during match warmup
+function G.WarmupEliminationRound()
+	local level = G.level
+	G.EnableWeapons()
+	level.roundNumberStarted = level.roundNumber - 1
+	level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+	G.SendEliminationMessageToAllClients()
+	level.roundRespawned = false
+	if G.g_elimination_ctf_oneway.integer ~= 0 then
+		G.SendAttackingTeamMessageToAllClients()
 	end
 end
 
@@ -305,9 +400,9 @@ function G.CheckDoubleDomination()
 	if level.warmupTime ~= 0 then
 		if ((level.pointStatusA == C.TEAM_BLUE and level.pointStatusB == C.TEAM_BLUE) or
 			(level.pointStatusA == C.TEAM_RED and level.pointStatusB == C.TEAM_RED)) and
-			level.timeTaken + G.g_ddCaptureTime.integer * 1000 <= level.time then
+			level.timeTaken + 10 * 1000 <= level.time then
 			G.Team_RemoveDoubleDominationPoints()
-			level.roundStartTime = level.time + G.g_ddRespawnDelay.integer * 1000
+			level.roundStartTime = level.time + 10 * 1000
 			G.SendScoreboardMessageToAllClients()
 		end
 		return
@@ -323,7 +418,7 @@ function G.CheckDoubleDomination()
 	end
 
 	if level.pointStatusA == C.TEAM_RED and level.pointStatusB == C.TEAM_RED and
-		level.timeTaken + G.g_ddCaptureTime.integer * 1000 <= level.time then
+		level.timeTaken + 10 * 1000 <= level.time then
 		--Red scores
 		G.trap_SendServerCommand(-1, "print \"Red team scores!\n\"")
 		G.AddTeamScore(level.intermission_origin, C.TEAM_RED, 1)
@@ -332,13 +427,13 @@ function G.CheckDoubleDomination()
 		G.Team_DD_bonusAtPoints(C.TEAM_RED)
 		G.Team_RemoveDoubleDominationPoints()
 		--We start again in 10 seconds:
-		level.roundStartTime = level.time + G.g_ddRespawnDelay.integer * 1000
+		level.roundStartTime = level.time + 10 * 1000
 		G.SendScoreboardMessageToAllClients()
 		G.CalculateRanks()
 	end
 
 	if level.pointStatusA == C.TEAM_BLUE and level.pointStatusB == C.TEAM_BLUE and
-		level.timeTaken + G.g_ddCaptureTime.integer * 1000 <= level.time then
+		level.timeTaken + 10 * 1000 <= level.time then
 		--Blue scores
 		G.trap_SendServerCommand(-1, "print \"Blue team scores!\n\"")
 		G.AddTeamScore(level.intermission_origin, C.TEAM_BLUE, 1)
@@ -347,7 +442,7 @@ function G.CheckDoubleDomination()
 		G.Team_DD_bonusAtPoints(C.TEAM_BLUE)
 		G.Team_RemoveDoubleDominationPoints()
 		--We start again in 10 seconds:
-		level.roundStartTime = level.time + G.g_ddRespawnDelay.integer * 1000
+		level.roundStartTime = level.time + 10 * 1000
 		G.SendScoreboardMessageToAllClients()
 		G.CalculateRanks()
 	end
@@ -356,6 +451,251 @@ function G.CheckDoubleDomination()
 		G.trap_SendServerCommand(-1, "print \"A new round has started\n\"")
 		G.Team_SpawnDoubleDominationPoints()
 		G.SendScoreboardMessageToAllClients()
+	end
+end
+
+function G.CheckLMS()
+	local level = G.level
+	local mode = G.g_lms_mode.integer
+	if level.numPlayingClients < 1 then
+		return
+	end
+
+	--We don't want to do anything in intermission
+	if level.intermissiontime ~= 0 then
+		if level.roundRespawned then
+			G.RestartEliminationRound()
+		end
+		level.roundStartTime = level.time --so that a player might join at any time to fix the bots+no humans+autojoin bug
+		return
+	end
+
+	if G.g_gametype.integer == C.GT_LMS then
+		local countsLiving = {}
+		countsLiving[C.TEAM_FREE] = G.TeamLivingCount(-1, C.TEAM_FREE)
+		if countsLiving[C.TEAM_FREE] == 1 and level.roundNumber == level.roundNumberStarted then
+			if mode <= 1 then
+				G.LMSpoint()
+			end
+			G.trap_SendServerCommand(-1, "print \"We have a winner!\n\"")
+			G.EndEliminationRound()
+			G.Team_ForceGesture(C.TEAM_FREE)
+		end
+
+		if countsLiving[C.TEAM_FREE] == 0 and level.roundNumber == level.roundNumberStarted then
+			G.trap_SendServerCommand(-1, "print \"All death... how sad\n\"")
+			G.EndEliminationRound()
+		end
+
+		if G.g_elimination_roundtime.integer ~= 0 and level.roundNumber == level.roundNumberStarted and (G.g_lms_mode.integer == 1 or G.g_lms_mode.integer == 3) and level.time >= level.roundStartTime + 1000 * G.g_elimination_roundtime.integer then
+			G.trap_SendServerCommand(-1, "print \"Time up - Overtime disabled\n\"")
+			if mode <= 1 then
+				G.LMSpoint()
+			end
+			G.EndEliminationRound()
+		end
+
+		--This might be better placed another place:
+		if G.g_elimination_activewarmup.integer < 2 then
+			G.g_elimination_activewarmup.integer = 2 --We need at least 2 seconds to spawn all players
+		end
+		if G.g_elimination_activewarmup.integer >= G.g_elimination_warmup.integer then --This must not be true
+			G.g_elimination_warmup.integer = G.g_elimination_activewarmup.integer + 1 --Increase warmup
+		end
+
+		--Force respawn
+		if level.roundNumber ~= level.roundNumberStarted and level.time > level.roundStartTime - 1000 * G.g_elimination_activewarmup.integer and not level.roundRespawned then
+			level.roundRespawned = true
+			G.RespawnAll()
+			G.DisableWeapons()
+			G.SendEliminationMessageToAllClients()
+		end
+
+		if level.time <= level.roundStartTime and level.time > level.roundStartTime - 1000 * G.g_elimination_activewarmup.integer then
+			G.RespawnDead()
+		end
+
+		if level.roundNumber == level.roundNumberStarted then
+			G.EnableWeapons()
+		end
+
+		if level.roundNumber > level.roundNumberStarted and level.time >= level.roundStartTime then
+			G.StartLMSRound()
+		end
+
+		if level.time + 1000 * G.g_elimination_warmup.integer - 500 > level.roundStartTime and level.numPlayingClients < 2 then
+			G.RespawnDead() --Allow player to run around anyway
+			G.WarmupEliminationRound() --Start over
+			return
+		end
+
+		if level.warmupTime ~= 0 then
+			if level.time + 1000 * G.g_elimination_warmup.integer - 500 > level.roundStartTime then
+				G.RespawnDead()
+				G.WarmupEliminationRound()
+			end
+		end
+	end
+end
+
+function G.CheckElimination()
+	local level = G.level
+	if level.numPlayingClients < 1 then
+		if (G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION) and
+			(level.time + 1000 * G.g_elimination_warmup.integer - 500 > level.roundStartTime) then
+			G.RestartEliminationRound() --For spectators
+		end
+		return
+	end
+
+	--We don't want to do anything in itnermission
+	if level.intermissiontime ~= 0 then
+		if level.roundRespawned then
+			G.RestartEliminationRound()
+		end
+		level.roundStartTime = level.time + 1000 * G.g_elimination_warmup.integer
+		return
+	end
+
+	if G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION then
+		local counts = {}
+		local countsLiving = {}
+		local countsHealth = {}
+		counts[C.TEAM_BLUE] = G.TeamCount(-1, C.TEAM_BLUE)
+		counts[C.TEAM_RED] = G.TeamCount(-1, C.TEAM_RED)
+
+		countsLiving[C.TEAM_BLUE] = G.TeamLivingCount(-1, C.TEAM_BLUE)
+		countsLiving[C.TEAM_RED] = G.TeamLivingCount(-1, C.TEAM_RED)
+
+		countsHealth[C.TEAM_BLUE] = G.TeamHealthCount(-1, C.TEAM_BLUE)
+		countsHealth[C.TEAM_RED] = G.TeamHealthCount(-1, C.TEAM_RED)
+
+		if level.roundBluePlayers ~= 0 and level.roundRedPlayers ~= 0 then --Cannot score if one of the team never got any living players
+			if countsLiving[C.TEAM_BLUE] == 0 and level.roundNumber == level.roundNumberStarted then
+				--Blue team has been eliminated!
+				G.trap_SendServerCommand(-1, "print \"Blue Team eliminated!\n\"")
+				G.AddTeamScore(level.intermission_origin, C.TEAM_RED, 1)
+				if G.g_gametype.integer == C.GT_ELIMINATION then
+					G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i by eleminating the enemy team!\n", level.roundNumber, C.TEAM_RED, 1, G.TeamName(C.TEAM_RED), level.roundNumber)
+				else
+					G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i by eleminating the enemy team!\n", level.roundNumber, -1, C.TEAM_RED, 6, G.TeamName(C.TEAM_RED), level.roundNumber)
+				end
+				G.EndEliminationRound()
+				G.Team_ForceGesture(C.TEAM_RED)
+			elseif countsLiving[C.TEAM_RED] == 0 and level.roundNumber == level.roundNumberStarted then
+				--Red team eliminated!
+				G.trap_SendServerCommand(-1, "print \"Red Team eliminated!\n\"")
+				G.AddTeamScore(level.intermission_origin, C.TEAM_BLUE, 1)
+				if G.g_gametype.integer == C.GT_ELIMINATION then
+					G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i by eleminating the enemy team!\n", level.roundNumber, C.TEAM_BLUE, 1, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+				else
+					G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i by eleminating the enemy team!\n", level.roundNumber, -1, C.TEAM_BLUE, 6, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+				end
+				G.EndEliminationRound()
+				G.Team_ForceGesture(C.TEAM_BLUE)
+			end
+		end
+
+		--Time up
+		if level.roundNumber == level.roundNumberStarted and G.g_elimination_roundtime.integer ~= 0 and level.time >= level.roundStartTime + 1000 * G.g_elimination_roundtime.integer then
+			G.trap_SendServerCommand(-1, "print \"No teams eliminated.\n\"")
+
+			if level.roundBluePlayers ~= 0 and level.roundRedPlayers ~= 0 then --We don't want to divide by zero. (should not be possible)
+				if G.g_gametype.integer == C.GT_CTF_ELIMINATION and G.g_elimination_ctf_oneway.integer ~= 0 then
+					--One way CTF, make defensice team the winner.
+					if Q.imod(level.eliminationSides + level.roundNumber, 2) == 0 then --Red was attacking
+						G.trap_SendServerCommand(-1, "print \"Blue team defended the base\n\"")
+						G.AddTeamScore(level.intermission_origin, C.TEAM_BLUE, 1)
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i by defending the flag!\n", level.roundNumber, -1, C.TEAM_BLUE, 5, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+					else
+						G.trap_SendServerCommand(-1, "print \"Red team defended the base\n\"")
+						G.AddTeamScore(level.intermission_origin, C.TEAM_RED, 1)
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i by defending the flag!\n", level.roundNumber, -1, C.TEAM_RED, 5, G.TeamName(C.TEAM_RED), level.roundNumber)
+					end
+				elseif countsLiving[C.TEAM_RED] / level.roundRedPlayers > countsLiving[C.TEAM_BLUE] / level.roundBluePlayers then
+					--Red team has higher procentage survivors
+					G.trap_SendServerCommand(-1, "print \"Red team has most survivers!\n\"")
+					G.AddTeamScore(level.intermission_origin, C.TEAM_RED, 1)
+					if G.g_gametype.integer == C.GT_ELIMINATION then
+						G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i due to more survivors!\n", level.roundNumber, C.TEAM_RED, 2, G.TeamName(C.TEAM_RED), level.roundNumber)
+					else
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i due to more survivors!\n", level.roundNumber, -1, C.TEAM_RED, 7, G.TeamName(C.TEAM_RED), level.roundNumber)
+					end
+				elseif countsLiving[C.TEAM_RED] / level.roundRedPlayers < countsLiving[C.TEAM_BLUE] / level.roundBluePlayers then
+					--Blue team has higher procentage survivors
+					G.trap_SendServerCommand(-1, "print \"Blue team has most survivers!\n\"")
+					G.AddTeamScore(level.intermission_origin, C.TEAM_BLUE, 1)
+					if G.g_gametype.integer == C.GT_ELIMINATION then
+						G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i due to more survivors!\n", level.roundNumber, C.TEAM_BLUE, 2, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+					else
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i due to more survivors!\n", level.roundNumber, -1, C.TEAM_BLUE, 7, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+					end
+				elseif countsHealth[C.TEAM_RED] > countsHealth[C.TEAM_BLUE] then
+					--Red team has more health
+					G.trap_SendServerCommand(-1, "print \"Red team has more health left!\n\"")
+					G.AddTeamScore(level.intermission_origin, C.TEAM_RED, 1)
+					if G.g_gametype.integer == C.GT_ELIMINATION then
+						G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i due to more health left!\n", level.roundNumber, C.TEAM_RED, 3, G.TeamName(C.TEAM_RED), level.roundNumber)
+					else
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i due to more health left!\n", level.roundNumber, -1, C.TEAM_RED, 8, G.TeamName(C.TEAM_RED), level.roundNumber)
+					end
+				elseif countsHealth[C.TEAM_RED] < countsHealth[C.TEAM_BLUE] then
+					--Blue team has more health
+					G.trap_SendServerCommand(-1, "print \"Blue team has more health left!\n\"")
+					G.AddTeamScore(level.intermission_origin, C.TEAM_BLUE, 1)
+					if G.g_gametype.integer == C.GT_ELIMINATION then
+						G.G_LogPrintf("ELIMINATION: %i %i %i: %s wins round %i due to more health left!\n", level.roundNumber, C.TEAM_BLUE, 3, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+					else
+						G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: %s wins round %i due to more health left!\n", level.roundNumber, -1, C.TEAM_BLUE, 8, G.TeamName(C.TEAM_BLUE), level.roundNumber)
+					end
+				end
+			end
+			--Draw
+			if G.g_gametype.integer == C.GT_ELIMINATION then
+				G.G_LogPrintf("ELIMINATION: %i %i %i: Round %i ended in a draw!\n", level.roundNumber, -1, 4, level.roundNumber)
+			else
+				G.G_LogPrintf("CTF_ELIMINATION: %i %i %i %i: Round %i ended in a draw!\n", level.roundNumber, -1, -1, 9, level.roundNumber)
+			end
+			G.EndEliminationRound()
+		end
+
+		--This might be better placed another place:
+		if G.g_elimination_activewarmup.integer < 1 then
+			G.g_elimination_activewarmup.integer = 1 --We need at least 1 second to spawn all players
+		end
+		if G.g_elimination_activewarmup.integer >= G.g_elimination_warmup.integer then --This must not be true
+			G.g_elimination_warmup.integer = G.g_elimination_activewarmup.integer + 1 --Increase warmup
+		end
+
+		--Force respawn
+		if level.roundNumber ~= level.roundNumberStarted and level.time > level.roundStartTime - 1000 * G.g_elimination_activewarmup.integer and not level.roundRespawned then
+			level.roundRespawned = true
+			G.RespawnAll()
+			G.SendEliminationMessageToAllClients()
+		end
+
+		if level.time <= level.roundStartTime and level.time > level.roundStartTime - 1000 * G.g_elimination_activewarmup.integer then
+			G.RespawnDead()
+		end
+
+		if level.roundNumber > level.roundNumberStarted and level.time >= level.roundStartTime then
+			G.StartEliminationRound()
+		end
+
+		if level.time + 1000 * G.g_elimination_warmup.integer - 500 > level.roundStartTime then
+			if counts[C.TEAM_BLUE] < 1 or counts[C.TEAM_RED] < 1 then
+				G.RespawnDead() --Allow players to run around anyway
+				G.WarmupEliminationRound() --Start over
+				return
+			end
+		end
+
+		if level.warmupTime ~= 0 then
+			if level.time + 1000 * G.g_elimination_warmup.integer - 500 > level.roundStartTime then
+				G.RespawnDead()
+				G.WarmupEliminationRound()
+			end
+		end
 	end
 end
 
@@ -502,12 +842,7 @@ function G.CheckTournament()
 		-- if all players have arrived, start the countdown
 		if level.warmupTime < 0 then
 			-- fudge by -1 to account for extra delays
-			if G.g_warmup.integer > 1 then
-				level.warmupTime = level.time + (G.g_warmup.integer - 1) * 1000
-			else
-				level.warmupTime = 0
-			end
-
+			level.warmupTime = level.time + (G.g_warmup.integer - 1) * 1000
 			G.trap_SetConfigstring(C.CS_WARMUP, QS.va("%i", level.warmupTime))
 			return
 		end
@@ -638,25 +973,10 @@ function G.CheckTeamVote(team)
 	G.trap_SetConfigstring(C.CS_TEAMVOTE_TIME + cs_offset, "")
 end
 
-function SF.CheckEmpty()
-	local level = G.level
-	if G.g_emptyTime.integer == 0 then
-		return -- a time period must be set
-	end
-	if G.g_humanplayers.integer > 0 or level.lastActiveTime == 0 then
-		level.lastActiveTime = level.time
-	else
-		if level.lastActiveTime + G.g_emptyTime.integer * 1000 < level.time then
-			level.lastActiveTime = level.time
-			G.trap_SendConsoleCommand(C.EXEC_APPEND, QS.va("%s\n", G.g_emptyCommand.string))
-		end
-	end
-end
-
 function G.CheckCvars()
 	if G.g_password.modificationCount ~= lastMod then
 		lastMod = G.g_password.modificationCount
-		if G.g_password.string ~= "" and not QS.Q_strequal(G.g_password.string, "none") then
+		if G.g_password.string ~= "" and QS.Q_stricmp(G.g_password.string, "none") ~= 0 then
 			G.trap_Cvar_Set("g_needpass", "1")
 		else
 			G.trap_Cvar_Set("g_needpass", "0")
@@ -829,10 +1149,6 @@ function G.G_RunFrame(levelTime)
 		G.Team_Dom_SpawnPoints()
 	end
 
-	if G.g_gametype.integer == C.GT_POSSESSION and level.time > 5000 then
-		G.Possession_SpawnFlag()
-	end
-
 	-- see if it is time to end the level
 	G.CheckExitRules()
 
@@ -845,8 +1161,6 @@ function G.G_RunFrame(levelTime)
 	-- check team votes
 	G.CheckTeamVote(C.TEAM_RED)
 	G.CheckTeamVote(C.TEAM_BLUE)
-
-	SF.CheckEmpty()
 
 	-- for tracking changes
 	G.CheckCvars()
@@ -864,13 +1178,6 @@ function G.G_RunFrame(levelTime)
 	-- accepting commands from connected clients
 	level.frameStartTime = G.trap_Milliseconds()
 --unlagged - backward reconciliation #4
-end
-
-function G.MapInfoPrint(info)
-	G.G_Printf("Auther: %s\n", info.author)
-	G.G_Printf("Fraglimit: %i\n", info.fragLimit)
-	G.G_Printf("Capturelimit: %i\n", info.captureLimit)
-	G.G_Printf("minTeamSize: %i\n", info.minTeamSize)
 end
 
 return nil

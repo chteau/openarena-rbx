@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_client.c, part 1 of 2).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_client.c, part 1 of 2).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_client.c, part 1 of 2. Client functions that don't happen every frame.
+-- Luau port of OpenArena 0.8.8's g_client.c (gamecode 9e0f0c0), part 1 of 2. Client functions that don't happen every frame.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -60,6 +60,14 @@ equivelant to info_player_deathmatch
 function G.SP_info_player_start(ent)
 	ent.classname = "info_player_deathmatch"
 	G.SP_info_player_deathmatch(ent)
+end
+
+--Three for Double_D
+function G.SP_info_player_dd(ent)
+end
+function G.SP_info_player_dd_red(ent)
+end
+function G.SP_info_player_dd_blue(ent)
 end
 
 --One for Standard Domination, not really a player spawn point
@@ -131,26 +139,22 @@ function G.SelectNearestDeathmatchSpawnPoint(from)
 end
 
 --[[
- Pick a random info_player_deathmatch spawnpoint
- Will prefer a spot that wont telefrag if such a point exist.
- filter_flags Will NEVER pick a spawnpoint mathcing these flags.
- Returns a spot or nil if no spots exists.
+================
+SelectRandomDeathmatchSpawnPoint
+
+go to a random point that doesn't telefrag
+================
 ]]
-function SF.SelectRandomDeathmatchSpawnPoint(filter_flags)
+function G.SelectRandomDeathmatchSpawnPoint()
 	local spots = {}
 	local count = 0
 	local spot = nil
-	local last_valid_spot = nil --Last valid spot although it might telefrag
 
 	while true do
 		spot = G.G_Find(spot, "classname", "info_player_deathmatch")
 		if spot == nil then
 			break
 		end
-		if bit32.band(spot.flags, filter_flags) ~= 0 then
-			continue
-		end
-		last_valid_spot = spot
 		if G.SpotWouldTelefrag(spot) then
 			continue
 		end
@@ -159,11 +163,82 @@ function SF.SelectRandomDeathmatchSpawnPoint(filter_flags)
 	end
 
 	if count == 0 then -- no spots that won't telefrag
-		return last_valid_spot
+		return G.G_Find(nil, "classname", "info_player_deathmatch")
 	end
 
 	local selection = Q.imod(Q.rand(), count)
 	return spots[selection]
+end
+
+--[[
+===========
+SelectRandomFurthestSpawnPoint
+
+Chooses a player start, deathmatch start, etc
+============
+]]
+function G.SelectRandomFurthestSpawnPoint(avoidPoint, origin, angles)
+	local delta = Q.vec3()
+	local list_dist = {}
+	local list_spot = {}
+	local numSpots = 0
+	local spot = nil
+
+	while true do
+		spot = G.G_Find(spot, "classname", "info_player_deathmatch")
+		if spot == nil then
+			break
+		end
+		if G.SpotWouldTelefrag(spot) then
+			continue
+		end
+		Q.VectorSubtract(spot.s.origin, avoidPoint, delta)
+		local dist = Q.VectorLength(delta)
+		local i = 0
+		while i < numSpots do
+			if dist > list_dist[i] then
+				if numSpots >= 64 then
+					numSpots = 64 - 1
+				end
+				for j = numSpots, i + 1, -1 do
+					list_dist[j] = list_dist[j - 1]
+					list_spot[j] = list_spot[j - 1]
+				end
+				list_dist[i] = dist
+				list_spot[i] = spot
+				numSpots += 1
+				if numSpots > 64 then
+					numSpots = 64
+				end
+				break
+			end
+			i += 1
+		end
+		if i >= numSpots and numSpots < 64 then
+			list_dist[numSpots] = dist
+			list_spot[numSpots] = spot
+			numSpots += 1
+		end
+	end
+	if numSpots == 0 then
+		spot = G.G_Find(nil, "classname", "info_player_deathmatch")
+		if spot == nil then
+			G.G_Error("Couldn't find a spawn point")
+		end
+		Q.VectorCopy(spot.s.origin, origin)
+		origin[2] += 9
+		Q.VectorCopy(spot.s.angles, angles)
+		return spot
+	end
+
+	-- select a random spot from the spawn points furthest away
+	local rnd = Q.trunc(Q.random() * Q.idiv(numSpots, 2))
+
+	Q.VectorCopy(list_spot[rnd].s.origin, origin)
+	origin[2] += 9
+	Q.VectorCopy(list_spot[rnd].s.angles, angles)
+
+	return list_spot[rnd]
 end
 
 --[[
@@ -173,26 +248,22 @@ SelectSpawnPoint
 Chooses a player start, deathmatch start, etc
 ============
 ]]
-function G.SelectSpawnPoint(avoidPoint, origin, angles, filter_flags)
+function G.SelectSpawnPoint(avoidPoint, origin, angles)
 	local nearestSpot = G.SelectNearestDeathmatchSpawnPoint(avoidPoint)
 
-	local spot = SF.SelectRandomDeathmatchSpawnPoint(filter_flags)
+	local spot = G.SelectRandomDeathmatchSpawnPoint()
 	if spot == nearestSpot then
 		-- roll again if it would be real close to point of death
-		spot = SF.SelectRandomDeathmatchSpawnPoint(filter_flags)
+		spot = G.SelectRandomDeathmatchSpawnPoint()
 		if spot == nearestSpot then
 			-- last try
-			spot = SF.SelectRandomDeathmatchSpawnPoint(filter_flags)
+			spot = G.SelectRandomDeathmatchSpawnPoint()
 		end
 	end
 
 	-- find a single player start spot
 	if spot == nil then
-		if G.g_cheats.integer ~= 0 then
-			--If in developer mode: Crash to ensure that the developer discovers the problem.
-			G.G_Error("Couldn't find a spawn point.\nAny map must contain at least one \"info_player_deathmatch\" with no spawn restrictions")
-		end
-		spot = G.g_entities[0]
+		G.G_Error("Couldn't find a spawn point")
 	end
 
 	Q.VectorCopy(spot.s.origin, origin)
@@ -210,22 +281,20 @@ Try to find a spawn point marked 'initial', otherwise
 use normal spawn selection.
 ============
 ]]
-function SF.SelectInitialSpawnPoint(origin, angles, filter_flags)
+function G.SelectInitialSpawnPoint(origin, angles)
 	local spot = nil
 	while true do
 		spot = G.G_Find(spot, "classname", "info_player_deathmatch")
 		if spot == nil then
 			break
 		end
-		if bit32.band(spot.flags, filter_flags) == 0 then
-			if bit32.band(spot.spawnflags, 1) ~= 0 then
-				break
-			end
+		if bit32.band(spot.spawnflags, 1) ~= 0 then
+			break
 		end
 	end
 
 	if spot == nil or G.SpotWouldTelefrag(spot) then
-		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles, filter_flags)
+		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles)
 	end
 
 	Q.VectorCopy(spot.s.origin, origin)
@@ -241,7 +310,7 @@ SelectSpectatorSpawnPoint
 
 ============
 ]]
-function SF.SelectSpectatorSpawnPoint(origin, angles)
+function G.SelectSpectatorSpawnPoint(origin, angles)
 	G.FindIntermissionPoint()
 
 	Q.VectorCopy(G.level.intermission_origin, origin)
@@ -323,7 +392,7 @@ function G.CopyToBodyQue(ent)
 		body.s.eFlags = bit32.bor(body.s.eFlags, C.EF_KAMIKAZE)
 
 		-- check if there is a kamikaze timer around for this owner
-		for j = 0, level.num_entities - 1 do
+		for j = 0, C.MAX_GENTITIES - 1 do
 			local e = G.g_entities[j]
 			if not e.inuse then
 				continue
@@ -331,7 +400,7 @@ function G.CopyToBodyQue(ent)
 			if e.activator ~= ent then
 				continue
 			end
-			if e.classname ~= "kamikaze timer" then
+			if e.classname ~= "kamikaze timer" then -- strcmp
 				continue
 			end
 			e.activator = body
@@ -432,8 +501,7 @@ function G.ClientRespawn(ent)
 				end
 				--Sago: This is really bad
 				--TODO: Try not to make people spectators here
-				ent.client.sess.spectatorState = C.SPECTATOR_FOLLOW
-				ent.client.ps.pm_type = C.PM_SPECTATOR
+				ent.client.sess.spectatorState = C.PM_SPECTATOR
 				--We have to force spawn imidiantly to prevent lag.
 				G.ClientSpawn(ent)
 			end
@@ -504,7 +572,7 @@ function G.TeamCvarSet()
 		end
 	end
 
-	if not QS.Q_strequal(G.g_redTeamClientNumbers.string, temp or "") then
+	if QS.Q_stricmp(G.g_redTeamClientNumbers.string, temp or "") ~= 0 then
 		redChanged = true
 	end
 	G.trap_Cvar_Set("g_redTeamClientNumbers", temp or "") --Set it right
@@ -523,7 +591,7 @@ function G.TeamCvarSet()
 			end
 		end
 	end
-	if not QS.Q_strequal(G.g_blueTeamClientNumbers.string, temp or "") then
+	if QS.Q_stricmp(G.g_blueTeamClientNumbers.string, temp or "") ~= 0 then
 		blueChanged = true
 	end
 	G.trap_Cvar_Set("g_blueTeamClientNumbers", temp or "")
@@ -597,63 +665,6 @@ function G.TeamLivingCount(ignoreClientNum, team)
 		if level.clients[i].sess.sessionTeam == team and (level.clients[i].ps.stats[C.STAT_HEALTH] > 0 or isLMS) and not level.clients[i].isEliminated then
 			count += 1
 		end
-	end
-
-	return count
-end
-
-function G.TeamLivingHumanCount(ignoreClientNum)
-	local level = G.level
-	local count = 0
-	local isLMS = (G.g_gametype.integer == C.GT_LMS)
-
-	for i = 0, level.maxclients - 1 do
-		if i == ignoreClientNum then
-			continue
-		end
-		if level.clients[i].pers.connected == C.CON_DISCONNECTED then
-			continue
-		end
-
-		if level.clients[i].pers.connected == C.CON_CONNECTING then
-			continue
-		end
-		if bit32.band(G.g_entities[i].r.svFlags, C.SVF_BOT) ~= 0 then
-			continue
-		end
-		if level.clients[i].sess.sessionTeam == C.TEAM_SPECTATOR then
-			continue
-		end
-		--crash if g_gametype.integer is used here, why?
-		if (level.clients[i].ps.stats[C.STAT_HEALTH] > 0 or isLMS) and not level.clients[i].isEliminated then
-			count += 1
-		end
-	end
-	return count
-end
-
-function G.TeamHumanParticipantsCount(ignoreClientNum)
-	local level = G.level
-	local count = 0
-
-	for i = 0, level.maxclients - 1 do
-		if i == ignoreClientNum then
-			continue
-		end
-		if level.clients[i].pers.connected == C.CON_DISCONNECTED then
-			continue
-		end
-
-		if level.clients[i].pers.connected == C.CON_CONNECTING then
-			continue
-		end
-		if bit32.band(G.g_entities[i].r.svFlags, C.SVF_BOT) ~= 0 then
-			continue
-		end
-		if level.clients[i].sess.sessionTeam == C.TEAM_SPECTATOR then
-			continue
-		end
-		count += 1
 	end
 
 	return count

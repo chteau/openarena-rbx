@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_cmds.c, part 2 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_cmds.c, part 2 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_cmds.c (part 2): team changes, following, chat and voice commands.
+-- Luau port of OpenArena 0.8.8's g_cmds.c (gamecode 9e0f0c0) (part 2): team changes, following, chat and voice commands.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -89,7 +89,7 @@ function G.SetTeam(ent, s)
 			team = G.PickTeam(clientNum)
 		end
 		if not force then
-			if G.g_teamForceBalance.integer ~= 0 and not client.pers.localClient and bit32.band(ent.r.svFlags, C.SVF_BOT) == 0 then
+			if G.g_teamForceBalance.integer ~= 0 then
 				local counts = {}
 
 				counts[C.TEAM_BLUE] = G.TeamCount(ent.client.ps.clientNum, C.TEAM_BLUE)
@@ -143,8 +143,8 @@ function G.SetTeam(ent, s)
 		end
 	end
 
-	-- if the player was dead leave the body, but only if they're actually in game
-	if client.ps.stats[C.STAT_HEALTH] <= 0 and client.pers.connected == C.CON_CONNECTED then
+	-- if the player was dead leave the body
+	if client.ps.stats[C.STAT_HEALTH] <= 0 then
 		G.CopyToBodyQue(ent)
 	end
 
@@ -184,12 +184,9 @@ function G.SetTeam(ent, s)
 		G.CheckTeamLeader(oldTeam)
 	end
 
-	G.ClientUserinfoChanged(clientNum)
-	if client.pers.connected ~= C.CON_CONNECTED then
-		return
-	end
-
 	G.BroadcastTeamChange(client, oldTeam)
+
+	G.ClientUserinfoChanged(clientNum)
 
 	G.ClientBegin(clientNum)
 end
@@ -206,13 +203,6 @@ function G.StopFollowing(ent)
 	ent.client.ps.pm_flags = bit32.band(ent.client.ps.pm_flags, bit32.bnot(C.PMF_FOLLOW))
 	ent.r.svFlags = bit32.band(ent.r.svFlags, bit32.bnot(C.SVF_BOT))
 	ent.client.ps.clientNum = ent.index
-
-	G.SetClientViewAngle(ent, ent.client.ps.viewangles)
-
-	-- don't use dead view angles
-	if ent.client.ps.stats[C.STAT_HEALTH] <= 0 then
-		ent.client.ps.stats[C.STAT_HEALTH] = 1
-	end
 end
 
 function G.Cmd_Team_f(ent)
@@ -268,7 +258,7 @@ function G.Cmd_Follow_f(ent)
 	end
 
 	arg = string.sub(G.trap_Argv(1), 1, C.MAX_TOKEN_CHARS - 1)
-	i = G.ClientNumberFromString(ent, arg, true, true)
+	i = G.ClientNumberFromString(ent, arg)
 	if i == -1 then
 		return
 	end
@@ -336,16 +326,6 @@ function G.Cmd_FollowCycle_f(ent)
 
 	if dir ~= 1 and dir ~= -1 then
 		G.G_Error("Cmd_FollowCycle_f: bad dir %i", dir)
-	end
-
-	-- if dedicated follow client, just switch between the two auto clients
-	if ent.client.sess.spectatorClient < 0 then
-		if ent.client.sess.spectatorClient == -1 then
-			ent.client.sess.spectatorClient = -2
-		elseif ent.client.sess.spectatorClient == -2 then
-			ent.client.sess.spectatorClient = -1
-		end
-		return
 	end
 
 	clientnum = ent.client.sess.spectatorClient
@@ -453,7 +433,7 @@ function G.G_Say(ent, target, mode, chatText)
 		color = COLOR_CYAN
 	elseif mode == C.SAY_TELL then
 		local ok = false
-		if target ~= nil and target.inuse and target.client ~= nil and G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 and
+		if target ~= nil and G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 and
 			target.client.sess.sessionTeam == ent.client.sess.sessionTeam then
 			ok, location = G.Team_GetLocationMsg(ent, 64)
 		end
@@ -491,10 +471,6 @@ function G.G_Say(ent, target, mode, chatText)
 	end
 end
 
-function SF.SanitizeChatText(text)
-	return (string.gsub(text, "[\n\r]", " "))
-end
-
 function SF.Cmd_Say_f(ent)
 	local p
 	local arg
@@ -510,7 +486,6 @@ function SF.Cmd_Say_f(ent)
 	end
 
 	p = G.ConcatArgs(1)
-	p = SF.SanitizeChatText(p)
 	G.G_Say(ent, nil, mode, p)
 end
 
@@ -520,14 +495,13 @@ function SF.Cmd_Tell_f(ent)
 	local p
 	local arg
 
-	if G.trap_Argc() < 3 then
-		G.trap_SendServerCommand(ent.index, "print \"Usage: tell <player id> <message>\n\"")
+	if G.trap_Argc() < 2 then
 		return
 	end
 
 	arg = G.trap_Argv(1)
-	targetNum = G.ClientNumberFromString(ent, arg, true, true)
-	if targetNum == -1 then
+	targetNum = QS.atoi(arg)
+	if targetNum < 0 or targetNum >= G.level.maxclients then
 		return
 	end
 
@@ -537,7 +511,6 @@ function SF.Cmd_Tell_f(ent)
 	end
 
 	p = G.ConcatArgs(2)
-	p = SF.SanitizeChatText(p)
 
 	G.G_LogPrintf("tell: %s to %s: %s\n", ent.client.pers.netname, target.client.pers.netname, p)
 	G.G_Say(ent, target, C.SAY_TELL, p)
@@ -629,7 +602,6 @@ function SF.Cmd_Voice_f(ent)
 	end
 
 	p = G.ConcatArgs(1)
-	p = SF.SanitizeChatText(p)
 
 	G.G_Voice(ent, nil, mode, p, voiceonly)
 end
@@ -662,7 +634,6 @@ function SF.Cmd_VoiceTell_f(ent)
 	end
 
 	id = G.ConcatArgs(2)
-	id = SF.SanitizeChatText(id)
 
 	G.G_LogPrintf("vtell: %s to %s: %s\n", ent.client.pers.netname, target.client.pers.netname, id)
 	G.G_Voice(ent, target, C.SAY_TELL, id, voiceonly)
@@ -749,45 +720,24 @@ SF.gc_orders = {
 	"report",
 }
 
-SF.numgc_orders = 7
-
 function G.Cmd_GameCommand_f(ent)
-	local targetNum
-	local target
+	local player
 	local order
-	local arg
+	local str
 
-	if G.trap_Argc() ~= 3 then
-		G.trap_SendServerCommand(ent.index, QS.va("print \"Usage: gc <player id> <order 0-%d>\n\"", SF.numgc_orders - 1))
+	str = G.trap_Argv(1)
+	player = QS.atoi(str)
+	str = G.trap_Argv(2)
+	order = QS.atoi(str)
+
+	if player < 0 or player >= C.MAX_CLIENTS then
 		return
 	end
-
-	arg = G.trap_Argv(1)
-	targetNum = G.ClientNumberFromString(ent, arg, true, true)
-	if targetNum == -1 then
+	if order < 0 or order > 7 then
 		return
 	end
-
-	target = G.g_entities[targetNum]
-	if target == nil or not target.inuse or target.client == nil then
-		return
-	end
-
-	arg = G.trap_Argv(2)
-	order = QS.atoi(arg)
-
-	if order < 0 or order >= SF.numgc_orders then
-		G.trap_SendServerCommand(ent.index, QS.va("print \"Bad order: %i\n\"", order))
-		return
-	end
-
-	G.G_LogPrintf("tell: %s to %s: %s\n", ent.client.pers.netname, target.client.pers.netname, SF.gc_orders[order])
-	G.G_Say(ent, target, C.SAY_TELL, SF.gc_orders[order])
-	-- don't tell to the player self if it was already directed to this player
-	-- also don't send the chat back to a bot
-	if ent ~= target and bit32.band(ent.r.svFlags, C.SVF_BOT) == 0 then
-		G.G_Say(ent, ent, C.SAY_TELL, SF.gc_orders[order])
-	end
+	G.G_Say(ent, G.g_entities[player], C.SAY_TELL, SF.gc_orders[order])
+	G.G_Say(ent, ent, C.SAY_TELL, SF.gc_orders[order])
 end
 
 return nil

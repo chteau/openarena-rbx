@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_combat.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_combat.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_combat.c, part 2 of 2 (armor, invulnerability, G_Damage, radius damage, monster_die).
+-- Luau port of OpenArena 0.8.8's g_combat.c (gamecode 9e0f0c0), part 2 of 2 (armor, invulnerability, G_Damage, radius damage).
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -142,10 +142,6 @@ function G.G_Damage(targ, inflictor, attacker, dir, point, damage, dflags, mod)
 	local bouncedir = Q.vec3()
 	local impactpoint = Q.vec3()
 
-	if targ == nil then
-		return
-	end
-
 	if not targ.takedamage then
 		return
 	end
@@ -165,15 +161,8 @@ function G.G_Damage(targ, inflictor, attacker, dir, point, damage, dflags, mod)
 	end
 	local client = targ.client
 
-	if inflictor == nil then
-		inflictor = G.g_entities[C.ENTITYNUM_WORLD]
-	end
-	if attacker == nil then
-		attacker = G.g_entities[C.ENTITYNUM_WORLD]
-	end
-
 	if
-		(attacker == G.g_entities[C.ENTITYNUM_WORLD] or attacker == targ or attacker.s.eType ~= C.ET_PLAYER)
+		(attacker == nil or attacker.s.eType ~= C.ET_PLAYER)
 		and client ~= nil
 		and client.lastSentFlying > -1
 		and (mod == C.MOD_FALLING or mod == C.MOD_LAVA or mod == C.MOD_SLIME or mod == C.MOD_TRIGGER_HURT or mod == C.MOD_SUICIDE)
@@ -184,6 +173,13 @@ function G.G_Damage(targ, inflictor, attacker, dir, point, damage, dflags, mod)
 		else
 			attacker = G.g_entities[client.lastSentFlying]
 		end
+	end
+
+	if inflictor == nil then
+		inflictor = G.g_entities[C.ENTITYNUM_WORLD]
+	end
+	if attacker == nil then
+		attacker = G.g_entities[C.ENTITYNUM_WORLD]
 	end
 
 	-- shootable doors / buttons don't actually have any health
@@ -385,7 +381,7 @@ function G.G_Damage(targ, inflictor, attacker, dir, point, damage, dflags, mod)
 	if client ~= nil then
 		if attacker ~= nil then
 			client.ps.persistant[C.PERS_ATTACKER] = attacker.s.number
-		elseif client.lastSentFlying > -1 then
+		elseif client.lastSentFlying ~= 0 then
 			client.ps.persistant[C.PERS_ATTACKER] = client.lastSentFlying
 		else
 			client.ps.persistant[C.PERS_ATTACKER] = C.ENTITYNUM_WORLD
@@ -570,66 +566,6 @@ function G.G_RadiusDamage(origin, attacker, damage, radius, ignore, mod)
 	end
 
 	return hitClient
-end
-
--- Monster code
-
--- definitely mangled from player_die with less about the player
-function G.monster_die(self, inflictor, attacker, damage, meansOfDeath)
-	local killer = 0
-
-	if self.client ~= nil and self.client.hook ~= nil then
-		G.Weapon_HookFree(self.client.hook)
-	end
-	if bit32.band(self.client.ps.eFlags, C.EF_TICKING) ~= 0 and self.activator ~= nil then
-		self.client.ps.eFlags = bit32.band(self.client.ps.eFlags, bit32.bnot(C.EF_TICKING))
-		self.activator.think = function(e)
-			G.G_FreeEntity(e)
-		end
-		self.activator.nextthink = G.level.time
-	end
-	self.enemy = attacker
-	self.takedamage = true -- can still be gibbed
-
-	self.s.weapon = C.WP_NONE
-	self.s.powerups = 0
-	self.r.contents = C.CONTENTS_CORPSE
-
-	self.s.angles[0] = 0
-	self.s.angles[2] = 0
-	G.LookAtKiller(self, inflictor, attacker)
-
-	Q.VectorCopy(self.s.angles, self.client.ps.viewangles)
-
-	self.s.loopSound = 0
-
-	self.r.maxs[2] = -8
-
-	-- never gib in a nodrop
-	local contents = G.trap_PointContents(self.r.currentOrigin, -1)
-
-	if
-		(self.health <= C.GIB_HEALTH and bit32.band(contents, C.CONTENTS_NODROP) == 0 and G.g_blood.integer ~= 0)
-		or meansOfDeath == C.MOD_SUICIDE
-	then
-		-- gib death
-		G.GibEntity(self, killer)
-	else
-		-- normal death
-
-		-- for the no-blood option, we need to prevent the health
-		-- from going to gib level
-		if self.health <= C.GIB_HEALTH then
-			self.health = C.GIB_HEALTH + 1
-		end
-
-		-- the body can still be gibbed
-		self.die = function(s, i, a, d, m)
-			G.body_die(s, i, a, d, m)
-		end
-	end
-
-	G.trap_LinkEntity(self)
 end
 
 return nil

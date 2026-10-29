@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_playerstore.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_playerstore.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_playerstore.c. Remembers persistant stats of leaving players by guid.
+-- Luau port of OpenArena 0.8.8's g_playerstore.c (gamecode 9e0f0c0). Remembers persistant stats of leaving players by guid.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -52,20 +52,6 @@ end
 
 local nextAge = 0
 
-function G.LogAcc(clientNum)
-	local buffer = QS.Com_sprintf(1024, "Accuracy: %i ", clientNum)
-	local first = true
-	local cl = G.level.clients[clientNum]
-	for i = 0, C.WP_NUM_WEAPONS - 1 do
-		local tmp = QS.va("%sf%i\\%i\\h%i\\%i", if first then "" else "\\", i, cl.accuracy[i][0], i, cl.accuracy[i][1])
-		if #tmp + #buffer + 1 + 1 < 1024 then
-			buffer = buffer .. tmp
-		end
-		first = false
-	end
-	G.G_LogPrintf("%s\n", buffer)
-end
-
 function G.PlayerStoreInit()
 	for i = 0, MAX_PLAYERS_STORED - 1 do
 		playerstore[i] = newEntry()
@@ -76,13 +62,12 @@ end
 function G.PlayerStore_store(guid, ps)
 	local place2store = -1
 	local lowestAge = 32000
-	G.LogAcc(ps.clientNum)
 	if #guid < 32 then
 		G.G_LogPrintf("Playerstore: Failed to store player. Invalid guid: %s\n", guid)
 		return
 	end
 	for i = 0, MAX_PLAYERS_STORED - 1 do
-		if QS.Q_strequal(guid, playerstore[i].guid) then
+		if QS.Q_stricmp(guid, playerstore[i].guid) == 0 then
 			place2store = i
 		end
 	end
@@ -122,7 +107,7 @@ function G.PlayerStore_restore(guid, ps)
 	end
 	for i = 0, MAX_PLAYERS_STORED - 1 do
 		local e = playerstore[i]
-		if QS.Q_strequaln(guid, e.guid, GUID_SIZE) and e.age ~= -1 then
+		if QS.Q_stricmpn(guid, e.guid, GUID_SIZE) == 0 and e.age ~= -1 then
 			for j = 0, C.MAX_PERSISTANT - 1 do
 				ps.persistant[j] = e.persistant[j]
 			end

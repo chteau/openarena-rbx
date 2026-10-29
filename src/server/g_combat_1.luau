@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_combat.c, part 1 of 2).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_combat.c, part 1 of 2).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_combat.c, part 1: scoring, item tossing, player death.
+-- Luau port of OpenArena 0.8.8's g_combat.c (gamecode 9e0f0c0), part 1: scoring, item tossing, player death.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -241,23 +241,6 @@ end
 TossClientCubes
 =================
 ]]
-function G.TossClientCubesValues(angles, origin, velocity)
-	angles[C.YAW] = Q.imod(G.level.time, 360)
-	angles[C.PITCH] = 0 -- always forward
-	angles[C.ROLL] = 0
-
-	Q.AngleVectors(angles, velocity, nil, nil)
-	Q.VectorScale(velocity, 150, velocity)
-	velocity[2] = Q.f(velocity[2] + (200 + Q.crandom() * 50))
-
-	if G.neutralObelisk ~= nil then
-		Q.VectorCopy(G.neutralObelisk.s.pos.trBase, origin)
-		origin[2] = Q.f(origin[2] + 44)
-	else
-		Q.VectorClear(origin)
-	end
-end
-
 function G.TossClientCubes(self)
 	local item
 	local velocity = Q.vec3()
@@ -278,10 +261,19 @@ function G.TossClientCubes(self)
 		item = BG.BG_FindItem("Blue Cube")
 	end
 
-	G.TossClientCubesValues(angles, origin, velocity)
+	angles[C.YAW] = Q.imod(G.level.time, 360)
+	angles[C.PITCH] = 0 -- always forward
+	angles[C.ROLL] = 0
 
-	if G.g_harvesterFromBodies.integer ~= 0 then
-		Q.VectorCopy(self.s.pos.trBase, origin)
+	Q.AngleVectors(angles, velocity, nil, nil)
+	Q.VectorScale(velocity, 150, velocity)
+	velocity[2] = Q.f(velocity[2] + (200 + Q.crandom() * 50))
+
+	if G.neutralObelisk ~= nil then
+		Q.VectorCopy(G.neutralObelisk.s.pos.trBase, origin)
+		origin[2] = Q.f(origin[2] + 44)
+	else
+		Q.VectorClear(origin)
 	end
 
 	local drop = G.LaunchItem(item, origin, velocity)
@@ -501,7 +493,7 @@ function G.player_die(self, inflictor, attacker, damage, meansOfDeath)
 	local killerName
 	local obit
 
-	if self.client == nil or self.client.ps.pm_type == C.PM_DEAD then
+	if self.client.ps.pm_type == C.PM_DEAD then
 		return
 	end
 
@@ -520,10 +512,7 @@ function G.player_die(self, inflictor, attacker, damage, meansOfDeath)
 	-- check for a player that almost brought in cubes
 	G.CheckAlmostScored(self, attacker)
 
-	if self.client == nil then
-		return
-	end
-	if self.client.hook ~= nil then
+	if self.client ~= nil and self.client.hook ~= nil then
 		G.Weapon_HookFree(self.client.hook)
 	end
 	if bit32.band(self.client.ps.eFlags, C.EF_TICKING) ~= 0 and self.activator ~= nil then
@@ -581,14 +570,14 @@ function G.player_die(self, inflictor, attacker, damage, meansOfDeath)
 		attacker.client.lastkilled_client = self.s.number
 
 		if attacker == self or G.OnSameTeam(self, attacker) then
-			if G.g_gametype.integer ~= C.GT_LMS and G.g_gametype.integer ~= C.GT_POSSESSION and not ((G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION) and G.level.time < G.level.roundStartTime) then
+			if G.g_gametype.integer ~= C.GT_LMS and not ((G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION) and G.level.time < G.level.roundStartTime) then
 				if (G.g_gametype.integer < C.GT_TEAM and G.g_ffa_gt ~= 1 and self.client.ps.persistant[C.PERS_SCORE] > 0) or G.level.numNonSpectatorClients < 3 then
 					--Cannot get negative scores by suicide
 					G.AddScore(attacker, self.r.currentOrigin, -1)
 				end
 			end
 		else
-			if G.g_gametype.integer ~= C.GT_LMS and G.g_gametype.integer ~= C.GT_POSSESSION then
+			if G.g_gametype.integer ~= C.GT_LMS then
 				G.AddScore(attacker, self.r.currentOrigin, 1)
 			end
 
@@ -738,7 +727,7 @@ function G.player_die(self, inflictor, attacker, damage, meansOfDeath)
 			attacker.client.lastKillTime = G.level.time
 		end
 	else
-		if G.g_gametype.integer ~= C.GT_LMS and G.g_gametype.integer ~= C.GT_POSSESSION and
+		if G.g_gametype.integer ~= C.GT_LMS and
 			not ((G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION) and G.level.time < G.level.roundStartTime) then
 			if self.client.ps.persistant[C.PERS_SCORE] > 0 or G.level.numNonSpectatorClients < 3 then
 				--Cannot get negative scores by suicide

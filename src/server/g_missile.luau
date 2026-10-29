@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_missile.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_missile.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_missile.c. Missile entities: impact, bounce, explosion, proximity mines and fire_* spawners.
+-- Luau port of OpenArena 0.8.8's g_missile.c (gamecode 9e0f0c0). Missile entities: impact, bounce, explosion, proximity mines and fire_* spawners.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -181,20 +181,6 @@ local function ProximityMine_Activate(ent)
 		c = "team_CTF_blueflag"
 	else
 		c = nil
-	end
-
-	if G.g_gametype.integer == C.GT_TEAM or G.g_gametype.integer == C.GT_DOMINATION or G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_DOUBLE_D then
-		c = nil
-	end
-
-	if G.g_gametype.integer == C.GT_OBELISK or G.g_gametype.integer == C.GT_HARVESTER then
-		if ent.s.generic1 == C.TEAM_RED then
-			c = "team_redobelisk"
-		elseif ent.s.generic1 == C.TEAM_BLUE then
-			c = "team_blueobelisk"
-		else
-			c = nil
-		end
 	end
 
 	if c ~= nil then
@@ -777,9 +763,7 @@ function G.fire_grapple(self, start, dir)
 	Q.SnapVector(hook.s.pos.trDelta) -- save net bandwidth
 	Q.VectorCopy(start, hook.r.currentOrigin)
 
-	if self.client ~= nil then
-		self.client.hook = hook
-	end
+	self.client.hook = hook
 
 	return hook
 end

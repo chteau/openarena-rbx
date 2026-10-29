@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_main.c, part 1 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_main.c, part 1 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_main.c, part 1 of 3. Cvar table, vmMain, game init, cvar registration/update.
+-- Luau port of OpenArena 0.8.8's g_main.c (gamecode 9e0f0c0), part 1 of 3. Cvar table, vmMain, game init, cvar registration/update.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -34,7 +34,7 @@ local BG = require("../shared/BG")
 local SF = G.FileStatics("g_main")
 
 local GAMEVERSION = "baseoa"
-local PRODUCT_DATE = "Oct 29 2026"
+local PRODUCT_DATE = "Jan 28 2012" -- __DATE__ of the 0.8.8 QVM build
 local MAX_VOTE_COUNT = "3"
 local SP_PODIUM_MODEL = "models/mapobjects/podium/podium4.md3"
 
@@ -48,17 +48,17 @@ local vmCvarNames = {
 	"g_doWarmup", "g_restarted", "g_logfile", "g_logfileSync", "g_blood", "g_podiumDist",
 	"g_podiumDrop", "g_allowVote", "g_teamAutoJoin", "g_teamForceBalance", "g_banIPs", "g_filterBan",
 	"g_smoothClients", "pmove_fixed", "pmove_msec", "pmove_float", "g_rankings", "g_listEntity",
-	"g_localTeamPref", "g_obeliskHealth", "g_obeliskRegenPeriod", "g_obeliskRegenAmount",
-	"g_obeliskRespawnDelay", "g_cubeTimeout", "g_enableDust", "cg_enableQ", "g_enableFS",
+	"g_obeliskHealth", "g_obeliskRegenPeriod", "g_obeliskRegenAmount",
+	"g_obeliskRespawnDelay", "g_cubeTimeout", "g_enableDust",
 	"g_enableBreath", "g_proxMineTimeout", "g_music", "g_spawnprotect",
 	"g_elimination_selfdamage", "g_elimination_startHealth", "g_elimination_startArmor",
-	"g_elimination_bfg", "g_elimination_roundtime", "g_elimination_warmup",
+	"g_elimination_bfg", "g_elimination_grapple", "g_elimination_roundtime", "g_elimination_warmup",
 	"g_elimination_activewarmup", "g_elimination_allgametypes", "g_elimination_machinegun",
 	"g_elimination_shotgun", "g_elimination_grenade", "g_elimination_rocket",
 	"g_elimination_railgun", "g_elimination_lightning", "g_elimination_plasmagun",
 	"g_elimination_chain", "g_elimination_mine", "g_elimination_nail",
 	"g_elimination_lockspectator", "g_rockets", "g_instantgib", "g_vampire", "g_vampireMaxHealth",
-	"g_regen", "g_lms_lives", "g_lms_mode", "g_elimination_ctf_oneway", "g_awardpushing", "g_runes",
+	"g_regen", "g_lms_lives", "g_lms_mode", "g_elimination_ctf_oneway", "g_awardpushing", "g_persistantpowerups",
 	"g_catchup", "g_autonextmap", "g_mappools", "g_voteNames", "g_voteBan", "g_voteGametypes",
 	"g_voteMinTimelimit", "g_voteMaxTimelimit", "g_voteMinFraglimit", "g_voteMaxFraglimit",
 	"g_maxvotes", "g_humanplayers", "g_redTeamClientNumbers", "g_blueTeamClientNumbers",
@@ -66,16 +66,13 @@ local vmCvarNames = {
 	"g_spreeDiv", "g_floodMaxDemerits", "g_floodMinTime", "g_admin", "g_adminLog", "g_adminParseSay",
 	"g_adminNameProtect", "g_adminTempBan", "g_adminMaxBan", "g_specChat", "g_publicAdminMessages",
 	"g_maxWarnings", "g_warningExpire", "g_minNameChangePeriod", "g_maxNameChanges",
-	"g_timestamp_startgame", "g_execute_gametype_script", "g_emptyCommand", "g_emptyTime",
-	"g_grapple", "g_harvesterFromBodies", "g_ddCaptureTime", "g_ddRespawnDelay", "g_developer",
+	"g_timestamp_startgame", "g_execute_gametype_script",
 }
 for _, name in vmCvarNames do
 	G[name] = S.vmCvar_t()
 end
 
 G.g_ffa_gt = 0 -- Are this a FFA gametype even if gametype is high?
-
-G.mapinfo = S.mapinfo_result_t()
 
 local function E(vmCvar, cvarName, defaultString, cvarFlags, modificationCount, trackChange, teamShader)
 	return {
@@ -97,6 +94,7 @@ local gameCvarTableList = {
 	E(nil, "gamename", GAMEVERSION, bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ROM), 0, false),
 	E(nil, "gamedate", PRODUCT_DATE, C.CVAR_ROM, 0, false),
 	E(G.g_restarted, "g_restarted", "0", C.CVAR_ROM, 0, false),
+	E(nil, "sv_mapname", "", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ROM), 0, false),
 
 	-- latched vars
 	E(G.g_gametype, "g_gametype", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_USERINFO, C.CVAR_LATCH), 0, false),
@@ -158,9 +156,9 @@ local gameCvarTableList = {
 	--Votes start:
 	E(G.g_allowVote, "g_allowVote", "1", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
 	E(G.g_maxvotes, "g_maxVotes", MAX_VOTE_COUNT, C.CVAR_ARCHIVE, 0, false),
-	E(G.g_voteNames, "g_voteNames", "/map_restart/nextmap/map/g_gametype/kick/clientkick/g_doWarmup/timelimit/fraglimit/", C.CVAR_ARCHIVE, 0, false),
+	E(G.g_voteNames, "g_voteNames", "/map_restart/nextmap/map/g_gametype/kick/clientkick/g_doWarmup/timelimit/fraglimit/shuffle/", C.CVAR_ARCHIVE, 0, false),
 	E(G.g_voteBan, "g_voteBan", "0", C.CVAR_ARCHIVE, 0, false),
-	E(G.g_voteGametypes, "g_voteGametypes", "/0/1/3/4/5/6/7/8/9/10/11/12/13/", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
+	E(G.g_voteGametypes, "g_voteGametypes", "/0/1/3/4/5/6/7/8/9/10/11/12/", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
 	E(G.g_voteMaxTimelimit, "g_voteMaxTimelimit", "1000", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
 	E(G.g_voteMinTimelimit, "g_voteMinTimelimit", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
 	E(G.g_voteMaxFraglimit, "g_voteMaxFraglimit", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),
@@ -177,15 +175,13 @@ local gameCvarTableList = {
 
 	E(G.g_cubeTimeout, "g_cubeTimeout", "30", 0, 0, false),
 
-	E(G.g_enableFS, "g_enableFS", "0", C.CVAR_SERVERINFO, 0, true, false), -- leilei - bikinis
-	E(G.cg_enableQ, "g_enableQ", "0", C.CVAR_SERVERINFO, 0, true, false), -- leilei - q scale
 	E(G.g_enableDust, "g_enableDust", "0", C.CVAR_SERVERINFO, 0, true, false),
 	E(G.g_enableBreath, "g_enableBreath", "0", C.CVAR_SERVERINFO, 0, true, false),
 	E(G.g_proxMineTimeout, "g_proxMineTimeout", "20000", 0, 0, false),
 
 	E(G.g_smoothClients, "g_smoothClients", "1", 0, 0, false),
-	E(G.pmove_fixed, "pmove_fixed", "0", bit32.bor(C.CVAR_SYSTEMINFO, C.CVAR_ARCHIVE), 0, true),
-	E(G.pmove_msec, "pmove_msec", "11", bit32.bor(C.CVAR_SYSTEMINFO, C.CVAR_ARCHIVE), 0, true),
+	E(G.pmove_fixed, "pmove_fixed", "0", bit32.bor(C.CVAR_SYSTEMINFO, C.CVAR_ARCHIVE), 0, false),
+	E(G.pmove_msec, "pmove_msec", "11", bit32.bor(C.CVAR_SYSTEMINFO, C.CVAR_ARCHIVE), 0, false),
 	E(G.pmove_float, "pmove_float", "1", bit32.bor(C.CVAR_SYSTEMINFO, C.CVAR_ARCHIVE), 0, true),
 
 	--unlagged - server options
@@ -197,54 +193,55 @@ local gameCvarTableList = {
 	--unlagged - server options
 
 	E(G.g_rankings, "g_rankings", "0", 0, 0, false),
-	E(G.g_localTeamPref, "g_localTeamPref", "", 0, 0, false),
 	E(G.g_music, "g_music", "", 0, 0, false),
-	E(G.g_spawnprotect, "g_spawnprotect", "500", C.CVAR_ARCHIVE, 0, true),
+	E(G.g_spawnprotect, "g_spawnprotect", "500", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
 	--Now for elimination stuff:
 	E(G.g_elimination_selfdamage, "elimination_selfdamage", "0", 0, 0, true),
-	E(G.g_elimination_startHealth, "elimination_startHealth", "200", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_startArmor, "elimination_startArmor", "150", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_bfg, "elimination_bfg", "0", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_roundtime, "elimination_roundtime", "120", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, true),
-	E(G.g_elimination_warmup, "elimination_warmup", "7", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_activewarmup, "elimination_activewarmup", "5", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_allgametypes, "g_elimination", "0", C.CVAR_LATCH, 0, false),
+	E(G.g_elimination_startHealth, "elimination_startHealth", "200", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_startArmor, "elimination_startArmor", "150", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_bfg, "elimination_bfg", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_grapple, "elimination_grapple", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_roundtime, "elimination_roundtime", "120", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_warmup, "elimination_warmup", "7", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_activewarmup, "elimination_activewarmup", "5", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_allgametypes, "g_elimination", "0", bit32.bor(C.CVAR_LATCH, C.CVAR_NORESTART), 0, false),
 
-	E(G.g_elimination_machinegun, "elimination_machinegun", "500", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_shotgun, "elimination_shotgun", "500", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_grenade, "elimination_grenade", "100", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_rocket, "elimination_rocket", "50", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_railgun, "elimination_railgun", "20", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_lightning, "elimination_lightning", "300", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_plasmagun, "elimination_plasmagun", "200", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_chain, "elimination_chain", "0", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_mine, "elimination_mine", "0", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_elimination_nail, "elimination_nail", "0", C.CVAR_ARCHIVE, 0, true),
+	E(G.g_elimination_machinegun, "elimination_machinegun", "500", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_shotgun, "elimination_shotgun", "500", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_grenade, "elimination_grenade", "100", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_rocket, "elimination_rocket", "50", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_railgun, "elimination_railgun", "20", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_lightning, "elimination_lightning", "300", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_plasmagun, "elimination_plasmagun", "200", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_chain, "elimination_chain", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_mine, "elimination_mine", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+	E(G.g_elimination_nail, "elimination_nail", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
 
-	E(G.g_elimination_ctf_oneway, "elimination_ctf_oneway", "0", C.CVAR_ARCHIVE, 0, true),
+	E(G.g_elimination_ctf_oneway, "elimination_ctf_oneway", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
 
-	-- the C initializer has qtrue in the modificationCount slot here
-	E(G.g_elimination_lockspectator, "elimination_lockspectator", "0", 0, 1, false),
+	E(G.g_elimination_lockspectator, "elimination_lockspectator", "0", C.CVAR_NORESTART, 0, true),
 
-	E(G.g_awardpushing, "g_awardpushing", "1", C.CVAR_ARCHIVE, 0, true),
+	E(G.g_awardpushing, "g_awardpushing", "1", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
 
 	--g_persistantpowerups
-	E(G.g_runes, "g_runes", "0", bit32.bor(C.CVAR_LATCH, C.CVAR_ARCHIVE), 0, false),
+	E(G.g_persistantpowerups, "g_runes", "0", bit32.bor(C.CVAR_LATCH, C.CVAR_ARCHIVE), 0, false),
 
 	--nexuiz style rocket arena
-	E(G.g_rockets, "g_rockets", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_LATCH), 0, false),
+	E(G.g_rockets, "g_rockets", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_LATCH, C.CVAR_NORESTART), 0, false),
 
 	--Instantgib and Vampire thingies
 	E(G.g_instantgib, "g_instantgib", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_LATCH), 0, false),
-	E(G.g_vampire, "g_vampire", "0.0", 0, 0, true),
-	E(G.g_regen, "g_regen", "0", 0, 0, true),
-	E(G.g_vampireMaxHealth, "g_vampire_max_health", "500", 0, 0, true),
-	E(G.g_lms_lives, "g_lms_lives", "1", 0, 0, true),
-	E(G.g_lms_mode, "g_lms_mode", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, true),
+	E(G.g_vampire, "g_vampire", "0.0", C.CVAR_NORESTART, 0, true),
+	E(G.g_regen, "g_regen", "0", C.CVAR_NORESTART, 0, true),
+	E(G.g_vampireMaxHealth, "g_vampire_max_health", "500", C.CVAR_NORESTART, 0, true),
+	E(G.g_lms_lives, "g_lms_lives", "1", C.CVAR_NORESTART, 0, true),
+	E(G.g_lms_mode, "g_lms_mode", "0", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
 
-	E(G.g_autonextmap, "g_autonextmap", "0", C.CVAR_ARCHIVE, 0, false),
-	E(G.g_mappools, "g_mappools", "0\\maps_dm.cfg\\1\\maps_tourney.cfg\\3\\maps_tdm.cfg\\4\\maps_ctf.cfg\\5\\maps_oneflag.cfg\\6\\maps_obelisk.cfg\\7\\maps_harvester.cfg\\8\\maps_elimination.cfg\\9\\maps_ctf.cfg\\10\\maps_lms.cfg\\11\\maps_dd.cfg\\12\\maps_dom.cfg\\13\\maps_dm.cfg\\", C.CVAR_ARCHIVE, 0, false),
-	E(G.g_humanplayers, "g_humanplayers", "0", C.CVAR_ROM, 0, false),
+	E(G.g_catchup, "g_catchup", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, true),
+
+	E(G.g_autonextmap, "g_autonextmap", "0", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, false),
+	E(G.g_mappools, "g_mappools", "0\\maps_dm.cfg\\1\\maps_tourney.cfg\\3\\maps_tdm.cfg\\4\\maps_ctf.cfg\\5\\maps_oneflag.cfg\\6\\maps_obelisk.cfg\\7\\maps_harvester.cfg\\8\\maps_elimination.cfg\\9\\maps_ctf.cfg\\10\\maps_lms.cfg\\11\\maps_dd.cfg\\12\\maps_dom.cfg\\", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_NORESTART), 0, false),
+	E(G.g_humanplayers, "g_humanplayers", "0", bit32.bor(C.CVAR_ROM, C.CVAR_NORESTART), 0, false),
 	--used for voIP
 	E(G.g_redTeamClientNumbers, "g_redTeamClientNumbers", "0", C.CVAR_ROM, 0, false),
 	E(G.g_blueTeamClientNumbers, "g_blueTeamClientNumbers", "0", C.CVAR_ROM, 0, false),
@@ -277,16 +274,6 @@ local gameCvarTableList = {
 
 	E(G.g_timestamp_startgame, "g_timestamp", "0001-01-01 00:00:00", C.CVAR_SERVERINFO, 0, false),
 	E(G.g_execute_gametype_script, "g_egs", "0", C.CVAR_ROM, 0, false),
-	E(G.g_emptyCommand, "g_emptyCommand", "map_restart", C.CVAR_ARCHIVE, 0, false),
-	E(G.g_emptyTime, "g_emptytime", "0", C.CVAR_ARCHIVE, 0, false),
-
-	E(G.g_grapple, "g_grapple", "0", C.CVAR_ARCHIVE, 0, false),
-	E(G.g_harvesterFromBodies, "g_harvesterFromBodies", "0", C.CVAR_ARCHIVE, 0, true),
-	-- Neon_Knight: Double Domination-specific cvars
-	E(G.g_ddCaptureTime, "g_ddCaptureTime", "10", C.CVAR_ARCHIVE, 0, true),
-	E(G.g_ddRespawnDelay, "g_ddRespawnDelay", "10", C.CVAR_ARCHIVE, 0, true),
-	-- Neon_Knight: Developer mode
-	E(G.g_developer, "developer", "0", C.CVAR_CHEAT, 0, true),
 }
 
 -- 0-based array like the C table
@@ -368,7 +355,7 @@ All but the last will have the teamchain field set to the next one
 function G.G_FindTeams()
 	local c = 0
 	local c2 = 0
-	for i = C.MAX_CLIENTS, G.level.num_entities - 1 do
+	for i = 1, G.level.num_entities - 1 do
 		local e = G.g_entities[i]
 		if not e.inuse then
 			continue
@@ -445,7 +432,7 @@ function G.G_RegisterCvars()
 	end
 
 	--set FFA status for high gametypes:
-	if G.g_gametype.integer == C.GT_LMS or G.g_gametype.integer == C.GT_POSSESSION then
+	if G.g_gametype.integer == C.GT_LMS then
 		G.g_ffa_gt = 1 --Last Man standig is a FFA gametype
 	else
 		G.g_ffa_gt = 0 --If >GT_CTF use bases
@@ -503,6 +490,10 @@ function G.G_UpdateCvars()
 						voteflags = bit32.bor(voteflags, C.VF_clientkick)
 					end
 
+					if G.allowedVote("shuffle") ~= 0 then
+						voteflags = bit32.bor(voteflags, C.VF_shuffle)
+					end
+
 					if G.allowedVote("nextmap") ~= 0 then
 						voteflags = bit32.bor(voteflags, C.VF_nextmap)
 					end
@@ -558,17 +549,13 @@ end
 -- Runs a script if it exists.
 -- Returns 0 if the script ran, 1 if it did not exist.
 function SF.G_RunScript(script)
-	local buffer = string.sub(script, 1, 99)
-	buffer = QS.Q_StrToLower(buffer)
-	G.G_LogPrintf("Looking for: %s\n", buffer)
-	local _len, file = G.trap_FS_FOpenFile(buffer, C.FS_READ)
+	local _len, file = G.trap_FS_FOpenFile(script, C.FS_READ)
 	if file == 0 then
 		return 1 --script does not exist
 	end
 	G.trap_FS_FCloseFile(file)
-	buffer = string.sub(QS.va("exec %s;\n", script), 1, 99)
-	buffer = QS.Q_StrToLower(buffer)
-	G.trap_SendConsoleCommand(C.EXEC_APPEND, buffer)
+	local command = string.sub(QS.va("exec %s;\n", script), 1, 99)
+	G.trap_SendConsoleCommand(C.EXEC_APPEND, command)
 	return 0
 end
 
@@ -632,7 +619,7 @@ function G.G_InitGame(levelTime, randomSeed, restart)
 			local serverinfo = G.trap_GetServerinfo()
 			G.G_LogPrintf("------------------------------------------------------------\n")
 			G.G_LogPrintf("InitGame: %s\n", serverinfo)
-			G.G_LogPrintf("Info: ServerInfo length: %i of %d\n", #serverinfo, C.MAX_INFO_STRING)
+			G.G_LogPrintf("Info: ServerInfo length: %d of %d\n", #serverinfo, C.MAX_INFO_STRING)
 		end
 	else
 		G.G_Printf("Not logging to disk.\n")
@@ -646,7 +633,7 @@ function G.G_InitGame(levelTime, randomSeed, restart)
 	--KK-OAX Get Admin Configuration
 	G.G_admin_readconfig(nil, 0)
 	--Let's Load up any killing sprees/multikills
-	G.G_ReadAltKillSettings()
+	G.G_ReadAltKillSettings(nil, 0)
 
 	-- initialize all entities for this game
 	for i = 0, C.MAX_GENTITIES - 1 do
@@ -690,8 +677,7 @@ function G.G_InitGame(levelTime, randomSeed, restart)
 	G.G_FindTeams()
 
 	-- make sure we have flags for CTF, etc
-	if G.g_gametype.integer == C.GT_POSSESSION or
-		(G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1) then
+	if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 then
 		G.G_CheckTeamItems()
 	end
 
@@ -710,8 +696,6 @@ function G.G_InitGame(levelTime, randomSeed, restart)
 	end
 
 	G.G_RemapTeamShaders()
-
-	G.trap_SetConfigstring(C.CS_INTERMISSION, "")
 
 	--elimination:
 	level.roundNumber = 1
@@ -784,15 +768,6 @@ function G.G_InitGame(levelTime, randomSeed, restart)
 		G.trap_Cvar_Set("voteflags", QS.va("%i", voteflags))
 	end
 	SF.G_CheckGametypeScripts()
-	local mapname = G.trap_Cvar_VariableStringBuffer("mapname")
-	BG.MapInfoGet(mapname, G.g_gametype.integer, G.mapinfo)
-	G.MapInfoPrint(G.mapinfo)
-	if SF.G_RunScript(QS.va("mapscripts/g_%s.cfg", mapname)) ~= 0 then
-		SF.G_RunScript("mapscripts/g_default.cfg")
-	end
-	if SF.G_RunScript(QS.va("mapscripts/g_%s_%i.cfg", mapname, G.g_gametype.integer)) ~= 0 then
-		SF.G_RunScript(QS.va("mapscripts/g_default_%i.cfg", G.g_gametype.integer))
-	end
 end
 
 return nil

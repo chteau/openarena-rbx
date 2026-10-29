@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_cmds_ext.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_cmds_ext.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_cmds_ext.c. Say-text argument parsing, player name matching, flood limiting, admin messages.
+-- Luau port of OpenArena 0.8.8's g_cmds_ext.c (gamecode 9e0f0c0). Say-text argument parsing, player name matching, flood limiting, admin messages.
 
 local G = require("./g_local")      -- game globals + every non-static function
 local C = require("./g_defs")       -- EVERY #define / enum
@@ -290,7 +290,7 @@ G_AdminMessage
 Print to all active server admins, and to the logfile, and to the server console
 Prepend *prefix, or '[SERVER]' if no *prefix is given
 ]]
-local function G_AdminMessage(prefix, fmt, ...)
+function G.G_AdminMessage(prefix, fmt, ...)
 	local str = string.sub(QS.va(fmt, ...), 1, 1023)
 
 	-- If there is no prefix, assume that this function was called directly
@@ -338,7 +338,7 @@ function G.Cmd_AdminMessage_f(ent)
 
 	-- Skip say/say_team if this was used from one of those
 	local cmd = G.G_SayArgv(0, #"say_team" + 1)
-	if QS.Q_strequal(cmd, "say") or QS.Q_strequal(cmd, "say_team") then
+	if QS.Q_stricmp(cmd, "say") == 0 or QS.Q_stricmp(cmd, "say_team") == 0 then
 		skiparg = 1
 		local a1, ok = G.G_SayArgv(1, #"say_team" + 1)
 		if ok then
@@ -353,7 +353,7 @@ function G.Cmd_AdminMessage_f(ent)
 	local msg = G.G_SayConcatArgs(1 + skiparg)
 
 	-- Send it
-	G_AdminMessage(prefix, "%s", msg)
+	G.G_AdminMessage(prefix, "%s", msg)
 end
 
 --[[

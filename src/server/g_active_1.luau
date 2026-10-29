@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_active.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_active.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_active.c, part 1. Per-frame client damage feedback, world effects, touches, spectators and events.
+-- Luau port of OpenArena 0.8.8's g_active.c (gamecode 9e0f0c0), part 1. Per-frame client damage feedback, world effects, touches, spectators and events.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -309,17 +309,8 @@ function G.SpectatorThink(ent, ucmd)
 		G.Cmd_FollowCycle_f(ent)
 	end
 
-	if client.sess.spectatorState ~= C.SPECTATOR_FOLLOW or bit32.band(client.ps.pm_flags, C.PMF_FOLLOW) == 0 then
-		if client.sess.spectatorState == C.SPECTATOR_FREE then
-			if client.noclip then
-				client.ps.pm_type = C.PM_NOCLIP
-			else
-				client.ps.pm_type = C.PM_SPECTATOR
-			end
-		else
-			client.ps.pm_type = C.PM_FREEZE
-		end
-
+	if client.sess.spectatorState ~= C.SPECTATOR_FOLLOW then
+		client.ps.pm_type = C.PM_SPECTATOR
 		client.ps.speed = 400 -- faster than normal
 
 		-- set up for pmove
@@ -402,7 +393,7 @@ ClientTimerActions
 Actions that happen once a second
 ==================
 ]]
-function SF.ClientTimerActions(ent, msec)
+function G.ClientTimerActions(ent, msec)
 	local level = G.level
 	local client = ent.client
 	local maxHealth
@@ -443,11 +434,8 @@ function SF.ClientTimerActions(ent, msec)
 			if ent.health > client.ps.stats[C.STAT_MAX_HEALTH] then
 				ent.health -= 1
 			end
-			if (G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION or G.g_gametype.integer == C.GT_LMS) and level.humansEliminated then
-				ent.damage = 5
-				G.G_Damage(ent, nil, nil, nil, nil, ent.damage, C.DAMAGE_NO_KNOCKBACK, C.MOD_UNKNOWN)
 			-- Start killing players in LMS, if we are in overtime
-			elseif G.g_elimination_roundtime.integer ~= 0 and G.g_gametype.integer == C.GT_LMS and G.TeamHealthCount(-1, C.TEAM_FREE) ~= ent.health
+			if G.g_elimination_roundtime.integer ~= 0 and G.g_gametype.integer == C.GT_LMS and G.TeamHealthCount(-1, C.TEAM_FREE) ~= ent.health
 				and level.roundNumber == level.roundNumberStarted and level.time >= level.roundStartTime + 1000 * G.g_elimination_roundtime.integer then
 				ent.damage = 5
 				G.G_Damage(ent, nil, nil, nil, nil, ent.damage, C.DAMAGE_NO_ARMOR, C.MOD_UNKNOWN)
@@ -462,11 +450,6 @@ function SF.ClientTimerActions(ent, msec)
 		-- count down armor when over max
 		if client.ps.stats[C.STAT_ARMOR] > client.ps.stats[C.STAT_MAX_HEALTH] then
 			client.ps.stats[C.STAT_ARMOR] -= 1
-		end
-
-		if G.g_gametype.integer == C.GT_POSSESSION and ent.health > 0 and client.ps.powerups[C.PW_NEUTRALFLAG] ~= 0 then
-			G.AddScore(ent, ent.client.ps.origin, 1)
-			G.G_LogPrintf("POS: %i %i: %s^7 scored a point\n", ent.s.number, 1, client.pers.netname)
 		end
 	end
 	if BG.bg_itemlist[client.ps.stats[C.STAT_PERSISTANT_POWERUP]].giTag == C.PW_AMMOREGEN then
@@ -556,6 +539,7 @@ but any server game effects are handled here
 ]]
 function G.ClientEvents(ent, oldEventSequence)
 	local level = G.level
+	local dir = Q.vec3()
 	local origin = Q.vec3()
 	local angles = Q.vec3()
 
@@ -580,6 +564,7 @@ function G.ClientEvents(ent, oldEventSequence)
 			else
 				damage = 5
 			end
+			Q.VectorSet(dir, 0, 0, 1)
 			ent.pain_debounce_time = level.time + 200 -- no normal pain sound
 			G.G_Damage(ent, nil, nil, nil, nil, damage, 0, C.MOD_FALLING)
 		elseif event == C.EV_FIRE_WEAPON then
@@ -631,7 +616,7 @@ function G.ClientEvents(ent, oldEventSequence)
 					ent.client.ps.generic1 = 0
 				end
 			end
-			G.SelectSpawnPoint(ent.client.ps.origin, origin, angles, 0)
+			G.SelectSpawnPoint(ent.client.ps.origin, origin, angles)
 			G.TeleportPlayer(ent, origin, angles)
 		elseif event == C.EV_USE_ITEM2 then -- medkit
 			ent.health = ent.client.ps.stats[C.STAT_MAX_HEALTH] + 25

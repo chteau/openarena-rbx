@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_admin.c, part 2 of 4).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_admin.c, part 2 of 4).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,13 +22,19 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_admin.c (part 2): ban checks, command dispatch, namelog, config reading, setlevel, kick.
+-- Luau port of OpenArena 0.8.8's g_admin.c (gamecode 9e0f0c0) (part 2): ban checks, command dispatch, namelog, config reading, setlevel, kick.
 
 local G = require("./g_local")
 local C = require("./g_defs")
 local S = require("./g_structs")
 local Q = require("../shared/q_math")
-local QS = require("../shared/q_shared")
+local QSBase = require("../shared/q_shared")
+-- 0.8.8 compares with Q_stricmp (case-insensitive) everywhere master uses Q_strequal
+local QS = setmetatable({
+	Q_strequal = function(a, b)
+		return QSBase.Q_stricmp(a, b) == 0
+	end,
+}, { __index = QSBase })
 local BG = require("../shared/BG")
 
 local SF = G.FileStatics("g_admin")

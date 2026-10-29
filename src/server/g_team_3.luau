@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_team.c, part 3 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_team.c, part 3 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_team.c part 3: team spawn points, team overlay info, obelisks.
+-- Luau port of OpenArena 0.8.8's g_team.c (gamecode 9e0f0c0) part 3: team spawn points, team overlay info, obelisks.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -36,10 +36,6 @@ local SF = G.FileStatics("g_team")
 -- challenge id from challenges.h (not provided by g_defs); value not checked
 -- against challenges.h, which was unreadable when this file was ported
 local AWARD_CAPTURE = 402
-
-function G.SelectRandomEntity(classname)
-	return G.SelectRandomEntityFilter(classname, nil)
-end
 
 local MAX_TEAM_SPAWN_POINTS = 32
 
@@ -119,21 +115,11 @@ function G.SelectRandomTeamDDSpawnPoint(team)
 	return PickSpot(classname)
 end
 
-function G.SelectRandomTeamDomSpawnPoint(team)
-	local classname
-	if team == C.TEAM_RED then
-		classname = "info_player_dom_red"
-	else
-		classname = "info_player_dom_blue"
-	end
-	return PickSpot(classname)
-end
-
 function G.SelectCTFSpawnPoint(team, teamstate, origin, angles)
 	local spot = G.SelectRandomTeamSpawnPoint(teamstate, team)
 
 	if spot == nil then
-		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles, 0)
+		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles)
 	end
 
 	Q.VectorCopy(spot.s.origin, origin)
@@ -151,21 +137,7 @@ function G.SelectDoubleDominationSpawnPoint(team, origin, angles)
 	end
 
 	if spot == nil then
-		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles, 0)
-	end
-
-	Q.VectorCopy(spot.s.origin, origin)
-	origin[2] += 9
-	Q.VectorCopy(spot.s.angles, angles)
-
-	return spot
-end
-
-function G.SelectDominationSpawnPoint(team, origin, angles)
-	local spot = G.SelectRandomTeamDomSpawnPoint(team)
-
-	if spot == nil then
-		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles, 0)
+		return G.SelectSpawnPoint(Q.vec3_origin, origin, angles)
 	end
 
 	Q.VectorCopy(spot.s.origin, origin)
@@ -177,30 +149,16 @@ end
 
 function G.TeamplayInfoMessage(ent)
 	local clients = {}
-	local team
 
 	if not ent.client.pers.teamInfo then
 		return
 	end
 
-	if ent.client.sess.sessionTeam == C.TEAM_SPECTATOR then
-		if ent.client.sess.spectatorState ~= C.SPECTATOR_FOLLOW or ent.client.sess.spectatorClient < 0 then
-			return
-		end
-		team = G.g_entities[ent.client.sess.spectatorClient].client.sess.sessionTeam
-	else
-		team = ent.client.sess.sessionTeam
-	end
-
-	if team ~= C.TEAM_RED and team ~= C.TEAM_BLUE then
-		return
-	end
-
 	local cnt = 0
 	local i = 0
-	while i < G.g_maxclients.integer and i < C.MAX_CLIENTS and cnt < C.TEAM_MAXOVERLAY do
+	while i < G.g_maxclients.integer and cnt < C.TEAM_MAXOVERLAY do
 		local player = G.g_entities[G.level.sortedClients[i]]
-		if player.inuse and player.client.sess.sessionTeam == team then
+		if player.inuse and player.client.sess.sessionTeam == ent.client.sess.sessionTeam then
 			clients[cnt] = G.level.sortedClients[i]
 			cnt += 1
 		end
@@ -223,9 +181,9 @@ function G.TeamplayInfoMessage(ent)
 
 	i = 0
 	cnt = 0
-	while i < G.g_maxclients.integer and i < C.MAX_GENTITIES and cnt < C.TEAM_MAXOVERLAY do
+	while i < G.g_maxclients.integer and cnt < C.TEAM_MAXOVERLAY do
 		local player = G.g_entities[i]
-		if player.inuse and player.client.sess.sessionTeam == team then
+		if player.inuse and player.client.sess.sessionTeam == ent.client.sess.sessionTeam then
 			local h = player.client.ps.stats[C.STAT_HEALTH]
 			local a = player.client.ps.stats[C.STAT_ARMOR]
 			local w = player.client.ps.weapon
@@ -282,7 +240,7 @@ function G.CheckTeamStatus()
 				continue
 			end
 
-			if ent.inuse then
+			if ent.inuse and (ent.client.sess.sessionTeam == C.TEAM_RED or ent.client.sess.sessionTeam == C.TEAM_BLUE) then
 				G.TeamplayInfoMessage(ent)
 			end
 		end
@@ -399,8 +357,8 @@ function SF.ObeliskTouch(self, other, trace)
 		return
 	end
 
-	G.PrintMsg(nil, "%s^7 brought in %i %s.\n",
-		other.client.pers.netname, tokens, if tokens == 1 then "skull" else "skulls")
+	G.PrintMsg(nil, "%s^7 brought in %i skull%s.\n",
+		other.client.pers.netname, tokens, if tokens > 1 then "s" else "")
 
 	G.G_LogPrintf("HARVESTER: %i %i %i %i %i: %s brought in %i skull%s for %s\n",
 		other.client.ps.clientNum, other.client.sess.sessionTeam, 0, -1, tokens,
@@ -446,7 +404,7 @@ function SF.ObeliskPain(self, attacker, damage)
 		attacker.client.pers.netname, actualDamage)
 end
 
-function SF.SpawnObelisk(origin, team, spawnflags)
+function G.SpawnObelisk(origin, team, spawnflags)
 	local tr = S.trace_t()
 	local dest = Q.vec3()
 
@@ -514,14 +472,14 @@ function G.SP_team_redobelisk(ent)
 	end
 	ent.s.eType = C.ET_TEAM
 	if G.g_gametype.integer == C.GT_OBELISK then
-		local obelisk = SF.SpawnObelisk(ent.s.origin, C.TEAM_RED, ent.spawnflags)
+		local obelisk = G.SpawnObelisk(ent.s.origin, C.TEAM_RED, ent.spawnflags)
 		obelisk.activator = ent
 		-- initial obelisk health value
 		ent.s.modelindex2 = 0xff
 		ent.s.frame = 0
 	end
 	if G.g_gametype.integer == C.GT_HARVESTER then
-		local obelisk = SF.SpawnObelisk(ent.s.origin, C.TEAM_RED, ent.spawnflags)
+		local obelisk = G.SpawnObelisk(ent.s.origin, C.TEAM_RED, ent.spawnflags)
 		obelisk.activator = ent
 	end
 	ent.s.modelindex = C.TEAM_RED
@@ -535,14 +493,14 @@ function G.SP_team_blueobelisk(ent)
 	end
 	ent.s.eType = C.ET_TEAM
 	if G.g_gametype.integer == C.GT_OBELISK then
-		local obelisk = SF.SpawnObelisk(ent.s.origin, C.TEAM_BLUE, ent.spawnflags)
+		local obelisk = G.SpawnObelisk(ent.s.origin, C.TEAM_BLUE, ent.spawnflags)
 		obelisk.activator = ent
 		-- initial obelisk health value
 		ent.s.modelindex2 = 0xff
 		ent.s.frame = 0
 	end
 	if G.g_gametype.integer == C.GT_HARVESTER then
-		local obelisk = SF.SpawnObelisk(ent.s.origin, C.TEAM_BLUE, ent.spawnflags)
+		local obelisk = G.SpawnObelisk(ent.s.origin, C.TEAM_BLUE, ent.spawnflags)
 		obelisk.activator = ent
 	end
 	ent.s.modelindex = C.TEAM_BLUE
@@ -550,13 +508,13 @@ function G.SP_team_blueobelisk(ent)
 end
 
 function G.SP_team_neutralobelisk(ent)
-	if G.g_gametype.integer ~= C.GT_1FCTF and G.g_gametype.integer ~= C.GT_HARVESTER and G.g_gametype.integer ~= C.GT_POSSESSION then
+	if G.g_gametype.integer ~= C.GT_1FCTF and G.g_gametype.integer ~= C.GT_HARVESTER then
 		G.G_FreeEntity(ent)
 		return
 	end
 	ent.s.eType = C.ET_TEAM
 	if G.g_gametype.integer == C.GT_HARVESTER then
-		G.neutralObelisk = SF.SpawnObelisk(ent.s.origin, C.TEAM_FREE, ent.spawnflags)
+		G.neutralObelisk = G.SpawnObelisk(ent.s.origin, C.TEAM_FREE, ent.spawnflags)
 		G.neutralObelisk.spawnflags = C.TEAM_FREE
 	end
 	ent.s.modelindex = C.TEAM_FREE
@@ -600,6 +558,43 @@ function G.CheckObeliskAttack(obelisk, attacker)
 	end
 
 	return false
+end
+
+function G.ShuffleTeams()
+	local assignedClients = 1
+	local nextTeam = C.TEAM_RED
+
+	if G.g_gametype.integer < C.GT_TEAM or G.g_ffa_gt == 1 then
+		return
+	end
+
+	for i = 0, G.level.numConnectedClients - 1 do
+		local num = G.level.sortedClients[i]
+		local cl = G.level.clients[num]
+		if bit32.band(G.g_entities[cl.index].r.svFlags, C.SVF_BOT) ~= 0 then
+			continue
+		end
+
+		if cl.sess.sessionTeam == C.TEAM_RED or cl.sess.sessionTeam == C.TEAM_BLUE then
+			if assignedClients > 1 then
+				assignedClients = 0
+				if nextTeam == C.TEAM_RED then
+					nextTeam = C.TEAM_BLUE
+				else
+					nextTeam = C.TEAM_RED
+				end
+			end
+
+			cl.sess.sessionTeam = nextTeam
+
+			G.ClientUserinfoChanged(num)
+			G.ClientBegin(num)
+
+			assignedClients += 1
+		end
+	end
+
+	G.trap_SendConsoleCommand(C.EXEC_APPEND, "map_restart 0\n")
 end
 
 return nil

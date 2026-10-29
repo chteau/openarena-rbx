@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_session.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_session.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_session.c. Session data persisted across level loads via cvars.
+-- Luau port of OpenArena 0.8.8's g_session.c (gamecode 9e0f0c0). Session data persisted across level loads via cvars.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -31,7 +31,7 @@ local Q = require("../shared/q_math")
 local QS = require("../shared/q_shared")
 local BG = require("../shared/BG")
 
-local function G_WriteClientSessionData(client)
+function G.G_WriteClientSessionData(client)
 	local s = QS.va("%i %i %i %i %i %i %i",
 		client.sess.sessionTeam,
 		client.sess.spectatorNum,
@@ -74,14 +74,10 @@ end
 function G.G_InitSessionData(client, userinfo)
 	local sess = client.sess
 
-	local value = QS.Info_ValueForKey(userinfo, "teampref")
-	if value == "" and G.g_localTeamPref.string ~= "" and client.pers.localClient then
-		value = G.g_localTeamPref.string
-		G.trap_Cvar_Set("g_localTeamPref", "")
-	end
+	local value
 
 	if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 then
-		if G.g_teamAutoJoin.integer ~= 0 and bit32.band(G.g_entities[client.index].r.svFlags, C.SVF_BOT) == 0 then
+		if G.g_teamAutoJoin.integer ~= 0 then
 			sess.sessionTeam = G.PickTeam(-1)
 			G.BroadcastTeamChange(client, -1)
 		else
@@ -111,7 +107,7 @@ function G.G_InitSessionData(client, userinfo)
 	sess.spectatorState = C.SPECTATOR_FREE
 	G.AddTournamentQueue(client)
 
-	G_WriteClientSessionData(client)
+	G.G_WriteClientSessionData(client)
 end
 
 function G.G_InitWorldSession()
@@ -129,7 +125,7 @@ function G.G_WriteSessionData()
 
 	for i = 0, G.level.maxclients - 1 do
 		if G.level.clients[i].pers.connected == C.CON_CONNECTED then
-			G_WriteClientSessionData(G.level.clients[i])
+			G.G_WriteClientSessionData(G.level.clients[i])
 		end
 	end
 end

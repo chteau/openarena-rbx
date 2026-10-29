@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_unlagged.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_unlagged.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_unlagged.c. Unlagged: history storage, time shifting and server-side movement prediction.
+-- Luau port of OpenArena 0.8.8's g_unlagged.c (gamecode 9e0f0c0). Unlagged: history storage, time shifting and server-side movement prediction.
 
 local G = require("./g_local")
 local C = require("./g_defs")

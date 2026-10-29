@@ -185,7 +185,6 @@ local modes = {
 	{ gt = 10, map = "oa_dm5", name = "LMS" },
 	{ gt = 11, map = "oa_ctf2", name = "Double Domination", teams = true },
 	{ gt = 12, map = "oa_dm4", name = "Domination", teams = true, dom = true },
-	{ gt = 13, map = "oa_ctf2", name = "Possession" },
 	{ gt = 0, map = "oa_dm1", name = "FFA instagib", cvars = "set g_instantgib 1" },
 	{ gt = 3, map = "oa_dm4", name = "TDM rockets", teams = true, cvars = "set g_rockets 1" },
 }

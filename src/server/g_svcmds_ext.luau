@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_svcmds_ext.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_svcmds_ext.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_svcmds_ext.c. Extra server console commands (status, say_team, cp, eject ...).
+-- Luau port of OpenArena 0.8.8's g_svcmds_ext.c (gamecode 9e0f0c0). Extra server console commands (status, say_team, cp, eject ...).
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -60,7 +60,7 @@ function G.Svcmd_Status_f()
 
 		local userinfo = G.trap_GetUserinfo(i)
 		G.G_Printf("%-21s ", QS.Info_ValueForKey(userinfo, "ip"))
-		G.G_Printf("%-8s ", QS.Info_ValueForKey(userinfo, "rate"))
+		G.G_Printf("%-8d ", QS.Info_ValueForKey(userinfo, "rate"))
 		G.G_Printf("%s\n", cl.pers.netname)
 	end
 end
@@ -215,7 +215,7 @@ Dumb wrapper for "a" and "m" and "say"
 ]]
 function G.Svcmd_MessageWrapper()
 	local cmd = string.sub(G.trap_Argv(0), 1, 4)
-	if QS.Q_strequal(cmd, "say") then
+	if QS.Q_stricmp(cmd, "say") == 0 then
 		G.G_Say(nil, nil, C.SAY_ALL, G.ConcatArgs(1))
 	end
 end

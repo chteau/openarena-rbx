@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_mover.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_mover.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_mover.c, part 1 of 2. Pushmove, general movers, binary mover and door blocking.
+-- Luau port of OpenArena 0.8.8's g_mover.c (gamecode 9e0f0c0), part 1 of 2. Pushmove, general movers, binary mover and door blocking.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -395,12 +395,7 @@ function G.G_MoverPush(pusher, move, amove)
 			-- the move was blocked an entity
 
 			-- bobbing entities are instant-kill and never get blocked
-			-- and so are train entities
-			if
-				pusher.s.pos.trType == C.TR_SINE
-				or pusher.s.apos.trType == C.TR_SINE
-				or pusher.reached == SF.Reached_Train
-			then
+			if pusher.s.pos.trType == C.TR_SINE or pusher.s.apos.trType == C.TR_SINE then
 				G.G_Damage(check, pusher, pusher, nil, nil, 99999, 0, C.MOD_CRUSH)
 			else
 				-- save off the obstacle so we can call the block function (crush, etc)
@@ -804,37 +799,30 @@ targeted by another entity.
 ===============================================================================
 ]]
 
-function SF.RemoveAnythingButFlags(other)
-	if other.s.eType == C.ET_ITEM and other.item.giType == C.IT_TEAM then
-		G.Team_DroppedFlagThink(other)
-		return
-	end
-	G.G_TempEntity(other.s.origin, C.EV_ITEM_POP)
-	G.G_FreeEntity(other)
-end
-
-function SF.DamagePlayer(ent, player)
-	if G.g_awardpushing.integer ~= 0 then
-		G.G_Damage(player, ent, ent.activator, nil, nil, ent.damage, 0, C.MOD_CRUSH)
-	else
-		G.G_Damage(player, ent, ent, nil, nil, ent.damage, 0, C.MOD_CRUSH)
-	end
-end
-
 --[[
 ================
 Blocked_Door
 ================
 ]]
 function G.Blocked_Door(ent, other)
-	-- remove anything other than a client (and flags)
+	-- remove anything other than a client
 	if other.client == nil then
-		SF.RemoveAnythingButFlags(other)
+		-- except CTF flags!!!!
+		if other.s.eType == C.ET_ITEM and other.item.giType == C.IT_TEAM then
+			G.Team_DroppedFlagThink(other)
+			return
+		end
+		G.G_TempEntity(other.s.origin, C.EV_ITEM_POP)
+		G.G_FreeEntity(other)
 		return
 	end
 
 	if ent.damage ~= 0 then
-		SF.DamagePlayer(ent, other)
+		if G.g_awardpushing.integer ~= 0 then
+			G.G_Damage(other, ent, ent.activator, nil, nil, ent.damage, 0, C.MOD_CRUSH)
+		else
+			G.G_Damage(other, ent, ent, nil, nil, ent.damage, 0, C.MOD_CRUSH)
+		end
 	end
 	if bit32.band(ent.spawnflags, 4) ~= 0 then
 		return -- crushers don't reverse

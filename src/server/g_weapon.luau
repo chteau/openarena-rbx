@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_weapon.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_weapon.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_weapon.c: perform the server side effects of a weapon firing.
+-- Luau port of OpenArena 0.8.8's g_weapon.c (gamecode 9e0f0c0): perform the server side effects of a weapon firing.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -257,7 +257,6 @@ function G.ShotgunPellet(start, ending, ent)
 	local bouncedir = Q.vec3()
 	local tr_start = Q.vec3()
 	local tr_end = Q.vec3()
-	local hitClient = false
 
 	local passent = ent.s.number
 	Q.VectorCopy(start, tr_start)
@@ -285,11 +284,10 @@ function G.ShotgunPellet(start, ending, ent)
 				end
 				continue
 			end
-			if G.LogAccuracyHit(traceEnt, ent) then
-				hitClient = true
-			end
 			G.G_Damage(traceEnt, ent, ent, forward, tr.endpos, damage, 0, C.MOD_SHOTGUN)
-			return hitClient
+			if G.LogAccuracyHit(traceEnt, ent) then
+				return true
+			end
 		end
 		return false
 	end
@@ -617,9 +615,6 @@ function G.Weapon_LightningFire(ent)
 				end
 				continue
 			end
-			if G.LogAccuracyHit(traceEnt, ent) then
-				ent.client.accuracy_hits += 1
-			end
 			G.G_Damage(traceEnt, ent, ent, forward, tr.endpos, damage, 0, C.MOD_LIGHTNING)
 		end
 
@@ -628,6 +623,10 @@ function G.Weapon_LightningFire(ent)
 			tent.s.otherEntityNum = traceEnt.s.number
 			tent.s.eventParm = Q.DirToByte(tr.plane.normal)
 			tent.s.weapon = ent.s.weapon
+			if G.LogAccuracyHit(traceEnt, ent) then
+				ent.client.accuracy_hits += 1
+				ent.client.accuracy[C.WP_LIGHTNING][1] += 1
+			end
 		elseif bit32.band(tr.surfaceFlags, C.SURF_NOIMPACT) == 0 then
 			local tent = G.G_TempEntity(tr.endpos, C.EV_MISSILE_MISS)
 			tent.s.eventParm = Q.DirToByte(tr.plane.normal)

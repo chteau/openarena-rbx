@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_target.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_target.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_target.c. Target entities: give, delay, score, print, speaker, laser, teleporter, relay, kill, position, location.
+-- Luau port of OpenArena 0.8.8's g_target.c (gamecode 9e0f0c0). Target entities: give, delay, score, print, speaker, laser, teleporter, relay, kill, position, location.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -428,7 +428,7 @@ local function target_location_linkup(ent)
 	local n = 1
 	for i = 0, G.level.num_entities - 1 do
 		ent = G.g_entities[i]
-		if ent.classname ~= nil and QS.Q_strequal(ent.classname, "target_location") then
+		if ent.classname ~= nil and QS.Q_stricmp(ent.classname, "target_location") == 0 then
 			-- lets overload some variables!
 			ent.health = n -- use for location marking
 			G.trap_SetConfigstring(C.CS_LOCATIONS + n, ent.message)

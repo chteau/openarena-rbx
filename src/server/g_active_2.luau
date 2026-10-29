@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_active.c, part 2 of 2).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_active.c, part 2 of 2).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_active.c (part 2). Client think, end frame and spectator frame handling.
+-- Luau port of OpenArena 0.8.8's g_active.c (gamecode 9e0f0c0) (part 2). Client think, end frame and spectator frame handling.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -204,10 +204,8 @@ function G.ClientThink_real(ent)
 
 	if G.pmove_msec.integer < 8 then
 		G.trap_Cvar_Set("pmove_msec", "8")
-		G.trap_Cvar_Update(G.pmove_msec)
 	elseif G.pmove_msec.integer > 33 then
 		G.trap_Cvar_Set("pmove_msec", "33")
-		G.trap_Cvar_Update(G.pmove_msec)
 	end
 
 	if G.pmove_fixed.integer ~= 0 or client.pers.pmoveFixed then
@@ -410,7 +408,7 @@ function G.ClientThink_real(ent)
 		return
 	end
 
-	if G.g_awardpushing.integer < 2 and pm.waterlevel <= 1 and pm.ps.groundEntityNum ~= C.ENTITYNUM_NONE and client.lastSentFlyingTime + 500 > level.time then
+	if pm.waterlevel <= 1 and pm.ps.groundEntityNum ~= C.ENTITYNUM_NONE and client.lastSentFlyingTime + 500 > level.time then
 		if bit32.band(pm.ps.pm_flags, C.PMF_TIME_KNOCKBACK) == 0 then
 			client.lastSentFlying = -1
 		end
@@ -484,14 +482,13 @@ function G.SpectatorClientEndFrame(ent)
 				ent.client.ps.pm_flags = bit32.bor(ent.client.ps.pm_flags, C.PMF_FOLLOW)
 				ent.client.ps.eFlags = flags
 				return
+			else
+				-- drop them to free spectators unless they are dedicated camera followers
+				if ent.client.sess.spectatorClient >= 0 then
+					ent.client.sess.spectatorState = C.SPECTATOR_FREE
+					G.ClientBegin(ent.client.index)
+				end
 			end
-		end
-		if bit32.band(ent.client.ps.pm_flags, C.PMF_FOLLOW) ~= 0 then
-			-- drop them to free spectators unless they are dedicated camera followers
-			if ent.client.sess.spectatorClient >= 0 then
-				ent.client.sess.spectatorState = C.SPECTATOR_FREE
-			end
-			G.ClientBegin(ent.client.index)
 		end
 	end
 

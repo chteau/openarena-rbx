@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_team.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_team.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_team.c, part 1 of 3 (game/g_team.c, part 1 of 3): team game state, flag status, frag bonuses, domination spawn.
+-- Luau port of OpenArena 0.8.8's g_team.c (gamecode 9e0f0c0), part 1 of 3 (game/g_team.c, part 1 of 3): team game state, flag status, frag bonuses, domination spawn.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -88,7 +88,7 @@ function G.Team_InitGame()
 		G.ddB = nil
 	elseif gt == C.GT_DOMINATION then
 		G.dominationPointsSpawned = false
-	elseif gt == C.GT_1FCTF or gt == C.GT_POSSESSION then
+	elseif gt == C.GT_1FCTF then
 		G.teamgame.flagStatus = -1 -- Invalid to force update
 		G.Team_SetFlagStatus(C.TEAM_FREE, C.FLAG_ATBASE)
 	end
@@ -367,7 +367,7 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 		enemy_flag_pw = C.PW_REDFLAG
 	end
 
-	if G.g_gametype.integer == C.GT_1FCTF or G.g_gametype.integer == C.GT_POSSESSION then
+	if G.g_gametype.integer == C.GT_1FCTF then
 		enemy_flag_pw = C.PW_NEUTRALFLAG
 	end
 
@@ -378,18 +378,10 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 	end
 	if targ.client.ps.powerups[enemy_flag_pw] ~= 0 then
 		attacker.client.pers.teamState.lastfraggedcarrier = level.time
-		if G.g_gametype.integer ~= C.GT_POSSESSION then
-			G.AddScore(attacker, targ.r.currentOrigin, C.CTF_FRAG_CARRIER_BONUS)
-		end
+		G.AddScore(attacker, targ.r.currentOrigin, C.CTF_FRAG_CARRIER_BONUS)
 		attacker.client.pers.teamState.fragcarrier += 1
-		if G.g_gametype.integer ~= C.GT_POSSESSION then
-			G.PrintMsg(nil, "%s" .. S_COLOR_WHITE .. " fragged %s's flag carrier!\n",
-				attacker.client.pers.netname, G.TeamName(team))
-		else
-			G.PrintMsg(nil, "%s" .. S_COLOR_WHITE .. " fragged the flag carrier!\n",
-				attacker.client.pers.netname)
-			G.G_LogPrintf("POS: %i %i: %s^7 fragged the carrier\n", attacker.s.number, 2, attacker.client.pers.netname)
-		end
+		G.PrintMsg(nil, "%s" .. S_COLOR_WHITE .. " fragged %s's flag carrier!\n",
+			attacker.client.pers.netname, G.TeamName(team))
 		if G.g_gametype.integer == C.GT_CTF then
 			G.G_LogPrintf("CTF: %i %i %i: %s fragged %s's flag carrier!\n", attacker.client.ps.clientNum, team, 3, attacker.client.pers.netname, G.TeamName(team))
 		elseif G.g_gametype.integer == C.GT_CTF_ELIMINATION then
@@ -454,6 +446,25 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 
 		return
 	end
+	if targ.client.pers.teamState.lasthurtcarrier ~= 0 and
+		level.time - targ.client.pers.teamState.lasthurtcarrier < C.CTF_CARRIER_DANGER_PROTECT_TIMEOUT then
+		-- attacker is on the same team as the skull carrier and
+		G.AddScore(attacker, targ.r.currentOrigin, C.CTF_CARRIER_DANGER_PROTECT_BONUS)
+
+		attacker.client.pers.teamState.carrierdefense += 1
+		targ.client.pers.teamState.lasthurtcarrier = 0
+
+		attacker.client.ps.persistant[C.PERS_DEFEND_COUNT] += 1
+		if not level.hadBots then
+			G.ChallengeMessage(attacker, CH_AWARD_DEFENCE)
+		end
+		G.G_LogPrintf("Award: %i %i: %s gained the %s award!\n", attacker.client.ps.clientNum, 3, attacker.client.pers.netname, "DEFENCE")
+		team = attacker.client.sess.sessionTeam
+		clearAwardFlags(attacker.client)
+		attacker.client.rewardTime = level.time + C.REWARD_SPRITE_TIME
+
+		return
+	end
 	-- We place the Double Domination bonus test here! This appears to be the best place to place them.
 	if G.g_gametype.integer == C.GT_DOUBLE_D then
 		local ddA = G.ddA
@@ -471,7 +482,7 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 
 				-- We defended point A
 				-- Was we dominating and maybe close to score?
-				if attacker.client.sess.sessionTeam == level.pointStatusB and level.time - level.timeTaken > (G.g_ddCaptureTime.integer - C.DD_CLOSE) * 1000 then
+				if attacker.client.sess.sessionTeam == level.pointStatusB and level.time - level.timeTaken > (10 - C.DD_CLOSE) * 1000 then
 					G.AddScore(attacker, targ.r.currentOrigin, C.DD_POINT_DEFENCE_CLOSE_BONUS)
 				else
 					G.AddScore(attacker, targ.r.currentOrigin, C.DD_POINT_DEFENCE_BONUS)
@@ -504,7 +515,7 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 
 				-- We defended point B
 				-- Was we dominating and maybe close to score?
-				if attacker.client.sess.sessionTeam == level.pointStatusA and level.time - level.timeTaken > (G.g_ddCaptureTime.integer - C.DD_CLOSE) * 1000 then
+				if attacker.client.sess.sessionTeam == level.pointStatusA and level.time - level.timeTaken > (10 - C.DD_CLOSE) * 1000 then
 					G.AddScore(attacker, targ.r.currentOrigin, C.DD_POINT_DEFENCE_CLOSE_BONUS)
 				else
 					G.AddScore(attacker, targ.r.currentOrigin, C.DD_POINT_DEFENCE_BONUS)
@@ -608,7 +619,7 @@ function G.Team_FragBonuses(targ, inflictor, attacker)
 
 	if carrier ~= nil and carrier ~= attacker then
 		Q.VectorSubtract(targ.r.currentOrigin, carrier.r.currentOrigin, v1)
-		Q.VectorSubtract(attacker.r.currentOrigin, carrier.r.currentOrigin, v2)
+		Q.VectorSubtract(attacker.r.currentOrigin, carrier.r.currentOrigin, v1)
 
 		if ((Q.VectorLength(v1) < C.CTF_ATTACKER_PROTECT_RADIUS and
 			G.trap_InPVS(carrier.r.currentOrigin, targ.r.currentOrigin)) or
@@ -651,10 +662,6 @@ function G.Team_CheckHurtCarrier(targ, attacker)
 		flag_pw = C.PW_BLUEFLAG
 	else
 		flag_pw = C.PW_REDFLAG
-	end
-
-	if G.g_gametype.integer == C.GT_1FCTF then
-		flag_pw = C.PW_NEUTRALFLAG
 	end
 
 	-- flags

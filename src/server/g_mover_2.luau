@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_mover.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_mover.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_mover.c, part 2 of 2: door triggers, doors, plats, buttons, trains, static/rotating/bobbing/pendulum movers.
+-- Luau port of OpenArena 0.8.8's g_mover.c (gamecode 9e0f0c0), part 2 of 2: door triggers, doors, plats, buttons, trains, static/rotating/bobbing/pendulum movers.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -139,26 +139,6 @@ function G.SP_func_door(ent)
 	-- default speed of 400
 	if ent.speed == 0 then
 		ent.speed = 400
-	end
-
-	-- leilei - HACK HACK HACK - indefinitely open door (from triggers, etc)
-	if ent.wait == -1 then
-		ent.wait = 99999999
-	end
-
-	if G.g_gametype.integer == C.GT_ELIMINATION or G.g_gametype.integer == C.GT_CTF_ELIMINATION then
-		--Classic part to make the
-		if ent.targetname == "elimination_active" then
-			ent.wait = 99999999
-		end
-
-		local ok, value = G.G_SpawnString("state_targetname", "")
-		if ok then
-			if value == "elimination_active" then
-				ent.wait = 99999999
-				ent.targetname = value --A state targetname replaces any other target
-			end
-		end
 	end
 
 	-- default wait of 2 seconds
@@ -381,7 +361,7 @@ function G.Think_BeginMoving(ent)
 	ent.s.pos.trType = C.TR_LINEAR_STOP
 end
 
-function SF.Reached_Train(ent)
+function G.Reached_Train(ent)
 	local next
 	local speed
 	local move = Q.vec3()
@@ -489,7 +469,7 @@ function G.Think_SetupTrainTargets(ent)
 	end
 
 	-- start the train moving from the first corner
-	SF.Reached_Train(ent)
+	G.Reached_Train(ent)
 end
 
 function G.SP_path_corner(self)
@@ -504,6 +484,14 @@ end
 function G.SP_func_train(self)
 	Q.VectorClear(self.s.angles)
 
+	if bit32.band(self.spawnflags, TRAIN_BLOCK_STOPS) ~= 0 then
+		self.damage = 0
+	else
+		if self.damage == 0 then
+			self.damage = 2
+		end
+	end
+
 	if self.speed == 0 then
 		self.speed = 100
 	end
@@ -517,7 +505,7 @@ function G.SP_func_train(self)
 	G.trap_SetBrushModel(self, self.model)
 	G.InitMover(self)
 
-	self.reached = SF.Reached_Train
+	self.reached = G.Reached_Train
 
 	-- start trains on the second frame, to make sure their targets have had
 	-- a chance to spawn

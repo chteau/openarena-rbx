@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_svcmds.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_svcmds.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_svcmds.c. Commands that can be executed by the server console, but not remote clients.
+-- Luau port of OpenArena 0.8.8's g_svcmds.c (gamecode 9e0f0c0). Commands that can be executed by the server console, but not remote clients.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -231,7 +231,7 @@ function G.Svcmd_RemoveIP_f()
 end
 
 function G.Svcmd_EntityList_f()
-	for e = 0, G.level.num_entities - 1 do
+	for e = 1, G.level.num_entities - 1 do
 		local check = G.g_entities[e]
 		if not check.inuse then
 			continue
@@ -296,7 +296,7 @@ function G.ClientForString(s)
 		if cl.pers.connected == C.CON_DISCONNECTED then
 			continue
 		end
-		if QS.Q_strequal(cl.pers.netname, s) then
+		if QS.Q_stricmp(cl.pers.netname, s) == 0 then
 			return cl
 		end
 	end
@@ -364,6 +364,8 @@ local svcmds = {
 	{ "say_team", true, function() G.Svcmd_TeamMessage_f() end },
 	{ "say", true, function() G.Svcmd_MessageWrapper() end },
 	{ "chat", true, function() G.Svcmd_Chat_f() end },
+	--Shuffle the teams
+	{ "shuffle", false, function() G.ShuffleTeams() end },
 	{ "clientkick_game", false, function() G.ClientKick_f() end },
 	{ "endgamenow", false, function() G.EndGame_f() end },
 }
@@ -373,7 +375,7 @@ function G.ConsoleCommand()
 
 	for i = 1, #svcmds do
 		local entry = svcmds[i]
-		if QS.Q_strequal(cmd, entry[1]) then
+		if QS.Q_stricmp(cmd, entry[1]) == 0 then
 			if entry[2] and G.g_dedicated.integer == 0 then
 				return false
 			end

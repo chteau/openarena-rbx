@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_killspree.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_killspree.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_killspree.c. Killing sprees, death sprees and multikills.
+-- Luau port of OpenArena 0.8.8's g_killspree.c (gamecode 9e0f0c0). Killing sprees, death sprees and multikills.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -45,7 +45,7 @@ G_ReadAltKillSettings
 Since this is cvar dependent, it has to be placed in G_InitGame after cvars are registered.
 =================
 ]]
-function G.G_ReadAltKillSettings()
+function G.G_ReadAltKillSettings(ent, skiparg)
 	local k = nil
 	local d = nil
 	local m = nil
@@ -81,7 +81,7 @@ function G.G_ReadAltKillSettings()
 	end
 
 	if G.g_sprees.string == "" then
-		if G.g_altExcellent.integer ~= 0 then
+		if G.g_altExcellent.integer == 1 then
 			G.trap_Cvar_Set("g_altExcellent", "0")
 		end
 		return false
@@ -115,7 +115,7 @@ function G.G_ReadAltKillSettings()
 		if t == "" then
 			break
 		end
-		if QS.Q_strequal(t, "[kspree]") then
+		if QS.Q_stricmp(t, "[kspree]") == 0 then
 			if ksc >= C.MAX_KSPREE then
 				return false
 			end
@@ -125,7 +125,7 @@ function G.G_ReadAltKillSettings()
 			kspree_read = true
 			dspree_read = false
 			mkill_read = false
-		elseif QS.Q_strequal(t, "[dspree]") then
+		elseif QS.Q_stricmp(t, "[dspree]") == 0 then
 			if dsc >= C.MAX_DSPREE then
 				return false
 			end
@@ -135,7 +135,7 @@ function G.G_ReadAltKillSettings()
 			dspree_read = true
 			kspree_read = false
 			mkill_read = false
-		elseif QS.Q_strequal(t, "[mkill]") then
+		elseif QS.Q_stricmp(t, "[mkill]") == 0 then
 			if mc >= C.MAX_MULTIKILLS then
 				return false
 			end
@@ -146,37 +146,37 @@ function G.G_ReadAltKillSettings()
 			kspree_read = false
 			dspree_read = false
 		elseif kspree_read then
-			if QS.Q_strequal(t, "level") then
+			if QS.Q_stricmp(t, "level") == 0 then
 				k.spreeLevel = G.readFile_int(cnf)
 				k.streakCount = k.spreeLevel * spreeDivisor
-			elseif QS.Q_strequal(t, "message") then
+			elseif QS.Q_stricmp(t, "message") == 0 then
 				k.spreeMsg = G.readFile_string(cnf, #k.spreeMsg)
-			elseif QS.Q_strequal(t, "printpos") then
+			elseif QS.Q_stricmp(t, "printpos") == 0 then
 				k.position = G.readFile_int(cnf)
-			elseif QS.Q_strequal(t, "sound") then
+			elseif QS.Q_stricmp(t, "sound") == 0 then
 				k.sound2Play = G.readFile_string(cnf, #k.sound2Play)
 			else
 				QS.COM_ParseError('Killing Spree unrecognized token "%s"', t)
 			end
 		elseif dspree_read then
-			if QS.Q_strequal(t, "level") then
+			if QS.Q_stricmp(t, "level") == 0 then
 				d.spreeLevel = G.readFile_int(cnf)
 				d.streakCount = d.spreeLevel * spreeDivisor
-			elseif QS.Q_strequal(t, "message") then
+			elseif QS.Q_stricmp(t, "message") == 0 then
 				d.spreeMsg = G.readFile_string(cnf, #d.spreeMsg)
-			elseif QS.Q_strequal(t, "printpos") then
+			elseif QS.Q_stricmp(t, "printpos") == 0 then
 				d.position = G.readFile_int(cnf)
-			elseif QS.Q_strequal(t, "sound") then
+			elseif QS.Q_stricmp(t, "sound") == 0 then
 				d.sound2Play = G.readFile_string(cnf, #d.sound2Play)
 			else
 				QS.COM_ParseError('Death Spree unrecognized token "%s"', t)
 			end
 		elseif mkill_read then
-			if QS.Q_strequal(t, "kills") then
+			if QS.Q_stricmp(t, "kills") == 0 then
 				m.kills = G.readFile_int(cnf)
-			elseif QS.Q_strequal(t, "message") then
+			elseif QS.Q_stricmp(t, "message") == 0 then
 				m.killMsg = G.readFile_string(cnf, #m.killMsg)
-			elseif QS.Q_strequal(t, "sound") then
+			elseif QS.Q_stricmp(t, "sound") == 0 then
 				m.sound2Play = G.readFile_string(cnf, #m.sound2Play)
 			else
 				QS.COM_ParseError('Multikill unrecognized token "%s"', t)
@@ -192,7 +192,7 @@ function G.G_ReadAltKillSettings()
 		G.level.mKillUBound = mc - 1
 	else
 		G.level.mKillUBound = -1
-		if G.g_altExcellent.integer ~= 0 then
+		if G.g_altExcellent.integer == 1 then
 			G.trap_Cvar_Set("g_altExcellent", "0")
 		end
 	end

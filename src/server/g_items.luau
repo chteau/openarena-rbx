@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_items.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_items.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_items.c. Items: pickup rules, respawning, dropping and spawning.
+-- Luau port of OpenArena 0.8.8's g_items.c (gamecode 9e0f0c0). Items: pickup rules, respawning, dropping and spawning.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -613,7 +613,7 @@ function G.LaunchItem(item, origin, velocity)
 
 	dropped.s.eFlags = bit32.bor(dropped.s.eFlags, C.EF_BOUNCE_HALF)
 	if (G.g_gametype.integer == C.GT_CTF or G.g_gametype.integer == C.GT_1FCTF or
-		G.g_gametype.integer == C.GT_CTF_ELIMINATION or G.g_gametype.integer == C.GT_DOUBLE_D or G.g_gametype.integer == C.GT_POSSESSION)
+		G.g_gametype.integer == C.GT_CTF_ELIMINATION or G.g_gametype.integer == C.GT_DOUBLE_D)
 		and item.giType == C.IT_TEAM then -- Special case for CTF flags
 		dropped.think = G.Team_DroppedFlagThink
 		dropped.nextthink = G.level.time + 30000
@@ -849,9 +849,6 @@ function G.ClearRegisteredItems()
 			G.RegisterItem(BG.BG_FindItemForWeapon(C.WP_CHAINGUN))
 		end
 	end
-	if G.g_grapple.integer ~= 0 then
-		G.RegisterItem(BG.BG_FindItemForWeapon(C.WP_GRAPPLING_HOOK))
-	end
 	if G.g_gametype.integer == C.GT_HARVESTER then
 		G.RegisterItem(BG.BG_FindItem("Red Cube"))
 		G.RegisterItem(BG.BG_FindItem("Blue Cube"))
@@ -870,10 +867,6 @@ function G.ClearRegisteredItems()
 		G.RegisterItem(BG.BG_FindItem("Neutral domination point"))
 		G.RegisterItem(BG.BG_FindItem("Red domination point"))
 		G.RegisterItem(BG.BG_FindItem("Blue domination point"))
-	end
-
-	if G.g_gametype.integer == C.GT_POSSESSION then
-		G.RegisterItem(BG.BG_FindItem("Neutral Flag"))
 	end
 end
 
@@ -924,9 +917,6 @@ G_ItemDisabled
 ]]
 function G.G_ItemDisabled(item)
 	local name
-	if G.g_runes.integer == 0 and item.giType == C.IT_PERSISTANT_POWERUP then
-		return 1
-	end
 
 	name = QS.Com_sprintf(128, "disable_%s", item.classname)
 	return G.trap_Cvar_VariableIntegerValue(name)
@@ -947,8 +937,21 @@ function G.G_SpawnItem(ent, item)
 	_, ent.random = G.G_SpawnFloat("random", "0")
 	_, ent.wait = G.G_SpawnFloat("wait", "0")
 
-	G.RegisterItem(item)
-	if G.G_ItemDisabled(item) ~= 0 then
+	if (item.giType == C.IT_TEAM and (G.g_instantgib.integer ~= 0 or G.g_rockets.integer ~= 0))
+		or (G.g_instantgib.integer == 0 and G.g_rockets.integer == 0) then
+		-- Don't load pickups in Elimination (or maybe... gives warnings)
+		if G.g_gametype.integer ~= C.GT_ELIMINATION and G.g_gametype.integer ~= C.GT_CTF_ELIMINATION and G.g_gametype.integer ~= C.GT_LMS then
+			G.RegisterItem(item)
+		end
+		-- Registrer flags anyway in CTF Elimination:
+		if G.g_gametype.integer == C.GT_CTF_ELIMINATION and item.giType == C.IT_TEAM then
+			G.RegisterItem(item)
+		end
+		if G.G_ItemDisabled(item) ~= 0 then
+			return
+		end
+	end
+	if G.g_persistantpowerups.integer == 0 and item.giType == C.IT_PERSISTANT_POWERUP then
 		return
 	end
 
@@ -971,12 +974,8 @@ function G.G_SpawnItem(ent, item)
 		ent.s.eFlags = bit32.bor(ent.s.eFlags, C.EF_NODRAW) --Don't draw the flag models/persistant powerups
 	end
 
-	if G.g_gametype.integer ~= C.GT_1FCTF and G.g_gametype.integer ~= C.GT_POSSESSION and QS.Q_strequal(ent.classname, "team_CTF_neutralflag") then
+	if G.g_gametype.integer ~= C.GT_1FCTF and QS.Q_strequal(ent.classname, "team_CTF_neutralflag") then
 		ent.s.eFlags = bit32.bor(ent.s.eFlags, C.EF_NODRAW) -- Don't draw the flag in CTF_elimination
-	end
-
-	if G.g_gametype.integer == C.GT_POSSESSION and (QS.Q_strequal(ent.classname, "team_CTF_redflag") or QS.Q_strequal(ent.classname, "team_CTF_blueflag")) then
-		ent.s.eFlags = bit32.bor(ent.s.eFlags, C.EF_NODRAW) -- Don't draw the flag colored flags in possession
 	end
 
 	if QS.Q_strequal(ent.classname, "domination_point") then
@@ -1034,8 +1033,6 @@ G_RunItem
 ]]
 function G.G_RunItem(ent)
 	local origin = Q.vec3()
-	local angles = Q.vec3()
-	local velocity = Q.vec3()
 	local tr = S.trace_t()
 	local contents
 	local mask
@@ -1084,14 +1081,6 @@ function G.G_RunItem(ent)
 	-- if it is in a nodrop volume, remove it
 	contents = G.trap_PointContents(ent.r.currentOrigin, -1)
 	if bit32.band(contents, C.CONTENTS_NODROP) ~= 0 then
-		if ent.item ~= nil and ent.item.giType == C.IT_TEAM and (QS.Q_strequal(ent.item.pickup_name, "Red Cube") or QS.Q_strequal(ent.item.pickup_name, "Blue Cube")) then
-			G.TossClientCubesValues(angles, origin, velocity)
-			G.G_SetOrigin(ent, origin)
-			ent.s.pos.trType = C.TR_GRAVITY
-			ent.s.pos.trTime = G.level.time
-			Q.VectorCopy(velocity, ent.s.pos.trDelta)
-			return
-		end
 		if ent.item ~= nil and ent.item.giType == C.IT_TEAM then
 			G.Team_FreeEntity(ent)
 		else

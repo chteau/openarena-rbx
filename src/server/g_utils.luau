@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_utils.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_utils.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_utils.c. Misc utility functions for the game module.
+-- Luau port of OpenArena 0.8.8's g_utils.c (gamecode 9e0f0c0). Misc utility functions for the game module.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -41,7 +41,7 @@ end
 
 function G.AddRemap(oldShader, newShader, timeOffset)
 	for i = 0, remapCount - 1 do
-		if QS.Q_strequal(oldShader, remappedShaders[i].oldShader) then
+		if QS.Q_stricmp(oldShader, remappedShaders[i].oldShader) == 0 then
 			-- found it, just update this one
 			remappedShaders[i].newShader = newShader
 			remappedShaders[i].timeOffset = Q.f(timeOffset)
@@ -146,7 +146,7 @@ function G.G_Find(from, fieldname, match)
 		if e.inuse then
 			local s = e[fieldname]
 			if s ~= nil then
-				if QS.Q_strequal(s, match) then
+				if QS.Q_stricmp(s, match) == 0 then
 					return e
 				end
 			end
@@ -326,10 +326,12 @@ angles and bad trails.
 function G.G_Spawn()
 	local level = G.level
 
+	local i = 0
 	for force = 0, 1 do
 		-- if we go through all entities and can't find one to free,
 		-- override the normal minimum times before use
-		for i = C.MAX_CLIENTS, level.num_entities - 1 do
+		i = C.MAX_CLIENTS
+		while i < level.num_entities do
 			local e = G.g_entities[i]
 			if not e.inuse then
 				-- the first couple seconds of server time can involve a lot of
@@ -340,14 +342,15 @@ function G.G_Spawn()
 					return e
 				end
 			end
+			i += 1
 		end
-		if level.num_entities < C.ENTITYNUM_MAX_NORMAL then
+		if i ~= C.MAX_GENTITIES then
 			break
 		end
 	end
-	if level.num_entities == C.ENTITYNUM_MAX_NORMAL then
-		for i = 0, C.MAX_GENTITIES - 1 do
-			G.G_Printf("%4i: %s\n", i, G.g_entities[i].classname)
+	if i == C.ENTITYNUM_MAX_NORMAL then
+		for j = 0, C.MAX_GENTITIES - 1 do
+			G.G_Printf("%4i: %s\n", j, G.g_entities[j].classname)
 		end
 		G.G_Error("G_Spawn: no free entities")
 	end
@@ -366,11 +369,6 @@ end
 
 function G.G_EntitiesFree()
 	local level = G.level
-
-	if level.num_entities < C.ENTITYNUM_MAX_NORMAL then
-		-- can open a new slot if needed
-		return true
-	end
 
 	for i = C.MAX_CLIENTS, level.num_entities - 1 do
 		if not G.g_entities[i].inuse then
@@ -499,10 +497,6 @@ function G.G_GlobalSound(soundIndex)
 	-- Let's avoid the S_FindName error if soundIndex is 0.
 	-- Sago: And let's check that the sound index is within the allowed range.
 	if soundIndex <= 0 or soundIndex >= C.MAX_SOUNDS then
-		if G.g_developer.integer ~= 0 then
-			-- Display this message when debugging
-			G.G_Printf("GlobalSound: Error, no soundIndex specified. Check your code!\n")
-		end
 		return
 	end
 	-- Spawn a Temporary Entity at the origin point for Intermission with the event EV_GLOBAL_SOUND

@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_bot.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_bot.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_bot.c. Bot and arena info loading, bot spawn queue, addbot/botlist commands.
+-- Luau port of OpenArena 0.8.8's g_bot.c (gamecode 9e0f0c0). Bot and arena info loading, bot spawn queue, addbot/botlist commands.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -174,7 +174,7 @@ G_GetArenaInfoByNumber
 ]]
 function G.G_GetArenaInfoByMap(map)
 	for n = 0, G.g_numArenas - 1 do
-		if QS.Q_strequal(QS.Info_ValueForKey(g_arenaInfos[n], "map"), map) then
+		if QS.Q_stricmp(QS.Info_ValueForKey(g_arenaInfos[n], "map"), map) == 0 then
 			return g_arenaInfos[n]
 		end
 	end
@@ -198,7 +198,7 @@ local function PlayerIntroSound(modelAndSkin)
 		skin = model
 	end
 
-	if QS.Q_strequal(skin, "default") then
+	if QS.Q_stricmp(skin, "default") == 0 then
 		skin = model
 	end
 
@@ -207,103 +207,75 @@ end
 
 --[[
 ===============
-G_CountBotPlayersByName
-
-Check connected and connecting (delay join) bots.
-
-Returns number of bots with name on specified team or whole server if team is -1.
-===============
-]]
-function G.G_CountBotPlayersByName(name, team)
-	local num = 0
-	for i = 0, G.g_maxclients.integer - 1 do
-		local cl = G.level.clients[i]
-		if cl.pers.connected == C.CON_DISCONNECTED then
-			continue
-		end
-		if bit32.band(G.g_entities[i].r.svFlags, C.SVF_BOT) == 0 then
-			continue
-		end
-		if team >= 0 and cl.sess.sessionTeam ~= team then
-			continue
-		end
-		if name ~= nil and QS.Q_stricmp(name, cl.pers.netname) ~= 0 then
-			continue
-		end
-		num += 1
-	end
-	return num
-end
-
---[[
-===============
-G_SelectRandomBotInfo
-
-Get random least used bot info on team or whole server if team is -1.
-===============
-]]
-function G.G_SelectRandomBotInfo(team)
-	local selection = {}
-	local num
-	local count, bestCount
-	local value
-
-	-- don't add duplicate bots to the server if there are less bots than bot types
-	if team ~= -1 and G.G_CountBotPlayersByName(nil, -1) < g_numBots then
-		team = -1
-	end
-
-	num = 0
-	bestCount = C.MAX_CLIENTS
-	for n = 0, g_numBots - 1 do
-		value = QS.Info_ValueForKey(g_botInfos[n], "funname")
-		if value == "" then
-			value = QS.Info_ValueForKey(g_botInfos[n], "name")
-		end
-		--
-		count = G.G_CountBotPlayersByName(value, team)
-
-		if count < bestCount then
-			bestCount = count
-			num = 0
-		end
-
-		if count == bestCount then
-			selection[num] = n
-			num += 1
-
-			if num == C.MAX_BOTS then
-				break
-			end
-		end
-	end
-
-	if num > 0 then
-		num = Q.trunc(Q.random() * (num - 1))
-		return selection[num]
-	end
-
-	return -1
-end
-
---[[
-===============
 G_AddRandomBot
 ===============
 ]]
 function G.G_AddRandomBot(team)
-	local teamstr
+	local i, num
 	local skill
+	local value, netname, teamstr
+	local cl
 
-	skill = G.trap_Cvar_VariableValue("g_spSkill")
-	if team == C.TEAM_RED then
-		teamstr = "red"
-	elseif team == C.TEAM_BLUE then
-		teamstr = "blue"
-	else
-		teamstr = "free"
+	if not G.trap_AAS_Initialized() then
+		return -- If no AAS then don't even try
 	end
-	G.trap_SendConsoleCommand(C.EXEC_INSERT, QS.va("addbot random %f %s %i\n", skill, teamstr, 0))
+
+	num = 0
+	for n = 0, g_numBots - 1 do
+		value = QS.Info_ValueForKey(g_botInfos[n], "name")
+		--
+		i = 0
+		while i < G.g_maxclients.integer do
+			cl = G.level.clients[i]
+			if
+				cl.pers.connected == C.CON_CONNECTED
+				and bit32.band(G.g_entities[cl.ps.clientNum].r.svFlags, C.SVF_BOT) ~= 0
+				and not (team >= 0 and cl.sess.sessionTeam ~= team)
+				and QS.Q_stricmp(value, cl.pers.netname) == 0
+			then
+				break
+			end
+			i += 1
+		end
+		if i >= G.g_maxclients.integer then
+			num += 1
+		end
+	end
+	num = Q.trunc(Q.random() * num)
+	for n = 0, g_numBots - 1 do
+		value = QS.Info_ValueForKey(g_botInfos[n], "name")
+		--
+		i = 0
+		while i < G.g_maxclients.integer do
+			cl = G.level.clients[i]
+			if
+				cl.pers.connected == C.CON_CONNECTED
+				and bit32.band(G.g_entities[cl.ps.clientNum].r.svFlags, C.SVF_BOT) ~= 0
+				and not (team >= 0 and cl.sess.sessionTeam ~= team)
+				and QS.Q_stricmp(value, cl.pers.netname) == 0
+			then
+				break
+			end
+			i += 1
+		end
+		if i >= G.g_maxclients.integer then
+			num -= 1
+			if num <= 0 then
+				skill = G.trap_Cvar_VariableValue("g_spSkill")
+				if team == C.TEAM_RED then
+					teamstr = "red"
+				elseif team == C.TEAM_BLUE then
+					teamstr = "blue"
+				else
+					teamstr = ""
+				end
+				netname = string.sub(value, 1, 35)
+				netname = QS.Q_CleanStr(netname)
+				G.trap_SendConsoleCommand(C.EXEC_INSERT, QS.va("addbot %s %f %s %i\n", netname, skill, teamstr, 0))
+				return
+			end
+		end
+	end
 end
 
 --[[
@@ -356,20 +328,28 @@ end
 ===============
 G_CountBotPlayers
 
-Check connected and connecting (delay join) bots.
 ===============
 ]]
 function G.G_CountBotPlayers(team)
 	local num = 0
 	for i = 0, G.g_maxclients.integer - 1 do
 		local cl = G.level.clients[i]
-		if cl.pers.connected == C.CON_DISCONNECTED then
+		if cl.pers.connected ~= C.CON_CONNECTED then
 			continue
 		end
 		if bit32.band(G.g_entities[cl.ps.clientNum].r.svFlags, C.SVF_BOT) == 0 then
 			continue
 		end
 		if team >= 0 and cl.sess.sessionTeam ~= team then
+			continue
+		end
+		num += 1
+	end
+	for n = 0, BOT_SPAWN_QUEUE_DEPTH - 1 do
+		if botSpawnQueue[n].spawnTime == 0 then
+			continue
+		end
+		if botSpawnQueue[n].spawnTime > G.level.time then
 			continue
 		end
 		num += 1
@@ -444,7 +424,7 @@ function G.G_CheckMinimumPlayers()
 				G.G_RemoveRandomBot(-1)
 			end
 		end
-	else
+	elseif G.g_gametype.integer == C.GT_FFA or G.g_gametype.integer == C.GT_LMS then
 		if minplayers >= G.g_maxclients.integer then
 			minplayers = G.g_maxclients.integer - 1
 		end
@@ -529,6 +509,7 @@ function G.G_BotConnect(clientNum, restart)
 	local settings = {
 		characterfile = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "characterfile"), C.MAX_FILEPATH),
 		skill = QS.atof(QS.Info_ValueForKey(userinfo, "skill")),
+		team = QS.Q_strncpyz(QS.Info_ValueForKey(userinfo, "team"), C.MAX_FILEPATH),
 	}
 
 	if not G.trap_AAS_Initialized() or G.BotAISetupClient(clientNum, settings, restart) == 0 then
@@ -546,9 +527,8 @@ G_AddBot
 ]]
 local function G_AddBot(name, skill, team, delay, altname)
 	local clientNum
-	local teamNum
-	local botinfoNum
 	local botinfo
+	local bot
 	local key
 	local s
 	local botname
@@ -556,55 +536,10 @@ local function G_AddBot(name, skill, team, delay, altname)
 	local headmodel
 	local userinfo
 
-	-- have the server allocate a client slot
-	clientNum = G.trap_BotAllocateClient()
-	if clientNum == -1 then
-		G.G_Printf(S_COLOR_RED .. "Unable to add bot. All player slots are in use.\n")
-		G.G_Printf(S_COLOR_RED .. "Start server with more 'open' slots (or check setting of sv_maxclients cvar).\n")
-		return
-	end
-
-	-- set default team
-	if team == nil or team == "" then
-		if G.GAMETYPE_IS_A_TEAM_GAME(G.g_gametype.integer) then
-			if G.PickTeam(clientNum) == C.TEAM_RED then
-				team = "red"
-			else
-				team = "blue"
-			end
-		else
-			team = "free"
-		end
-	end
-
 	-- get the botinfo from bots.txt
-	if QS.Q_strequal(name, "random") then
-		if QS.Q_strequal(team, "red") or QS.Q_strequal(team, "r") then
-			teamNum = C.TEAM_RED
-		elseif QS.Q_strequal(team, "blue") or QS.Q_strequal(team, "b") then
-			teamNum = C.TEAM_BLUE
-		elseif QS.Q_strequal(team, "spectator") or QS.Q_strequal(team, "s") then
-			teamNum = C.TEAM_SPECTATOR
-		else
-			teamNum = C.TEAM_FREE
-		end
-
-		botinfoNum = G.G_SelectRandomBotInfo(teamNum)
-
-		if botinfoNum < 0 then
-			G.G_Printf(S_COLOR_RED .. "Error: Cannot add random bot, no bot info available.\n")
-			G.trap_BotFreeClient(clientNum)
-			return
-		end
-
-		botinfo = G.G_GetBotInfoByNumber(botinfoNum)
-	else
-		botinfo = G.G_GetBotInfoByName(name)
-	end
-
+	botinfo = G.G_GetBotInfoByName(name)
 	if botinfo == nil then
 		G.G_Printf(S_COLOR_RED .. "Error: Bot '%s' not defined\n", name)
-		G.trap_BotFreeClient(clientNum)
 		return
 	end
 
@@ -622,8 +557,7 @@ local function G_AddBot(name, skill, team, delay, altname)
 	userinfo = QS.Info_SetValueForKey(userinfo, "name", botname)
 	userinfo = QS.Info_SetValueForKey(userinfo, "rate", "25000")
 	userinfo = QS.Info_SetValueForKey(userinfo, "snaps", "20")
-	userinfo = QS.Info_SetValueForKey(userinfo, "skill", QS.va("%.2f", skill))
-	userinfo = QS.Info_SetValueForKey(userinfo, "teampref", team)
+	userinfo = QS.Info_SetValueForKey(userinfo, "skill", QS.va("%1.2f", skill))
 
 	if skill >= 1 and skill < 2 then
 		userinfo = QS.Info_SetValueForKey(userinfo, "handicap", "50")
@@ -675,13 +609,36 @@ local function G_AddBot(name, skill, team, delay, altname)
 	s = QS.Info_ValueForKey(botinfo, "aifile")
 	if s == "" then
 		G.trap_Printf(S_COLOR_RED .. "Error: bot has no aifile specified\n")
-		G.trap_BotFreeClient(clientNum)
 		return
 	end
-	userinfo = QS.Info_SetValueForKey(userinfo, "characterfile", s)
 
-	-- don't send tinfo to bots, they don't parse it
-	userinfo = QS.Info_SetValueForKey(userinfo, "teamoverlay", "0")
+	-- have the server allocate a client slot
+	clientNum = G.trap_BotAllocateClient()
+	if clientNum == -1 then
+		G.G_Printf(S_COLOR_RED .. "Unable to add bot.  All player slots are in use.\n")
+		G.G_Printf(S_COLOR_RED .. "Start server with more 'open' slots (or check setting of sv_maxclients cvar).\n")
+		return
+	end
+
+	-- initialize the bot settings
+	if team == nil or team == "" then
+		if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 then
+			if G.PickTeam(clientNum) == C.TEAM_RED then
+				team = "red"
+			else
+				team = "blue"
+			end
+		else
+			team = "red"
+		end
+	end
+	userinfo = QS.Info_SetValueForKey(userinfo, "characterfile", QS.Info_ValueForKey(botinfo, "aifile"))
+	userinfo = QS.Info_SetValueForKey(userinfo, "skill", QS.va("%5.2f", skill))
+	userinfo = QS.Info_SetValueForKey(userinfo, "team", team)
+
+	bot = G.g_entities[clientNum]
+	bot.r.svFlags = bit32.bor(bot.r.svFlags, C.SVF_BOT)
+	bot.inuse = true
 
 	-- register the userinfo
 	G.trap_SetUserinfo(clientNum, userinfo)
@@ -729,7 +686,7 @@ function G.Svcmd_AddBot_f()
 	if str == "" then
 		skill = 4
 	else
-		skill = QS.Com_Clamp(1, 5, QS.atof(str))
+		skill = QS.atof(str)
 	end
 
 	-- team
@@ -821,9 +778,6 @@ local function G_SpawnBots(botList, baseDelay)
 		--skip spaces
 		while p <= len and string.byte(bots, p) == space do
 			p += 1
-		end
-		if p > len then
-			break
 		end
 
 		-- mark start of bot name
@@ -925,7 +879,7 @@ function G.G_GetBotInfoByName(name)
 
 	for n = 0, g_numBots - 1 do
 		value = QS.Info_ValueForKey(g_botInfos[n], "name")
-		if QS.Q_strequal(value, name) then
+		if QS.Q_stricmp(value, name) == 0 then
 			return g_botInfos[n]
 		end
 	end
@@ -984,7 +938,7 @@ function G.G_InitBots(restart)
 
 		basedelay = BOT_BEGIN_DELAY_BASE
 		strValue = QS.Info_ValueForKey(arenainfo, "special")
-		if QS.Q_strequal(strValue, "training") then
+		if QS.Q_stricmp(strValue, "training") == 0 then
 			basedelay += 10000
 		end
 

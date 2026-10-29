@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_local.h).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_local.h).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -87,26 +87,6 @@ function G.FileStatics(cfile: string)
 		fileStatics[cfile] = t
 	end
 	return t
-end
-
--- bg_public.h gametype macros
-function G.GAMETYPE_IS_A_TEAM_GAME(gt: number): boolean
-	return gt ~= C.GT_FFA and gt ~= C.GT_TOURNAMENT and gt ~= C.GT_SINGLE_PLAYER and gt ~= C.GT_LMS and gt ~= C.GT_POSSESSION
-end
-function G.GAMETYPE_USES_KEY_OBJECTIVES(gt: number): boolean
-	return gt ~= C.GT_FFA and gt ~= C.GT_TOURNAMENT and gt ~= C.GT_SINGLE_PLAYER and gt ~= C.GT_TEAM and gt ~= C.GT_LMS and gt ~= C.GT_POSSESSION
-end
-function G.GAMETYPE_USES_RED_AND_BLUE_FLAG(gt: number): boolean
-	return gt == C.GT_CTF or gt == C.GT_1FCTF or gt == C.GT_CTF_ELIMINATION
-end
-function G.GAMETYPE_USES_WHITE_FLAG(gt: number): boolean
-	return gt == C.GT_1FCTF or gt == C.GT_POSSESSION
-end
-function G.GAMETYPE_IS_ROUND_BASED(gt: number): boolean
-	return gt == C.GT_ELIMINATION or gt == C.GT_CTF_ELIMINATION or gt == C.GT_LMS
-end
-function G.GAMETYPE_USES_OBELISKS(gt: number): boolean
-	return gt == C.GT_HARVESTER or gt == C.GT_OBELISK
 end
 
 return G

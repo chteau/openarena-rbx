@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_admin.c, part 4 of 4).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_admin.c, part 4 of 4).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_admin.c (part 4). Admin commands help..warn, print/buffer helpers, cleanup.
+-- Luau port of OpenArena 0.8.8's g_admin.c (gamecode 9e0f0c0) (part 4). Admin commands help..warn, print/buffer helpers, cleanup.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -133,7 +133,7 @@ function G.G_admin_help(ent, skiparg)
 		ADMBP_begin()
 		for k = 0, SF.adminNumCmds - 1 do
 			i = k
-			if QS.Q_strequal(cmd, G.g_admin_cmds[i].keyword) then
+			if QS.Q_stricmp(cmd, G.g_admin_cmds[i].keyword) == 0 then
 				if not G.G_admin_permission(ent, string.sub(G.g_admin_cmds[i].flag, 1, 1)) then
 					ADMBP(ent, QS.va("^3!help: ^7you do not have permission to use '%s'\n",
 						G.g_admin_cmds[i].keyword))
@@ -152,7 +152,7 @@ function G.G_admin_help(ent, skiparg)
 		end
 		i = 0
 		while i < C.MAX_ADMIN_COMMANDS and G.g_admin_commands[i] ~= nil do
-			if QS.Q_strequal(cmd, G.g_admin_commands[i].command) then
+			if QS.Q_stricmp(cmd, G.g_admin_commands[i].command) == 0 then
 				if not SF.admin_command_permission(ent, G.g_admin_commands[i].command) then
 					ADMBP(ent, QS.va("^3!help: ^7you do not have permission to use '%s'\n",
 						G.g_admin_commands[i].command))
@@ -185,32 +185,27 @@ function G.G_admin_admintest(ent, skiparg)
 		return true
 	end
 	while i < C.MAX_ADMIN_ADMINS and G.g_admin_admins[i] ~= nil do
-		if QS.Q_strequal(G.g_admin_admins[i].guid, ent.client.pers.guid) then
+		if QS.Q_stricmp(G.g_admin_admins[i].guid, ent.client.pers.guid) == 0 then
 			found = true
 			break
 		end
 		i += 1
 	end
 
-	if not found or i == C.MAX_ADMIN_ADMINS then
-		--The i == MAX_ADMIN_ADMINS check makes it easier for static analysers to rationate about the code
-		return false
-	end
-	l = G.g_admin_admins[i].level
-	i = 0
-	while i < C.MAX_ADMIN_LEVELS and G.g_admin_levels[i] ~= nil do
-		if G.g_admin_levels[i].level ~= l then
+	if found then
+		l = G.g_admin_admins[i].level
+		i = 0
+		while i < C.MAX_ADMIN_LEVELS and G.g_admin_levels[i] ~= nil do
+			if G.g_admin_levels[i].level ~= l then
+				i += 1
+				continue
+			end
+			if G.g_admin_levels[i].name ~= "" then
+				lname = true
+				break
+			end
 			i += 1
-			continue
 		end
-		if G.g_admin_levels[i].name ~= "" then
-			lname = true
-			break
-		end
-		i += 1
-	end
-	if i >= C.MAX_ADMIN_LEVELS then
-		return false
 	end
 	AP(QS.va("print \"^3!admintest: ^7%s^7 is a level %d admin %s%s^7%s\n\"",
 		ent.client.pers.netname,
@@ -838,6 +833,13 @@ function G.G_admin_warn(ent, skiparg)
 			rsn))
 		return true
 	end
+end
+
+function G.G_admin_shuffle(ent, skipargs)
+	G.trap_SendConsoleCommand(C.EXEC_APPEND, "shuffle")
+	AP(QS.va("print \"^3!shuffle: ^7teams shuffled by %s \n\"",
+		netnameOf(ent)))
+	return true
 end
 
 --KK-OAX End Additions

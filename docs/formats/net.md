@@ -264,6 +264,14 @@ client constructs them with `S.playerState_t()`, `S.entityState_t()`,
 - **Constants** are in `src/shared/consts.luau`. They include `CS_*`,
   `EV_*`, `ET_*`, `PW_*`, `WP_*`, `STAT_*`, `PERS_*`, `EF_*`, `PMF_*`,
   `GT_*` and `TEAM_*`.
+- **Numbering** is OpenArena 0.8.8's (`bg_public.h` at gamecode
+  `9e0f0c0`), not OA master's. Stats are `STAT_HEALTH` 0,
+  `STAT_HOLDABLE_ITEM` 1, `STAT_PERSISTANT_POWERUP` 2, `STAT_WEAPONS` 3,
+  `STAT_ARMOR` 4, `STAT_DEAD_YAW` 5, `STAT_CLIENTS_READY` 6 and
+  `STAT_MAX_HEALTH` 7. Gametypes stop at `GT_DOMINATION` 12 (no
+  Possession). Events end at `EV_TAUNT_PATROL` 82, and animations at
+  `MAX_TOTALANIMATIONS` 37 (no master-only footstep events or OA3 torso
+  animations). The netField tables are ioq3's and did not change.
 
 ### Configstrings
 

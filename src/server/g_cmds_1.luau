@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_cmds.c, part 1 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_cmds.c, part 1 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_cmds.c (part 1). Scoreboard/status messages and cheat commands.
+-- Luau port of OpenArena 0.8.8's g_cmds.c (gamecode 9e0f0c0) (part 1). Scoreboard/status messages and cheat commands.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -47,11 +47,6 @@ function G.DeathmatchScoreboardMessage(ent)
 	local cl
 	local numSorted, scoreFlags, accuracy, perfect
 	local level = G.level
-
-	-- don't send scores to bots, they don't parse it
-	if bit32.band(ent.r.svFlags, C.SVF_BOT) ~= 0 then
-		return
-	end
 
 	-- send the latest information on all clients
 	stringlength = 0
@@ -198,7 +193,7 @@ DoubleDominationScoreTime
 ==================
 ]]
 function G.DoubleDominationScoreTimeMessage(ent)
-	G.trap_SendServerCommand(ent.index, QS.va("ddTakeAt %i", G.level.timeTaken + G.g_ddCaptureTime.integer * 1000))
+	G.trap_SendServerCommand(ent.index, QS.va("ddtaken %i", G.level.timeTaken))
 end
 
 --[[
@@ -379,61 +374,42 @@ end
 
 --[[
 ==================
-StringIsInteger
-==================
-]]
-function G.StringIsInteger(s)
-	local len = #s
-	local foundDigit = false
-
-	for i = 0, len - 1 do
-		local ch = string.byte(s, i + 1)
-		if ch < 48 or ch > 57 then
-			return false
-		end
-
-		foundDigit = true
-	end
-
-	return foundDigit
-end
-
---[[
-==================
 ClientNumberFromString
 
 Returns a player number for either a number or name string
 Returns -1 if invalid
 ==================
 ]]
-function G.ClientNumberFromString(to, s, checkNums, checkNames)
+function G.ClientNumberFromString(to, s)
 	local cl
 	local idnum
 	local cleanName
 
-	if checkNums then
-		-- numeric values could be slot numbers
-		if G.StringIsInteger(s) then
-			idnum = QS.atoi(s)
-			if idnum >= 0 and idnum < G.level.maxclients then
-				cl = G.level.clients[idnum]
-				if cl.pers.connected == C.CON_CONNECTED then
-					return idnum
-				end
-			end
+	-- numeric values are just slot numbers
+	local first = string.byte(s, 1) or 0
+	if first >= 48 and first <= 57 then
+		idnum = QS.atoi(s)
+		if idnum < 0 or idnum >= G.level.maxclients then
+			G.trap_SendServerCommand(to.index, QS.va("print \"Bad client slot: %i\n\"", idnum))
+			return -1
 		end
+
+		cl = G.level.clients[idnum]
+		if cl.pers.connected ~= C.CON_CONNECTED then
+			G.trap_SendServerCommand(to.index, QS.va("print \"Client %i is not active\n\"", idnum))
+			return -1
+		end
+		return idnum
 	end
 
-	if checkNames then
-		-- check for a name match
-		for n = 0, G.level.maxclients - 1 do
-			cl = G.level.clients[n]
-			if cl.pers.connected == C.CON_CONNECTED then
-				cleanName = QS.Q_strncpyz(cl.pers.netname, C.MAX_STRING_CHARS)
-				cleanName = QS.Q_CleanStr(cleanName)
-				if QS.Q_stricmp(cleanName, s) == 0 then
-					return n
-				end
+	-- check for a name match
+	for n = 0, G.level.maxclients - 1 do
+		cl = G.level.clients[n]
+		if cl.pers.connected == C.CON_CONNECTED then
+			cleanName = QS.Q_strncpyz(cl.pers.netname, C.MAX_STRING_CHARS)
+			cleanName = QS.Q_CleanStr(cleanName)
+			if QS.Q_strequal(cleanName, s) then
+				return n
 			end
 		end
 	end

@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/g_vote.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/g_vote.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of g_vote.c. Vote permission checks, vote counting and custom vote files.
+-- Luau port of OpenArena 0.8.8's g_vote.c (gamecode 9e0f0c0). Vote permission checks, vote counting and custom vote files.
 
 local G = require("./g_local")
 local C = require("./g_defs")
@@ -42,7 +42,7 @@ G.custom_vote_info = ""
 
 function G.allowedVote(commandStr)
 	local voteNames = G.trap_Cvar_VariableStringBuffer("g_voteNames")
-	if QS.Q_strequal(voteNames, "*") then
+	if QS.Q_stricmp(voteNames, "*") == 0 then
 		return true
 	end
 	local length = #commandStr
@@ -130,7 +130,7 @@ function G.allowedMap(mapname)
 	local pointer = QS.cursor(buffer)
 	local token = QS.COM_Parse(pointer)
 	while token ~= "" and not found do
-		if QS.Q_strequal(token, mapname) then
+		if QS.Q_stricmp(token, mapname) == 0 then
 			found = true
 		end
 		token = QS.COM_Parse(pointer)
@@ -142,7 +142,7 @@ end
 
 function G.allowedGametype(gametypeStr)
 	local voteGametypes = G.trap_Cvar_VariableStringBuffer("g_voteGametypes")
-	if QS.Q_strequal(voteGametypes, "*") then
+	if QS.Q_stricmp(voteGametypes, "*") == 0 then
 		return true
 	end
 	local length = #gametypeStr
@@ -264,42 +264,23 @@ function G.getCustomVote(votecommand)
 			if token == "" then
 				G.Com_Printf("Invalid/missing argument to %s in customvote.cfg\n", key)
 			end
-			if QS.Q_strequal(key, "votecommand") then
+			if QS.Q_stricmp(key, "votecommand") == 0 then
 				result.votename = QS.Q_strncpyz(token, MAX_CUSTOMNAME)
-			elseif QS.Q_strequal(key, "displayname") then
+			elseif QS.Q_stricmp(key, "displayname") == 0 then
 				result.displayname = QS.Q_strncpyz(token, MAX_CUSTOMDISPLAYNAME)
-			elseif QS.Q_strequal(key, "command") then
+			elseif QS.Q_stricmp(key, "command") == 0 then
 				result.command = QS.Q_strncpyz(token, MAX_CUSTOMCOMMAND)
 			else
 				G.Com_Printf("Unknown key in customvote.cfg: %s\n", key)
 			end
 		end
 
-		if QS.Q_strequal(result.votename, votecommand) then
+		if QS.Q_stricmp(result.votename, votecommand) == 0 then
 			return result
 		end
 	end
 
 	return S.t_customvote()
-end
-
-function G.whiteListedStr(str)
-	local out = {}
-	local destIndex = 0
-	local sourceLength = #str
-	local sourceIndex = 0
-	while sourceIndex < sourceLength and destIndex < 1024 do
-		local a = string.byte(str, sourceIndex + 1)
-		if (a >= 97 and a <= 122) or (a >= 65 and a <= 90) or (a >= 48 and a <= 57) or a == 32 or a == 63 then
-			destIndex += 1
-			out[destIndex] = string.char(a)
-		end
-		sourceIndex += 1
-	end
-	if destIndex >= 1024 then
-		destIndex = 1023
-	end
-	return table.concat(out, "", 1, destIndex)
 end
 
 function G.CheckVote()
@@ -314,25 +295,25 @@ function G.CheckVote()
 	if level.time - level.voteTime >= C.VOTE_TIME then
 		if bit32.band(G.g_dmflags.integer, C.DF_LIGHT_VOTING) ~= 0 then
 			if level.voteYes > level.voteNo * 2 then
-				G.trap_SendServerCommand(-1, QS.va("print \"Vote passed. At least 2 of 3 voted yes (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+				G.trap_SendServerCommand(-1, "print \"Vote passed. At least 2 of 3 voted yes\n\"")
 				level.voteExecuteTime = level.time + 3000
 			else
 				if level.voteYes > level.voteNo and level.voteYes >= 2 and (level.voteYes * 10) > (level.numVotingClients * 3) then
-					G.trap_SendServerCommand(-1, QS.va("print \"Vote passed. More yes than no. (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+					G.trap_SendServerCommand(-1, "print \"Vote passed. More yes than no.\n\"")
 					level.voteExecuteTime = level.time + 3000
 				else
-					G.trap_SendServerCommand(-1, QS.va("print \"Vote failed. (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+					G.trap_SendServerCommand(-1, "print \"Vote failed.\n\"")
 				end
 			end
 		else
-			G.trap_SendServerCommand(-1, QS.va("print \"Vote failed. (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+			G.trap_SendServerCommand(-1, "print \"Vote failed.\n\"")
 		end
 	else
 		if level.voteYes > Q.idiv(level.numVotingClients, 2) then
-			G.trap_SendServerCommand(-1, QS.va("print \"Vote passed. (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+			G.trap_SendServerCommand(-1, "print \"Vote passed.\n\"")
 			level.voteExecuteTime = level.time + 3000
 		elseif level.voteNo >= Q.idiv(level.numVotingClients, 2) then
-			G.trap_SendServerCommand(-1, QS.va("print \"Vote failed. (%s)\n\"", G.whiteListedStr(level.voteDisplayString)))
+			G.trap_SendServerCommand(-1, "print \"Vote failed.\n\"")
 		else
 			return
 		end
