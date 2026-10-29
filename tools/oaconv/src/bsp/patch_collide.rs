@@ -7,8 +7,8 @@ mod polylib;
 
 use grid::Grid;
 use polylib::{
-    base_winding_for_plane, chop_winding, cross, dot, ma, normalize, sub, winding_bounds, within, Vec3,
-    MAX_MAP_BOUNDS, SIDE_BACK, SIDE_FRONT, SIDE_ON,
+    base_winding_for_plane, chop_winding, cross, dot, ma, normalize, sub, winding_bounds, within,
+    Vec3, MAX_MAP_BOUNDS, SIDE_BACK, SIDE_FRONT, SIDE_ON,
 };
 
 pub const MAX_FACET_BEVELS: usize = 4 + 6 + 16;
@@ -135,8 +135,12 @@ impl Builder {
             if dot(&n, &normal_of(&p.plane)) < 0.0 {
                 continue;
             }
-            let near =
-                |pt: &Vec3| within(dot(pt, &normal_of(&p.plane)) - p.plane[3], PLANE_TRI_EPSILON);
+            let near = |pt: &Vec3| {
+                within(
+                    dot(pt, &normal_of(&p.plane)) - p.plane[3],
+                    PLANE_TRI_EPSILON,
+                )
+            };
             if near(p1) && near(p2) && near(p3) {
                 return i as i32;
             }

@@ -180,6 +180,12 @@ pub fn build_atlases(
             "libvorbis",
             "-q:a",
             "5",
+            // Fixed Ogg serials and no encoder tag: same input, same bytes,
+            // so the upload lock keeps matching across converts.
+            "-fflags",
+            "+bitexact",
+            "-flags:a",
+            "+bitexact",
             &out_str,
         ];
         run_ffmpeg(&args, f32_bytes(&pcm))
@@ -219,6 +225,10 @@ pub fn write_music(clip: &Clip, out_dir: &Path) -> Result<PathBuf, String> {
         "libvorbis",
         "-q:a",
         "5",
+        "-fflags",
+        "+bitexact",
+        "-flags:a",
+        "+bitexact",
         &dest_str,
     ];
     run_ffmpeg(&args, clip.bytes.clone())

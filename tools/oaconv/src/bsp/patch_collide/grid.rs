@@ -31,9 +31,7 @@ fn subdivide(a: &Vec3, b: &Vec3, c: &Vec3) -> (Vec3, Vec3, Vec3) {
 }
 
 fn compare_points(a: &Vec3, b: &Vec3) -> bool {
-    (0..3).all(|i| {
-        within(a[i] - b[i], POINT_EPSILON)
-    })
+    (0..3).all(|i| within(a[i] - b[i], POINT_EPSILON))
 }
 
 impl Grid {
@@ -48,11 +46,10 @@ impl Grid {
     pub fn set_wrap_width(&mut self) {
         let first = &self.cols[0];
         let last = &self.cols[self.cols.len() - 1];
-        self.wrap_width = first.iter().zip(last).all(|(a, b)| {
-            (0..3).all(|j| {
-                within(a[j] - b[j], WRAP_POINT_EPSILON)
-            })
-        });
+        self.wrap_width = first
+            .iter()
+            .zip(last)
+            .all(|(a, b)| (0..3).all(|j| within(a[j] - b[j], WRAP_POINT_EPSILON)));
     }
 
     pub fn subdivide_columns(&mut self) {
