@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_chat.c, part 1 of 2).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_chat.c, part 1 of 2).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_chat.c, part 1 of 2. Bot chat helpers and the chat triggers up to BotChat_Death.
+-- Luau port of OpenArena 0.8.8's ai_chat.c (gamecode 9e0f0c0), part 1 of 2. Bot chat helpers and the chat triggers up to BotChat_Death.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -43,9 +43,19 @@ local function ActivePlayerConfig(i)
 	return true
 end
 
+local maxclients_BotNumActivePlayers = 0
+local maxclients_BotIsFirstInRankings = 0
+local maxclients_BotIsLastInRankings = 0
+local maxclients_BotFirstClientInRankings = 0
+local maxclients_BotLastClientInRankings = 0
+local maxclients_BotRandomOpponentName = 0
+
 function G.BotNumActivePlayers()
+	if maxclients_BotNumActivePlayers == 0 then
+		maxclients_BotNumActivePlayers = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
 	local num = 0
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(maxclients_BotNumActivePlayers, C.MAX_CLIENTS) - 1 do
 		if ActivePlayerConfig(i) then
 			num += 1
 		end
@@ -56,9 +66,13 @@ end
 function G.BotIsFirstInRankings(bs)
 	local score = bs.cur_ps.persistant[C.PERS_SCORE]
 	local ps = S.playerState_t()
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_BotIsFirstInRankings == 0 then
+		maxclients_BotIsFirstInRankings = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_BotIsFirstInRankings, C.MAX_CLIENTS) - 1 do
 		if not ActivePlayerConfig(i) then continue end
-		if G.BotAI_GetClientState(i, ps) ~= 0 and score < ps.persistant[C.PERS_SCORE] then return 0 end
+		G.BotAI_GetClientState(i, ps)
+		if score < ps.persistant[C.PERS_SCORE] then return 0 end
 	end
 	return 1
 end
@@ -66,9 +80,13 @@ end
 function G.BotIsLastInRankings(bs)
 	local score = bs.cur_ps.persistant[C.PERS_SCORE]
 	local ps = S.playerState_t()
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_BotIsLastInRankings == 0 then
+		maxclients_BotIsLastInRankings = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_BotIsLastInRankings, C.MAX_CLIENTS) - 1 do
 		if not ActivePlayerConfig(i) then continue end
-		if G.BotAI_GetClientState(i, ps) ~= 0 and score > ps.persistant[C.PERS_SCORE] then return 0 end
+		G.BotAI_GetClientState(i, ps)
+		if score > ps.persistant[C.PERS_SCORE] then return 0 end
 	end
 	return 1
 end
@@ -77,9 +95,13 @@ function G.BotFirstClientInRankings()
 	local bestscore = -999999
 	local bestclient = 0
 	local ps = S.playerState_t()
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_BotFirstClientInRankings == 0 then
+		maxclients_BotFirstClientInRankings = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_BotFirstClientInRankings, C.MAX_CLIENTS) - 1 do
 		if not ActivePlayerConfig(i) then continue end
-		if G.BotAI_GetClientState(i, ps) ~= 0 and ps.persistant[C.PERS_SCORE] > bestscore then
+		G.BotAI_GetClientState(i, ps)
+		if ps.persistant[C.PERS_SCORE] > bestscore then
 			bestscore = ps.persistant[C.PERS_SCORE]
 			bestclient = i
 		end
@@ -91,9 +113,13 @@ function G.BotLastClientInRankings()
 	local worstscore = 999999
 	local bestclient = 0
 	local ps = S.playerState_t()
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_BotLastClientInRankings == 0 then
+		maxclients_BotLastClientInRankings = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_BotLastClientInRankings, C.MAX_CLIENTS) - 1 do
 		if not ActivePlayerConfig(i) then continue end
-		if G.BotAI_GetClientState(i, ps) ~= 0 and ps.persistant[C.PERS_SCORE] < worstscore then
+		G.BotAI_GetClientState(i, ps)
+		if ps.persistant[C.PERS_SCORE] < worstscore then
 			worstscore = ps.persistant[C.PERS_SCORE]
 			bestclient = i
 		end
@@ -105,7 +131,10 @@ function G.BotRandomOpponentName(bs)
 	local opponents = {}
 	local numopponents = 0
 	opponents[0] = 0
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_BotRandomOpponentName == 0 then
+		maxclients_BotRandomOpponentName = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_BotRandomOpponentName, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then continue end
 		if not ActivePlayerConfig(i) then continue end
 		--skip team mates

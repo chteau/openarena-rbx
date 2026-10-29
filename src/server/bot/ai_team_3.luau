@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_team.c, part 3 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_team.c, part 3 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_team.c, part 3 of 3. 1FCTF, obelisk and harvester orders, human team leader search and BotTeamAI.
+-- Luau port of OpenArena 0.8.8's ai_team.c (gamecode 9e0f0c0), part 3 of 3. 1FCTF, obelisk and harvester orders, human team leader search and BotTeamAI.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -290,7 +290,7 @@ function G.BotTeamAI(bs)
 	bs.becometeamleader_time = 0
 
 	local netname = G.ClientName(bs.client, C.MAX_NETNAME)
-	if not QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) ~= 0 then
 		return
 	end
 	local numteammates = G.BotNumTeamMates(bs)

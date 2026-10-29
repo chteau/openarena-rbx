@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_main.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_main.c, part 1 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_main.c, part 1 of 3. Bot AI entry: globals, print/trace/state helpers, status reports.
+-- Luau port of OpenArena 0.8.8's ai_main.c (gamecode 9e0f0c0), part 1 of 3. Bot AI entry: globals, print/trace/state helpers, status reports.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -36,7 +36,6 @@ local SF = G.FileStatics("ai_main")
 local S_COLOR_RED = "^1"
 local S_COLOR_YELLOW = "^3"
 local S_COLOR_BLUE = "^4"
-local GT_POSSESSION = 13
 
 SF.MAX_PATH = 144
 
@@ -228,7 +227,7 @@ function G.BotReportStatus(bs)
 	local netname = G.ClientName(bs.client, C.MAX_MESSAGE_SIZE)
 	local leader
 	local flagstatus
-	if QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) == 0 then
 		leader = "L"
 	else
 		leader = " "
@@ -299,7 +298,7 @@ BotTeamplayReport
 ]]
 function G.BotTeamplayReport()
 	G.BotAI_Print(C.PRT_MESSAGE, S_COLOR_RED .. "RED\n")
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		--
 		local b = G.botstates[i]
 		if b ~= nil and b.inuse ~= 0 then
@@ -314,7 +313,7 @@ function G.BotTeamplayReport()
 		end
 	end
 	G.BotAI_Print(C.PRT_MESSAGE, S_COLOR_BLUE .. "BLUE\n")
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		--
 		local b = G.botstates[i]
 		if b ~= nil and b.inuse ~= 0 then
@@ -343,7 +342,7 @@ function G.BotSetInfoConfigString(bs)
 	local carrying
 	--
 	local netname = G.ClientName(bs.client, C.MAX_MESSAGE_SIZE)
-	if QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) == 0 then
 		leader = "L"
 	else
 		leader = " "
@@ -355,7 +354,7 @@ function G.BotSetInfoConfigString(bs)
 		if G.BotCTFCarryingFlag(bs) ~= 0 then
 			carrying = "F "
 		end
-	elseif gametype == C.GT_1FCTF or gametype == GT_POSSESSION then
+	elseif gametype == C.GT_1FCTF then
 		if G.Bot1FCTFCarryingFlag(bs) ~= 0 then
 			carrying = "F "
 		end
@@ -418,7 +417,7 @@ BotUpdateInfoConfigStrings
 ==============
 ]]
 function G.BotUpdateInfoConfigStrings()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		--
 		local b = G.botstates[i]
 		if b ~= nil and b.inuse ~= 0 then

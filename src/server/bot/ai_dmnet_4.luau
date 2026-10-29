@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmnet.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmnet.c, part 4 of 5).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmnet.c, part 4 of 5. Seek (activate entity, NBG, LTG) and battle fight nodes.
+-- Luau port of OpenArena 0.8.8's ai_dmnet.c (gamecode 9e0f0c0), part 4 of 5. Seek (activate entity, NBG, LTG) and battle fight nodes.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -433,8 +433,7 @@ function G.AINode_Seek_LTG(bs)
 			if G.BotCTFCarryingFlag(bs) ~= 0 then
 				range = 50
 			end
-		-- original condition "gametype == GT_1FCTF || GT_POSSESSION" is always true (GT_POSSESSION is a nonzero constant)
-		elseif G.gametype == C.GT_1FCTF or true then
+		elseif G.gametype == C.GT_1FCTF then
 			if G.Bot1FCTFCarryingFlag(bs) ~= 0 then
 				range = 50
 			end
@@ -609,10 +608,6 @@ function G.AINode_Battle_Fight(bs)
 	end
 	--if the enemy is not visible
 	if G.BotEntityVisible(bs.entitynum, bs.eye, bs.viewangles, 360, bs.enemy) == 0 then
-		if bs.enemy == G.redobelisk.entitynum or bs.enemy == G.blueobelisk.entitynum then
-			G.AIEnter_Battle_Chase(bs, "battle fight: obelisk out of sight")
-			return 0
-		end
 		if G.BotWantsToChase(bs) ~= 0 then
 			G.AIEnter_Battle_Chase(bs, "battle fight: enemy out of sight")
 			return 0

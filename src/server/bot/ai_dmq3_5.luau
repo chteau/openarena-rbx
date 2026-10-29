@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c, part 5 of 7).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c, part 5 of 7).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 5 of 7. Flag/cube carrier queries, aiming, attack checks, map scripts, button goals.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 5 of 7. Flag/cube carrier queries, aiming, attack checks, map scripts, button goals.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -35,12 +35,12 @@ local SF = G.FileStatics("ai_dmq3")
 
 function G.BotTeamFlagCarrier(bs)
 	local entinfo = S.aas_entityinfo_t()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end
 		G.BotEntityInfo(i, entinfo)
-		if not entinfo.valid then
+		if entinfo.valid == 0 then
 			continue
 		end
 		if not G.EntityCarriesFlag(entinfo) then
@@ -56,12 +56,12 @@ end
 
 function G.BotEnemyFlagCarrierVisible(bs)
 	local entinfo = S.aas_entityinfo_t()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end
 		G.BotEntityInfo(i, entinfo)
-		if not entinfo.valid then
+		if entinfo.valid == 0 then
 			continue
 		end
 		if not G.EntityCarriesFlag(entinfo) then
@@ -85,12 +85,12 @@ function G.BotVisibleTeamMatesAndEnemies(bs, range)
 	local enemies = 0
 	local entinfo = S.aas_entityinfo_t()
 	local dir = Q.vec3()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end
 		G.BotEntityInfo(i, entinfo)
-		if not entinfo.valid then
+		if entinfo.valid == 0 then
 			continue
 		end
 		if not G.EntityCarriesFlag(entinfo) then
@@ -115,12 +115,12 @@ end
 
 function G.BotTeamCubeCarrierVisible(bs)
 	local entinfo = S.aas_entityinfo_t()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end
 		G.BotEntityInfo(i, entinfo)
-		if not entinfo.valid then
+		if entinfo.valid == 0 then
 			continue
 		end
 		if not G.EntityCarriesCubes(entinfo) then
@@ -140,12 +140,12 @@ end
 
 function G.BotEnemyCubeCarrierVisible(bs)
 	local entinfo = S.aas_entityinfo_t()
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end
 		G.BotEntityInfo(i, entinfo)
-		if not entinfo.valid then
+		if entinfo.valid == 0 then
 			continue
 		end
 		if not G.EntityCarriesCubes(entinfo) then
@@ -494,29 +494,25 @@ function G.BotMapScripts(bs)
 	local info = G.trap_GetServerinfo()
 	local mapname = QS.Q_strncpyz(QS.Info_ValueForKey(info, "mapname"), 128)
 
-	if QS.Q_strequal(mapname, "q3tourney6") or QS.Q_strequal(mapname, "q3tourney6_ctf") or QS.Q_strequal(mapname, "mpq3tourney6") then
-		local mins = { [0] = 694, 200, 480 }
-		local maxs = { [0] = 968, 472, 680 }
+	if QS.Q_stricmp(mapname, "q3tourney6") == 0 then
+		local mins = { [0] = 700, 204, 672 }
+		local maxs = { [0] = 964, 468, 680 }
 		local buttonorg = { [0] = 304, 352, 920 }
 		bs.tfl = bit32.band(bs.tfl, bit32.bnot(C.TFL_FUNCBOB))
-		if QS.Q_strequal(mapname, "mpq3tourney6") then
-			mins[2] += 64
-			maxs[2] += 64
-		end
 		if bs.origin[0] > mins[0] and bs.origin[0] < maxs[0] then
 			if bs.origin[1] > mins[1] and bs.origin[1] < maxs[1] then
-				if bs.origin[2] > mins[2] and bs.origin[2] < maxs[2] then
+				if bs.origin[2] < mins[2] then
 					return
 				end
 			end
 		end
 		local shootbutton = false
-		for i = 0, G.level.maxclients - 1 do
+		for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 			if i == bs.client then
 				continue
 			end
 			G.BotEntityInfo(i, entinfo)
-			if not entinfo.valid then
+			if entinfo.valid == 0 then
 				continue
 			end
 			if G.EntityIsDead(entinfo) or entinfo.number == bs.entitynum then
@@ -524,11 +520,11 @@ function G.BotMapScripts(bs)
 			end
 			if entinfo.origin[0] > mins[0] and entinfo.origin[0] < maxs[0] then
 				if entinfo.origin[1] > mins[1] and entinfo.origin[1] < maxs[1] then
-					if entinfo.origin[2] > mins[2] and entinfo.origin[2] < maxs[2] then
+					if entinfo.origin[2] < mins[2] then
 						if G.BotSameTeam(bs, i) ~= 0 then
 							shootbutton = false
 							break
-						elseif bs.enemy == i then
+						else
 							shootbutton = true
 						end
 					end
@@ -548,6 +544,9 @@ function G.BotMapScripts(bs)
 				G.trap_EA_Attack(bs.client)
 			end
 		end
+	elseif QS.Q_stricmp(mapname, "mpq3tourney6") == 0 then
+		-- NOTE: NEVER use the func_bobbing in mpq3tourney6
+		bs.tfl = bit32.band(bs.tfl, bit32.bnot(C.TFL_FUNCBOB))
 	end
 end
 
@@ -632,6 +631,7 @@ function G.BotFuncButtonActivateGoal(bs, bspent, activategoal)
 	if modelindex == 0 then
 		return 0
 	end
+	Q.VectorClear(angles)
 	local entitynum = G.BotModelMinsMaxs(modelindex, C.ET_MOVER, 0, mins, maxs)
 	ok, lip = G.trap_AAS_FloatForBSPEpairKey(bspent, "lip")
 	if lip == 0 then

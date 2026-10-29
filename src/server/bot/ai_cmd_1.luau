@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_cmd.c, part 1 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_cmd.c, part 1 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_cmd.c, part 1 of 3. Bot team command helpers and the first command handlers.
+-- Luau port of OpenArena 0.8.8's ai_cmd.c (gamecode 9e0f0c0), part 1 of 3. Bot team command helpers and the first command handlers.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -121,12 +121,16 @@ end
 FindClientByName
 ==================
 ]]
+local maxclients_FindClientByName = 0
 function G.FindClientByName(name)
-	for i = 0, G.level.maxclients - 1 do
-		local buf = G.ClientName(i, C.MAX_INFO_STRING)
-		if QS.Q_strequal(buf, name) then return i end
+	if maxclients_FindClientByName == 0 then
+		maxclients_FindClientByName = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
 	end
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(maxclients_FindClientByName, C.MAX_CLIENTS) - 1 do
+		local buf = G.ClientName(i, C.MAX_INFO_STRING)
+		if QS.Q_stricmp(buf, name) == 0 then return i end
+	end
+	for i = 0, math.min(maxclients_FindClientByName, C.MAX_CLIENTS) - 1 do
 		local buf = G.ClientName(i, C.MAX_INFO_STRING)
 		if G.stristr(buf, name) then return i end
 	end
@@ -138,13 +142,17 @@ end
 FindEnemyByName
 ==================
 ]]
+local maxclients_FindEnemyByName = 0
 function G.FindEnemyByName(bs, name)
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_FindEnemyByName == 0 then
+		maxclients_FindEnemyByName = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	for i = 0, math.min(maxclients_FindEnemyByName, C.MAX_CLIENTS) - 1 do
 		if G.BotSameTeam(bs, i) ~= 0 then continue end
 		local buf = G.ClientName(i, C.MAX_INFO_STRING)
-		if QS.Q_strequal(buf, name) then return i end
+		if QS.Q_stricmp(buf, name) == 0 then return i end
 	end
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(maxclients_FindEnemyByName, C.MAX_CLIENTS) - 1 do
 		if G.BotSameTeam(bs, i) ~= 0 then continue end
 		local buf = G.ClientName(i, C.MAX_INFO_STRING)
 		if G.stristr(buf, name) then return i end
@@ -157,9 +165,13 @@ end
 NumPlayersOnSameTeam
 ==================
 ]]
+local maxclients_NumPlayersOnSameTeam = 0
 function G.NumPlayersOnSameTeam(bs)
+	if maxclients_NumPlayersOnSameTeam == 0 then
+		maxclients_NumPlayersOnSameTeam = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
 	local num = 0
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(maxclients_NumPlayersOnSameTeam, C.MAX_CLIENTS) - 1 do
 		local buf = G.trap_GetConfigstring(C.CS_PLAYERS + i)
 		if #buf ~= 0 then
 			if G.BotSameTeam(bs, i + 1) ~= 0 then num += 1 end

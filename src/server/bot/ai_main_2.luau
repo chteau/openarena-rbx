@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_main.c, part 2 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_main.c, part 2 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_main.c, part 2 of 3. Interbreeding, view angles, usercmd conversion, BotAI frame, session write.
+-- Luau port of OpenArena 0.8.8's ai_main.c (gamecode 9e0f0c0), part 2 of 3. Interbreeding, view angles, usercmd conversion, BotAI frame, session write.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -178,7 +178,8 @@ function G.BotChangeViewAngles(bs, thinktime)
 	maxchange *= thinktime
 	for i = 0, 1 do
 		if G.bot_challenge.integer ~= 0 then
-			diff = math.abs(G.AngleDifference(bs.viewangles[i], bs.ideal_viewangles[i]))
+			-- abs() is bg_lib's int abs: the float difference is truncated first
+			diff = math.abs(Q.trunc(G.AngleDifference(bs.viewangles[i], bs.ideal_viewangles[i])))
 			anglespeed = diff * factor
 			if anglespeed > maxchange then anglespeed = maxchange end
 			bs.viewangles[i] = G.BotChangeViewAngle(bs.viewangles[i], bs.ideal_viewangles[i], anglespeed)
@@ -248,7 +249,8 @@ function G.BotInputToUserCommand(bi, ucmd, delta_angles, time)
 	bi.speed = bi.speed * 127 / 400
 	local f = Q.DotProduct(forward, bi.dir)
 	local r = Q.DotProduct(right, bi.dir)
-	local u = math.abs(forward[2]) * bi.dir[2]
+	-- int abs(), as in 0.8.8: 0 unless forward[2] is exactly +-1
+	local u = math.abs(Q.trunc(forward[2])) * bi.dir[2]
 	local m = math.abs(f)
 
 	if math.abs(r) > m then
@@ -331,10 +333,7 @@ function G.BotAI(client, thinktime)
 		return 0
 	end
 
-	if isFalse(G.BotAI_GetClientState(client, bs.cur_ps)) then
-		G.BotAI_Print(C.PRT_FATAL, "BotAI: failed to get player state for player %d\n", client)
-		return 0
-	end
+	G.BotAI_GetClientState(client, bs.cur_ps)
 
 	while true do
 		local ok, buf = G.trap_BotGetServerCommand(client, 1024)
@@ -346,15 +345,15 @@ function G.BotAI(client, thinktime)
 
 		args = G.RemoveColorEscapeSequences(args)
 
-		if QS.Q_strequal(buf, "print") then
+		if QS.Q_stricmp(buf, "print") == 0 then
 			args = string.sub(args, 2)
 			args = string.sub(args, 1, #args - 1)
 			G.trap_BotQueueConsoleMessage(bs.cs, C.CMS_NORMAL, args)
-		elseif QS.Q_strequal(buf, "chat") then
+		elseif QS.Q_stricmp(buf, "chat") == 0 then
 			args = string.sub(args, 2)
 			args = string.sub(args, 1, #args - 1)
 			G.trap_BotQueueConsoleMessage(bs.cs, C.CMS_CHAT, args)
-		elseif QS.Q_strequal(buf, "tchat") then
+		elseif QS.Q_stricmp(buf, "tchat") == 0 then
 			args = string.sub(args, 2)
 			args = string.sub(args, 1, #args - 1)
 			G.trap_BotQueueConsoleMessage(bs.cs, C.CMS_CHAT, args)
@@ -396,8 +395,7 @@ function G.BotWriteSessionData(bs)
 		"%i %i %i %i %i %i %i %i"
 		.. " %f %f %f"
 		.. " %f %f %f"
-		.. " %f %f %f"
-		.. " %f",
+		.. " %f %f %f",
 		bs.lastgoal_decisionmaker,
 		bs.lastgoal_ltgtype,
 		bs.lastgoal_teammate,
@@ -414,8 +412,7 @@ function G.BotWriteSessionData(bs)
 		g.mins[2],
 		g.maxs[0],
 		g.maxs[1],
-		g.maxs[2],
-		bs.formation_dist
+		g.maxs[2]
 	)
 
 	local var = QS.va("botsession%i", bs.client)

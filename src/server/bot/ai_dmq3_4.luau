@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c, part 4 of 7).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c, part 4 of 7).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 4 of 7. Bot combat decisions, attack movement, enemy finding and visibility.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 4 of 7. Bot combat decisions, attack movement, enemy finding and visibility.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -34,7 +34,6 @@ local BG = require("../../shared/BG")
 local SF = G.FileStatics("ai_dmq3")
 
 local IDEAL_ATTACKDIST = 140
-local GT_POSSESSION = 13
 
 local function Square(x)
 	return x * x
@@ -72,11 +71,6 @@ function G.BotWantsToChase(bs)
 
 		G.BotEntityInfo(bs.enemy, entinfo)
 		if G.EntityCarriesCubes(entinfo) then
-			return 1
-		end
-	elseif G.gametype == GT_POSSESSION then
-		G.BotEntityInfo(bs.enemy, entinfo)
-		if G.EntityCarriesFlag(entinfo) then
 			return 1
 		end
 	end
@@ -401,10 +395,6 @@ function G.BotEntityVisible(viewer, eye, viewangles, fov, ent)
 	local LWS = bit32.bor(C.CONTENTS_LAVA, C.CONTENTS_SLIME, C.CONTENTS_WATER)
 
 	G.BotEntityInfo(ent, entinfo)
-	if entinfo.valid == 0 then
-		return 0
-	end
-
 	Q.VectorAdd(entinfo.mins, entinfo.maxs, middle)
 	Q.VectorScale(middle, 0.5, middle)
 	Q.VectorAdd(entinfo.origin, middle, middle)
@@ -517,12 +507,9 @@ function G.BotFindEnemy(bs, curenemy)
 			return 1
 		end
 	end
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then continue end
 		if i == curenemy then continue end
-		if bit32.band(G.g_entities[i].flags, C.FL_NOTARGET) ~= 0 then
-			continue
-		end
 		G.BotEntityInfo(i, entinfo)
 		if entinfo.valid == 0 then continue end
 		if G.EntityIsDead(entinfo) or entinfo.number == bs.entitynum then continue end
@@ -575,7 +562,7 @@ end
 function G.BotTeamFlagCarrierVisible(bs)
 	local entinfo = S.aas_entityinfo_t()
 
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(G.maxclients, C.MAX_CLIENTS) - 1 do
 		if i == bs.client then
 			continue
 		end

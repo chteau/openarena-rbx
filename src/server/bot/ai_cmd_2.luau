@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_cmd.c, part 2 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_cmd.c, part 2 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_cmd.c, part 2 of 3. Team command handlers (TakeB .. Suicide).
+-- Luau port of OpenArena 0.8.8's ai_cmd.c (gamecode 9e0f0c0), part 2 of 3. Team command handlers (TakeB .. Suicide).
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -31,7 +31,6 @@ local Q = require("../../shared/q_math")
 local QS = require("../../shared/q_shared")
 local BG = require("../../shared/BG")
 
-local GT_POSSESSION = 13
 local VOICECHAT_YES = "yes"
 local VOICECHAT_TAUNT = "taunt"
 
@@ -199,10 +198,6 @@ function G.BotMatch_GetFlag(bs, match)
 		if G.ctf_neutralflag.areanum == 0 or G.ctf_redflag.areanum == 0 or G.ctf_blueflag.areanum == 0 then
 			return
 		end
-	elseif G.gametype == GT_POSSESSION then
-		if G.ctf_neutralflag.areanum == 0 then
-			return
-		end
 	else
 		return
 	end
@@ -223,7 +218,7 @@ function G.BotMatch_GetFlag(bs, match)
 	--set the team goal time
 	bs.teamgoal_time = G.floattime + C.CTF_GETFLAG_TIME
 	-- get an alternate route in ctf
-	if G.gametype == C.GT_CTF or G.gametype == C.GT_1FCTF or G.gametype == C.GT_CTF_ELIMINATION then
+	if G.gametype == C.GT_CTF or G.gametype == C.GT_CTF_ELIMINATION then
 		--get an alternative route goal towards the enemy base
 		G.BotGetAlternateRouteGoal(bs, G.BotOppositeTeam(bs))
 	end
@@ -332,7 +327,7 @@ end
 
 function G.BotMatch_TaskPreference(bs, match)
 	local netname = G.ClientName(bs.client, C.MAX_NETNAME)
-	if not QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) ~= 0 then
 		return
 	end
 

@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_cmd.c, part 3 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_cmd.c, part 3 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_cmd.c, part 3 of 3. Team leader, status questions and the message dispatcher.
+-- Luau port of OpenArena 0.8.8's ai_cmd.c (gamecode 9e0f0c0), part 3 of 3. Team leader, status questions and the message dispatcher.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -34,7 +34,6 @@ local BG = require("../../shared/BG")
 local SF = G.FileStatics("ai_cmd")
 
 local MAX_MESSAGE_SIZE = 150
-local GT_POSSESSION = 13
 
 function G.BotMatch_StartTeamLeaderShip(bs, match)
 	if G.TeamPlayIsOn() == 0 then return end
@@ -59,7 +58,7 @@ function G.BotMatch_StopTeamLeaderShip(bs, match)
 		client = G.FindClientByName(teammate)
 	end
 	if client >= 0 then
-		if QS.Q_strequal(bs.teamleader, G.ClientName(client, MAX_MESSAGE_SIZE)) then
+		if QS.Q_stricmp(bs.teamleader, G.ClientName(client, MAX_MESSAGE_SIZE)) == 0 then
 			bs.teamleader = ""
 			G.notleader[client] = 1
 		end
@@ -70,7 +69,7 @@ function G.BotMatch_WhoIsTeamLeader(bs, match)
 	if G.TeamPlayIsOn() == 0 then return end
 
 	local netname = G.ClientName(bs.client, MAX_MESSAGE_SIZE)
-	if QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) == 0 then
 		G.trap_EA_SayTeam(bs.client, "I'm the team leader\n")
 	end
 end
@@ -121,7 +120,7 @@ end
 
 function G.BotMatch_WhatIsMyCommand(bs, match)
 	local netname = G.ClientName(bs.client, C.MAX_NETNAME)
-	if not QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) ~= 0 then
 		return
 	end
 	bs.forceorders = 1
@@ -137,7 +136,7 @@ function G.BotNearestVisibleItem(bs, itemname, goal)
 	while true do
 		i = G.trap_BotGetLevelItemGoal(i, itemname, tmpgoal)
 		local name = G.trap_BotGoalName(tmpgoal.number, 64)
-		if QS.Q_strequal(itemname, name) then
+		if QS.Q_stricmp(itemname, name) == 0 then
 			Q.VectorSubtract(tmpgoal.origin, bs.origin, dir)
 			local dist = Q.VectorLength(dir)
 			if dist < bestdist then
@@ -314,7 +313,7 @@ function G.BotMatch_CTF(bs, match)
 	if gametype == C.GT_CTF or gametype == C.GT_CTF_ELIMINATION then
 		local flag = G.trap_BotMatchVariable(match, C.FLAG, 128)
 		if bit32.band(match.subtype, C.ST_GOTFLAG) ~= 0 then
-			if QS.Q_strequal(flag, "red") then
+			if QS.Q_stricmp(flag, "red") == 0 then
 				bs.redflagstatus = 1
 				if G.BotTeam(bs) == C.TEAM_BLUE then
 					local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_NETNAME)
@@ -335,14 +334,14 @@ function G.BotMatch_CTF(bs, match)
 			bs.flagcarrier = 0
 			bs.flagstatuschanged = 1
 		elseif bit32.band(match.subtype, C.ST_RETURNEDFLAG) ~= 0 then
-			if QS.Q_strequal(flag, "red") then
+			if QS.Q_stricmp(flag, "red") == 0 then
 				bs.redflagstatus = 0
 			else
 				bs.blueflagstatus = 0
 			end
 			bs.flagstatuschanged = 1
 		end
-	elseif gametype == C.GT_1FCTF or gametype == GT_POSSESSION then
+	elseif gametype == C.GT_1FCTF then
 		if bit32.band(match.subtype, C.ST_1FCTFGOTFLAG) ~= 0 then
 			local netname = G.trap_BotMatchVariable(match, C.NETNAME, C.MAX_NETNAME)
 			bs.flagcarrier = G.ClientFromName(netname)

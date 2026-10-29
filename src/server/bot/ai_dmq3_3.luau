@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c, part 3 of 7).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c, part 3 of 7).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 3 of 7. Client names, inventory, item use, waypoints, aggression.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 3 of 7. Client names, inventory, item use, waypoints, aggression.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -38,8 +38,6 @@ local MAX_WAYPOINTS = 128
 -- menudef.h voice chat names (not in the shared defs)
 local VOICECHAT_WANTONOFFENSE = "wantonoffense"
 local VOICECHAT_WANTONDEFENSE = "wantondefense"
--- bg_public.h gametype_t value (not in the shared defs)
-local GT_POSSESSION = 13
 
 local function b2i(b)
 	if b then
@@ -646,7 +644,7 @@ end
 function G.BotFindWayPoint(waypoints, name)
 	local wp = waypoints
 	while wp ~= nil do
-		if QS.Q_strequal(wp.name, name) then
+		if QS.Q_stricmp(wp.name, name) == 0 then
 			return wp
 		end
 		wp = wp.next
@@ -756,7 +754,7 @@ function G.BotWantsToRetreat(bs)
 		if G.BotCTFCarryingFlag(bs) ~= 0 then
 			return 1
 		end
-	elseif gametype == C.GT_1FCTF or gametype == GT_POSSESSION then
+	elseif gametype == C.GT_1FCTF then
 		--if carrying the flag then always retreat
 		if G.Bot1FCTFCarryingFlag(bs) ~= 0 then
 			return 1
@@ -784,10 +782,6 @@ function G.BotWantsToRetreat(bs)
 		G.BotEntityInfo(bs.enemy, entinfo)
 		-- if the enemy is carrying a flag
 		if G.EntityCarriesFlag(entinfo) then
-			return 0
-		end
-		-- if the enemy is carrying cubes
-		if G.EntityCarriesCubes(entinfo) then
 			return 0
 		end
 	end

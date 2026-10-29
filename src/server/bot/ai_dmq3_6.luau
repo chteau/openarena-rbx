@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c, part 6 of 7).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c, part 6 of 7).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 6 of 7. Activate goals, blocked handling, obstacle prediction, console messages.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 6 of 7. Activate goals, blocked handling, obstacle prediction, console messages.
 
 local G = require("../g_local")
 local C = require("./ai_defs")

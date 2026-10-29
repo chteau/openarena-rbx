@@ -74,7 +74,7 @@ function B.AAS_UpdateEntity(entnum, state)
 	--number of the entity
 	ent.i.number = entnum
 	--updated so set valid flag
-	ent.i.valid = true
+	ent.i.valid = 1
 	--link everything the first frame
 	if aasworld.numframes == 1 then
 		relink = true
@@ -239,7 +239,7 @@ end
 function B.AAS_InvalidateEntities()
 	local aasworld = B.aasworld
 	for i = 0, aasworld.maxentities - 1 do
-		aasworld.entities[i].i.valid = false
+		aasworld.entities[i].i.valid = 0
 		aasworld.entities[i].i.number = i
 	end
 end
@@ -248,7 +248,7 @@ function B.AAS_UnlinkInvalidEntities()
 	local aasworld = B.aasworld
 	for i = 0, aasworld.maxentities - 1 do
 		local ent = aasworld.entities[i]
-		if not ent.i.valid then
+		if ent.i.valid == 0 then
 			B.AAS_UnlinkFromAreas(ent.areas)
 			ent.areas = nil
 			B.AAS_UnlinkFromBSPLeaves(ent.leaves)
@@ -298,7 +298,7 @@ function B.AAS_NextEntity(entnum)
 	end
 	entnum = entnum + 1
 	while entnum < aasworld.maxentities do
-		if aasworld.entities[entnum].i.valid then
+		if aasworld.entities[entnum].i.valid ~= 0 then
 			return entnum
 		end
 		entnum = entnum + 1

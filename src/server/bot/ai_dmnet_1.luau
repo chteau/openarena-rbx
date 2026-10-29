@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmnet.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmnet.c, part 1 of 5).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmnet.c, part 1 of 5. Node switch recording, air/nearby goals, goal reached checks.
+-- Luau port of OpenArena 0.8.8's ai_dmnet.c (gamecode 9e0f0c0), part 1 of 5. Node switch recording, air/nearby goals, goal reached checks.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -128,7 +128,7 @@ function G.BotNearbyGoal(bs, tfl, ltg, range)
 	--check if the bot should go for air
 	if G.BotGoForAir(bs, tfl, ltg, range) ~= 0 then return 1 end
 	-- if the bot is carrying a flag or cubes
-	if G.BotCTFCarryingFlag(bs) ~= 0 or G.Bot1FCTFCarryingFlag(bs) ~= 0 or G.BotHarvesterCarryingCubes(bs) ~= 0 then
+	if G.BotCTFCarryingFlag(bs) ~= 0 then
 		--if the bot is just a few secs away from the base
 		if G.trap_AAS_AreaTravelTimeToGoalArea(bs.areanum, bs.origin,
 				bs.teamgoal.areanum, C.TFL_DEFAULT) < 300 then

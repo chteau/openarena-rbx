@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c, part 7 of 7).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c, part 7 of 7).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 7 of 7. Event checks, alternate routes, deathmatch AI frame and setup.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 7 of 7. Event checks, alternate routes, deathmatch AI frame and setup.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -33,7 +33,6 @@ local BG = require("../../shared/BG")
 
 local SF = G.FileStatics("ai_dmq3")
 
-local GT_POSSESSION = 13
 local MAX_ALTROUTEGOALS = 32
 
 function G.BotCheckForGrenades(bs, state)
@@ -108,7 +107,7 @@ function G.BotCheckEvents(bs, state)
 		elseif attacker == bs.enemy and target == attacker then
 			bs.enemysuicide = true
 		end
-		if G.gametype == C.GT_1FCTF or G.gametype == GT_POSSESSION then
+		if G.gametype == C.GT_1FCTF then
 			G.BotEntityInfo(target, entinfo)
 			if bit32.band(entinfo.powerups, bit32.lshift(1, C.PW_NEUTRALFLAG)) ~= 0 then
 				if G.BotSameTeam(bs, target) == 0 then
@@ -346,6 +345,9 @@ function G.BotDeathmatchAI(bs, thinktime)
 		userinfo = G.trap_GetUserinfo(bs.client)
 		userinfo = QS.Info_SetValueForKey(userinfo, "sex", gender)
 		G.trap_SetUserinfo(bs.client, userinfo)
+		if bs.map_restart == 0 and G.g_gametype.integer ~= C.GT_TOURNAMENT then
+			G.trap_EA_Command(bs.client, string.format("team %s", bs.settings.team))
+		end
 		local g0 = string.sub(gender, 1, 1)
 		if g0 == "m" then
 			G.trap_BotSetChatGender(bs.cs, C.CHAT_GENDERMALE)
@@ -424,25 +426,7 @@ function G.BotSetEntityNumForGoal(goal, classname)
 		if not ent.inuse then
 			continue
 		end
-		if not QS.Q_strequal(ent.classname, classname) then
-			continue
-		end
-		Q.VectorSubtract(goal.origin, ent.s.origin, dir)
-		if Q.DotProduct(dir, dir) < 100 then
-			goal.entitynum = i
-			return
-		end
-	end
-end
-
-function G.BotSetEntityNumForGoalWithActivator(goal, classname)
-	local dir = Q.vec3()
-	for i = 0, G.level.num_entities - 1 do
-		local ent = G.g_entities[i]
-		if not ent.inuse or ent.activator == nil then
-			continue
-		end
-		if not QS.Q_strequal(ent.activator.classname, classname) then
+		if QS.Q_stricmp(ent.classname, classname) ~= 0 then
 			continue
 		end
 		Q.VectorSubtract(goal.origin, ent.s.origin, dir)
@@ -493,6 +477,7 @@ function G.BotSetupDeathmatchAI()
 	local model
 
 	G.gametype = G.trap_Cvar_VariableIntegerValue("g_gametype")
+	G.maxclients = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
 
 	G.trap_Cvar_Register(G.bot_rocketjump, "bot_rocketjump", "1", 0)
 	G.trap_Cvar_Register(G.bot_grapple, "bot_grapple", "0", 0)
@@ -543,30 +528,26 @@ function G.BotSetupDeathmatchAI()
 		end
 	elseif G.gametype == C.GT_OBELISK then
 		if G.untrap_BotGetLevelItemGoal(-1, "Red Obelisk", G.redobelisk) < 0 then
-			G.BotAI_Print(C.PRT_WARNING, "Overload without red obelisk\n")
+			G.BotAI_Print(C.PRT_WARNING, "Obelisk without red obelisk\n")
 		end
-		G.BotSetEntityNumForGoalWithActivator(G.redobelisk, "team_redobelisk")
+		G.BotSetEntityNumForGoal(G.redobelisk, "team_redobelisk")
 		if G.untrap_BotGetLevelItemGoal(-1, "Blue Obelisk", G.blueobelisk) < 0 then
-			G.BotAI_Print(C.PRT_WARNING, "Overload without blue obelisk\n")
+			G.BotAI_Print(C.PRT_WARNING, "Obelisk without blue obelisk\n")
 		end
-		G.BotSetEntityNumForGoalWithActivator(G.blueobelisk, "team_blueobelisk")
+		G.BotSetEntityNumForGoal(G.blueobelisk, "team_blueobelisk")
 	elseif G.gametype == C.GT_HARVESTER then
 		if G.untrap_BotGetLevelItemGoal(-1, "Red Obelisk", G.redobelisk) < 0 then
 			G.BotAI_Print(C.PRT_WARNING, "Harvester without red obelisk\n")
 		end
-		G.BotSetEntityNumForGoalWithActivator(G.redobelisk, "team_redobelisk")
+		G.BotSetEntityNumForGoal(G.redobelisk, "team_redobelisk")
 		if G.untrap_BotGetLevelItemGoal(-1, "Blue Obelisk", G.blueobelisk) < 0 then
 			G.BotAI_Print(C.PRT_WARNING, "Harvester without blue obelisk\n")
 		end
-		G.BotSetEntityNumForGoalWithActivator(G.blueobelisk, "team_blueobelisk")
+		G.BotSetEntityNumForGoal(G.blueobelisk, "team_blueobelisk")
 		if G.untrap_BotGetLevelItemGoal(-1, "Neutral Obelisk", G.neutralobelisk) < 0 then
 			G.BotAI_Print(C.PRT_WARNING, "Harvester without neutral obelisk\n")
 		end
-		G.BotSetEntityNumForGoalWithActivator(G.neutralobelisk, "team_neutralobelisk")
-	elseif G.gametype == GT_POSSESSION then
-		if G.untrap_BotGetLevelItemGoal(-1, "Neutral Flag", G.ctf_neutralflag) < 0 then
-			G.BotAI_Print(C.PRT_WARNING, "Possession without Neutral Flag\n")
-		end
+		G.BotSetEntityNumForGoal(G.neutralobelisk, "team_neutralobelisk")
 	end
 
 	G.max_bspmodelindex = 0

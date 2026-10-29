@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_team.c, part 1 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_team.c, part 1 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_team.c, part 1 of 3. Team order helpers and CTF order generation.
+-- Luau port of OpenArena 0.8.8's ai_team.c (gamecode 9e0f0c0), part 1 of 3. Team order helpers and CTF order generation.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -51,6 +51,8 @@ end
 
 -- static int maxclients in BotNumTeamMates
 SF.BotNumTeamMates_maxclients = 0
+-- static int maxclients in BotSortTeamMatesByBaseTravelTime
+SF.BotSortTeamMatesByBaseTravelTime_maxclients = 0
 -- static int maxclients in BotSortTeamMatesByRelativeTravelTime2ddA
 SF.BotSortTeamMatesByRelativeTravelTime2ddA_maxclients = 0
 
@@ -66,7 +68,7 @@ function G.BotNumTeamMates(bs)
 	end
 
 	local numplayers = 0
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(SF.BotNumTeamMates_maxclients, C.MAX_CLIENTS) - 1 do
 		local buf = G.trap_GetConfigstring(C.CS_PLAYERS + i)
 		--if no config string or no name
 		if #buf == 0 or #QS.Info_ValueForKey(buf, "n") == 0 then continue end
@@ -84,11 +86,8 @@ function G.BotClientTravelTimeToGoal(client, goal)
 	local ps = S.playerState_t()
 	local areanum
 
-	if G.BotAI_GetClientState(client, ps) ~= 0 then
-		areanum = G.BotPointAreaNum(ps.origin)
-	else
-		areanum = 0
-	end
+	G.BotAI_GetClientState(client, ps)
+	areanum = G.BotPointAreaNum(ps.origin)
 	if areanum == 0 then return 1 end
 	return G.trap_AAS_AreaTravelTimeToGoalArea(areanum, ps.origin, goal.areanum, C.TFL_DEFAULT)
 end
@@ -110,8 +109,11 @@ function G.BotSortTeamMatesByBaseTravelTime(bs, teammates, maxteammates)
 			goal = G.blueobelisk
 		end
 	end
+	if SF.BotSortTeamMatesByBaseTravelTime_maxclients == 0 then
+		SF.BotSortTeamMatesByBaseTravelTime_maxclients = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
 	local numteammates = 0
-	for i = 0, G.level.maxclients - 1 do
+	for i = 0, math.min(SF.BotSortTeamMatesByBaseTravelTime_maxclients, C.MAX_CLIENTS) - 1 do
 		local buf = G.trap_GetConfigstring(C.CS_PLAYERS + i)
 		--if no config string or no name
 		if #buf == 0 or #QS.Info_ValueForKey(buf, "n") == 0 then continue end
@@ -200,7 +202,7 @@ function G.BotGetTeamMateTaskPreference(bs, teammate)
 		return 0
 	end
 	local teammatename = G.ClientName(teammate, C.MAX_NETNAME)
-	if not QS.Q_strequal(teammatename, SF.ctftaskpreferences[teammate].name) then
+	if QS.Q_stricmp(teammatename, SF.ctftaskpreferences[teammate].name) ~= 0 then
 		return 0
 	end
 	return SF.ctftaskpreferences[teammate].preference

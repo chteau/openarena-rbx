@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_vcmd.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_vcmd.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_vcmd.c. Bot reactions to team voice chat commands.
+-- Luau port of OpenArena 0.8.8's ai_vcmd.c (gamecode 9e0f0c0). Bot reactions to team voice chat commands.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -193,7 +193,7 @@ function G.BotVoiceChat_Camp(bs, client, mode)
 	bs.teamgoal.entitynum = -1
 	G.BotEntityInfo(client, entinfo)
 	--if info is valid (in PVS)
-	if entinfo.valid and entinfo.valid ~= 0 then
+	if entinfo.valid ~= 0 then
 		local areanum = G.BotPointAreaNum(entinfo.origin)
 		if areanum ~= 0 then -- && trap_AAS_AreaReachability(areanum)) {
 			--NOTE: just assume the bot knows where the person is
@@ -236,7 +236,7 @@ function G.BotVoiceChat_FollowMe(bs, client, mode)
 	bs.teamgoal.entitynum = -1
 	G.BotEntityInfo(client, entinfo)
 	--if info is valid (in PVS)
-	if entinfo.valid and entinfo.valid ~= 0 then
+	if entinfo.valid ~= 0 then
 		local areanum = G.BotPointAreaNum(entinfo.origin)
 		if areanum ~= 0 then -- && trap_AAS_AreaReachability(areanum)) {
 			bs.teamgoal.entitynum = client
@@ -305,7 +305,7 @@ function G.BotVoiceChat_StartLeader(bs, client, mode)
 end
 
 function G.BotVoiceChat_StopLeader(bs, client, mode)
-	if QS.Q_strequal(bs.teamleader, G.ClientName(client, C.MAX_MESSAGE_SIZE)) then
+	if QS.Q_stricmp(bs.teamleader, G.ClientName(client, C.MAX_MESSAGE_SIZE)) == 0 then
 		bs.teamleader = ""
 		G.notleader[client] = true
 	end
@@ -318,7 +318,7 @@ function G.BotVoiceChat_WhoIsLeader(bs, client, mode)
 
 	local netname = G.ClientName(bs.client, C.MAX_MESSAGE_SIZE)
 	--if this bot IS the team leader
-	if QS.Q_strequal(netname, bs.teamleader) then
+	if QS.Q_stricmp(netname, bs.teamleader) == 0 then
 		G.BotAI_BotInitialChat(bs, "iamteamleader", nil)
 		G.trap_BotEnterChat(bs.cs, 0, C.CHAT_TEAM)
 		G.BotVoiceChatOnly(bs, -1, VC.STARTLEADER)
@@ -406,7 +406,7 @@ function G.BotVoiceChatCommand(bs, mode, voiceChat)
 	end
 
 	for i = 1, #voiceCommands do
-		if QS.Q_strequal(cmdStr, voiceCommands[i][1]) then
+		if QS.Q_stricmp(cmdStr, voiceCommands[i][1]) == 0 then
 			voiceCommands[i][2](bs, clientNum, mode)
 			return 1
 		end

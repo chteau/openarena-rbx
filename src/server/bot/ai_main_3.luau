@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_main.c, part 3 of 3).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_main.c, part 3 of 3).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_main.c, part 3 of 3. Session data, bot client setup/shutdown, map load, frame, library init.
+-- Luau port of OpenArena 0.8.8's ai_main.c (gamecode 9e0f0c0), part 3 of 3. Session data, bot client setup/shutdown, map load, frame, library init.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -72,7 +72,6 @@ function G.BotReadSessionData(bs)
 		{ true, function(v) tg.maxs[0] = v end },
 		{ true, function(v) tg.maxs[1] = v end },
 		{ true, function(v) tg.maxs[2] = v end },
-		{ true, function(v) bs.formation_dist = v end },
 	}
 	for i, setter in ipairs(setters) do
 		local tok = tokens[i]
@@ -505,7 +504,8 @@ BotInitLibrary
 ]]
 function G.BotInitLibrary()
 	--set the maxclients and maxentities library variables before calling BotSetupLibrary
-	local buf = QS.Com_sprintf(144, "%d", G.level.maxclients)
+	local buf = G.trap_Cvar_VariableStringBuffer("sv_maxclients")
+	if #buf == 0 then buf = "8" end
 	G.trap_BotLibVarSet("maxclients", buf)
 	buf = QS.Com_sprintf(144, "%d", C.MAX_GENTITIES)
 	G.trap_BotLibVarSet("maxentities", buf)

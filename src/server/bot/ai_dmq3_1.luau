@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 1 of 7. File-top declarations, team/flag helpers and CTF seek goals.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 1 of 7. File-top declarations, team/flag helpers and CTF seek goals.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -32,8 +32,6 @@ local QS = require("../../shared/q_shared")
 local BG = require("../../shared/BG")
 
 local SF = G.FileStatics("ai_dmq3")
-
-local GT_POSSESSION = 13
 
 -- from ui/menudef.h
 local VOICECHAT_NO = "no"
@@ -60,6 +58,7 @@ G.botai_freewaypoints = nil
 
 --NOTE: not using a cvars which can be updated because the game should be reloaded anyway
 G.gametype = 0 --game type
+G.maxclients = 0 --maximum number of clients
 
 G.bot_grapple = S.vmCvar_t()
 G.bot_rocketjump = S.vmCvar_t()
@@ -100,8 +99,7 @@ G.red_numaltroutegoals = 0
 G.blue_numaltroutegoals = 0
 
 local gametypeNames = { [0] = "ffa", "tournament", "single", "team", "ctf", "oneflag", "obelisk", "harvester", "elimination",
-	"ctf", "lms", "dd", "dom", "pos" }
-local gametypeNamesLen = 14
+	"ctf", "lms", "dd", "dom" }
 
 --[[
 ==================
@@ -116,7 +114,7 @@ function G.untrap_BotGetLevelItemGoal(start, classname, goal)
 		if ok == 0 or not ok then
 			return start --No gametype flag
 		end
-		if G.gametype >= C.GT_FFA and G.gametype < gametypeNamesLen then
+		if G.gametype >= C.GT_FFA and G.gametype < C.GT_MAX_GAME_TYPE then
 			local gametypeName = gametypeNames[G.gametype]
 			if QS.strstr(allowedGametypes, gametypeName) ~= nil then
 				--In gametype strig
@@ -222,9 +220,7 @@ function G.EntityIsDead(entinfo)
 
 	if entinfo.number >= 0 and entinfo.number < C.MAX_CLIENTS then
 		--retrieve the current client state
-		if G.BotAI_GetClientState(entinfo.number, ps) == 0 then
-			return false
-		end
+		G.BotAI_GetClientState(entinfo.number, ps)
 
 		if ps.pm_type ~= C.PM_NORMAL then return true end
 	end
@@ -338,7 +334,7 @@ Bot1FCTFCarryingFlag
 ==================
 ]]
 function G.Bot1FCTFCarryingFlag(bs)
-	if G.gametype ~= C.GT_1FCTF or G.gametype ~= GT_POSSESSION then return 0 end
+	if G.gametype ~= C.GT_1FCTF then return 0 end
 
 	if bs.inventory[C.INVENTORY_NEUTRALFLAG] > 0 then return 1 end
 	return 0
@@ -413,19 +409,8 @@ function G.BotSetTeamStatus(bs)
 		teamtask = C.TEAMTASK_OFFENSE
 	elseif ltg == C.LTG_ATTACKENEMYBASE then
 		teamtask = C.TEAMTASK_OFFENSE
-	elseif ltg == C.LTG_POINTA then
-		if G.BotTeam(bs) == C.TEAM_BLUE then
-			teamtask = C.TEAMTASK_OFFENSE
-		else
-			teamtask = C.TEAMTASK_DEFENSE
-		end
-	elseif ltg == C.LTG_POINTB then
-		if G.BotTeam(bs) == C.TEAM_RED then
-			teamtask = C.TEAMTASK_OFFENSE
-		else
-			teamtask = C.TEAMTASK_DEFENSE
-		end
 	else
+		-- 0.8.8's LTG_POINTA/LTG_POINTB cases lack a break and fall through to default
 		teamtask = C.TEAMTASK_PATROL
 	end
 	G.BotSetUserInfo(bs, "teamtask", QS.va("%d", teamtask))

@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmnet.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmnet.c, part 5 of 5).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmnet.c, part 5 of 5. Battle chase, retreat and NBG AI nodes.
+-- Luau port of OpenArena 0.8.8's ai_dmnet.c (gamecode 9e0f0c0), part 5 of 5. Battle chase, retreat and NBG AI nodes.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -30,8 +30,6 @@ local S = require("./ai_structs")
 local Q = require("../../shared/q_math")
 local QS = require("../../shared/q_shared")
 local BG = require("../../shared/BG")
-
-local GT_POSSESSION = 13
 
 function G.AIEnter_Battle_Chase(bs, s)
 	G.BotRecordNodeSwitch(bs, "battle chase", "", s)
@@ -267,7 +265,7 @@ function G.AINode_Battle_Retreat(bs)
 			if G.BotCTFCarryingFlag(bs) ~= 0 then
 				range = 50
 			end
-		elseif G.gametype == C.GT_1FCTF or G.gametype == GT_POSSESSION then
+		elseif G.gametype == C.GT_1FCTF then
 			if G.Bot1FCTFCarryingFlag(bs) ~= 0 then
 				range = 50
 			end

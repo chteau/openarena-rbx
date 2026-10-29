@@ -4,7 +4,7 @@ Copyright (C) 1999-2005 Id Software, Inc.
 Copyright (C) 2005-2012 The OpenArena team
 
 This file is part of the OpenArena Roblox port, a Luau port of the
-Quake III Arena / OpenArena source code (game/ai_dmq3.c).
+OpenArena 0.8.8 source code (gamecode 9e0f0c0, game/ai_dmq3.c).
 
 This program is free software; you can redistribute it and/or modify it
 under the terms of the GNU General Public License as published by the Free
@@ -22,7 +22,7 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 ===========================================================================
 ]]
 --!native
--- Luau port of ai_dmq3.c, part 2 of 7. Team goal selection (CTF, 1FCTF, obelisk, harvester, DD) and client name helpers.
+-- Luau port of OpenArena 0.8.8's ai_dmq3.c (gamecode 9e0f0c0), part 2 of 7. Team goal selection (CTF, 1FCTF, obelisk, harvester, DD) and client name helpers.
 
 local G = require("../g_local")
 local C = require("./ai_defs")
@@ -33,13 +33,14 @@ local BG = require("../../shared/BG")
 
 local SF = G.FileStatics("ai_dmq3")
 
--- not defined in the shared defs: menudef.h voice chat names and the possession gametype
+-- not defined in the shared defs: menudef.h voice chat names
 local VOICECHAT_IHAVEFLAG = "ihaveflag"
 local VOICECHAT_ONFOLLOW = "onfollow"
-local GT_POSSESSION = 13
 
 -- static int maxclients of ClientOnSameTeamFromName
 local clientOnSameTeamMaxclients = 0
+-- static int maxclients of ClientFromName
+local maxclients_ClientFromName = 0
 
 function G.BotCTFRetreatGoals(bs)
 	--when carrying a flag in ctf the bot should rush to the base
@@ -616,7 +617,7 @@ function G.BotTeamGoals(bs, retreat)
 		if gametype == C.GT_CTF or gametype == C.GT_CTF_ELIMINATION then
 			--decide what to do in CTF mode
 			G.BotCTFSeekGoals(bs)
-		elseif gametype == C.GT_1FCTF or gametype == GT_POSSESSION then
+		elseif gametype == C.GT_1FCTF then
 			G.Bot1FCTFSeekGoals(bs)
 		elseif gametype == C.GT_OBELISK then
 			G.BotObeliskSeekGoals(bs)
@@ -679,12 +680,17 @@ end
 function G.ClientFromName(name)
 	local buf
 
-	for i = 0, G.level.maxclients - 1 do
+	if maxclients_ClientFromName == 0 then
+		maxclients_ClientFromName = G.trap_Cvar_VariableIntegerValue("sv_maxclients")
+	end
+	local i = 0
+	while i < maxclients_ClientFromName and i < C.MAX_CLIENTS do
 		buf = G.trap_GetConfigstring(C.CS_PLAYERS + i)
 		buf = QS.Q_CleanStr(buf)
-		if QS.Q_strequal(QS.Info_ValueForKey(buf, "n"), name) then
+		if QS.Q_stricmp(QS.Info_ValueForKey(buf, "n"), name) == 0 then
 			return i
 		end
+		i += 1
 	end
 	return -1
 end
@@ -700,7 +706,7 @@ function G.ClientOnSameTeamFromName(bs, name)
 		if G.BotSameTeam(bs, i) ~= 0 then
 			buf = G.trap_GetConfigstring(C.CS_PLAYERS + i)
 			buf = QS.Q_CleanStr(buf)
-			if QS.Q_strequal(QS.Info_ValueForKey(buf, "n"), name) then
+			if QS.Q_stricmp(QS.Info_ValueForKey(buf, "n"), name) == 0 then
 				return i
 			end
 		end
