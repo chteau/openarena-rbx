@@ -163,7 +163,13 @@ pub fn images(
     runtime: &BTreeSet<String>,
     manifest: &mut Manifest,
 ) -> Result<(), String> {
-    let paths = vfs.list("", &[".tga", ".jpg", ".jpeg", ".png"]);
+    // Several stems ship in two formats (`decal2.tga` and `decal2.jpg`) and
+    // both would land on the same PNG; keep the one the engine loads.
+    let paths: Vec<String> = vfs
+        .list("", &[".tga", ".jpg", ".jpeg", ".png"])
+        .into_iter()
+        .filter(|p| vfs.find_image(&strip_ext(p)).as_deref() == Some(p.as_str()))
+        .collect();
     let mut live: BTreeSet<String> = runtime.clone();
     for s in shaders.shaders.values() {
         if !matches!(s.class, ShaderClass::Opaque | ShaderClass::Nodraw)
