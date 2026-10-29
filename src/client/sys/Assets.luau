@@ -8,6 +8,7 @@
 --   shaders = { [name] = shader table (ShaderParse shape) }   (from shaders.json)
 --   models  = { ["models/weapons2/rocketl/rocketl"] = { ... see Md3.luau } }
 --   baked2d = { [shader] = image path }  2D multi-stage shaders composited offline
+--   atlases = { ["sfx_00.ogg"] = "rbxassetid://.." }  sound atlas uploads
 --   sounds  = { ["sound/weapons/rocket/rocklf1a"] = { id, start, len } }   (SoundAtlas)
 -- Shader scripts in the FS pack (scripts/*.shader) are parsed on first use
 -- when `shaders` is missing.
@@ -28,6 +29,23 @@ do
 	end
 end
 Assets.index = index
+
+-- feat/conv's sound_index.json shape ({ ["sound/x.wav"] = { atlas, start,
+-- length } }) -> { id, start, len } keyed without extension. `atlases` maps
+-- an atlas file to its uploaded asset id (from the upload lock).
+do
+	local norm = {}
+	for k, v in index.sounds do
+		local key = string.lower(k):gsub("\\", "/"):gsub("%.%w%w%w?$", "")
+		if v.atlas then
+			local id = index.atlases and index.atlases[v.atlas]
+			norm[key] = { id = id, start = v.start, len = v.length }
+		else
+			norm[key] = v
+		end
+	end
+	index.sounds = norm
+end
 
 local function stripExt(name: string): string
 	return (string.lower(name):gsub("\\", "/"):gsub("%.%w%w%w?$", ""))
@@ -213,7 +231,8 @@ function Assets.RegisterSound(name: string): number
 		return h
 	end
 	h = #sounds + 1
-	sounds[h] = { name = key, clip = index.sounds[key] }
+	local clip = index.sounds[key]
+	sounds[h] = { name = key, clip = if clip and clip.id then clip else nil }
 	soundByName[key] = h
 	return h
 end

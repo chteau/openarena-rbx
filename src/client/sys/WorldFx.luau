@@ -4,6 +4,7 @@
 -- can't bake (scrolling/animated/additive/deforming shaders) becomes
 -- MeshParts tagged with attributes (contract, see docs/client-notes.md):
 --   OAShader = "<shader name>"   OAStage = <1-based stage index, default 1>
+-- or, untagged, a part named after a map.json mesh whose class isn't opaque
 -- WorldFx animates each tagged part every frame from the parsed shader:
 --   tcMod scroll/rotate/scale/stretch/turb/transform -> UVs rewritten on an
 --       EditableMesh copy of the part's mesh (base UVs x the stage matrix)
@@ -31,8 +32,19 @@ local animated: { any } = {}
 local fogs: { any } = {}
 local savedFog: { any }? = nil
 
+-- feat/conv's map.json lists every mesh it exports with the shader the
+-- client must draw (glb.meshes[i] = { name, shader, class, overlay }); the
+-- index carries it as maps[name].meshes = { [meshName] = that record }.
+local meshInfo: { [string]: any } = {}
+
 local function stageOf(part: Instance)
 	local name = part:GetAttribute("OAShader")
+	if name == nil then
+		local m = meshInfo[part.Name]
+		if m and (m.overlay or (m.class ~= nil and m.class ~= "opaque")) and m.shader ~= "atlas" then
+			name = m.shader
+		end
+	end
 	if type(name) ~= "string" then
 		return nil, nil
 	end
@@ -99,6 +111,10 @@ function WorldFx.Load(mapName: string)
 	local maps = Assets.index.maps or {}
 	local info = maps[string.lower(mapName or "")] or {}
 	fogs = info.fogs or {}
+	table.clear(meshInfo)
+	for _, m in info.meshes or {} do
+		meshInfo[m.name] = m
+	end
 	if root then
 		for _, part in root:GetDescendants() do
 			if part:IsA("MeshPart") then

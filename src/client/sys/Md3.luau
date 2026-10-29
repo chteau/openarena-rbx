@@ -2,7 +2,8 @@
 -- and answers tag/bounds queries (R_LerpTag). Vertex animation for display
 -- is in R3D (EditableMesh). The model data comes from the asset index:
 --   index.models[name] = { md3 = buffer }        raw MD3 bytes, or
---   index.models[name] = { md3b64 = string }     the same, base64
+--   index.models[name] = { md3b64 = string }     the same, base64, or
+--   index.models[name] = { oam3 = buffer }       feat/conv's packed form
 -- (the converter's buffers, see docs/formats/md3.md, are adapted here).
 local Md3 = {}
 
@@ -105,6 +106,73 @@ function Md3.Parse(name: string, b: buffer)
 	return m
 end
 
+-- feat/conv's runtime buffer "OAM3" (docs/formats/md3.md in tools/oaconv):
+-- the same model, packed tighter. Parsed into the table Md3.Parse makes.
+function Md3.ParseOAM3(name: string, b: buffer)
+	assert(buffer.readstring(b, 0, 4) == "OAM3", "not an OAM3 buffer")
+	local F, T, S = buffer.readu16(b, 6), buffer.readu16(b, 8), buffer.readu16(b, 10)
+	local m = { name = name, numFrames = F, frames = {}, numTags = T, tags = {}, surfaces = {} }
+	local at = 12
+	for f = 0, F - 1 do
+		m.frames[f] = { mins = vec(b, at), maxs = vec(b, at + 12), localOrigin = vec(b, at + 24), radius = buffer.readf32(b, at + 36) }
+		at += 40
+	end
+	local function str(): string
+		local len = buffer.readu8(b, at)
+		local v = string.lower(buffer.readstring(b, at + 1, len))
+		at += 1 + len
+		return v
+	end
+	local function pad4()
+		at = (at + 3) // 4 * 4
+	end
+	local tagNames = {}
+	for t = 1, T do
+		tagNames[t] = str()
+	end
+	pad4()
+	for f = 0, F - 1 do
+		local frameTags = {}
+		for t = 1, T do
+			frameTags[tagNames[t]] = {
+				origin = vec(b, at),
+				axis = { [0] = vec(b, at + 12), [1] = vec(b, at + 24), [2] = vec(b, at + 36) },
+			}
+			at += 48
+		end
+		m.tags[f] = frameTags
+	end
+	for _ = 1, S do
+		local s = { name = str(), numFrames = F, shaders = {} }
+		local numShaders = buffer.readu8(b, at)
+		at += 1
+		for _ = 1, numShaders do
+			table.insert(s.shaders, str())
+		end
+		pad4()
+		s.numVerts = buffer.readu32(b, at)
+		s.numTriangles = buffer.readu32(b, at + 4)
+		at += 8
+		local tris = buffer.create(s.numTriangles * 12)
+		for i = 0, s.numTriangles * 3 - 1 do
+			buffer.writei32(tris, i * 4, buffer.readu16(b, at + i * 2))
+		end
+		s.triangles = tris
+		at += s.numTriangles * 6
+		pad4()
+		local st = buffer.create(s.numVerts * 8)
+		buffer.copy(st, 0, b, at, s.numVerts * 8)
+		s.st = st
+		at += s.numVerts * 8
+		local xyz = buffer.create(F * s.numVerts * 8)
+		buffer.copy(xyz, 0, b, at, F * s.numVerts * 8)
+		s.xyz = xyz
+		at += F * s.numVerts * 8
+		table.insert(m.surfaces, s)
+	end
+	return m
+end
+
 function Md3.Load(name: string, data)
 	if data == nil then
 		return nil
@@ -112,11 +180,11 @@ function Md3.Load(name: string, data)
 	if data.model then
 		return data.model
 	end
-	local b = data.md3 or (data.md3b64 and Md3.decodeBase64(data.md3b64))
+	local b = data.oam3 or data.md3 or (data.md3b64 and Md3.decodeBase64(data.md3b64))
 	if b == nil then
 		return nil
 	end
-	local m = Md3.Parse(name, b)
+	local m = if buffer.len(b) >= 4 and buffer.readstring(b, 0, 4) == "OAM3" then Md3.ParseOAM3(name, b) else Md3.Parse(name, b)
 	data.model = m
 	return m
 end

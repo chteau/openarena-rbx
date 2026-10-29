@@ -401,6 +401,10 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?
 
 	Cmd.ExecuteText(C.EXEC_NOW, "exec default.cfg")
 	Cmd.Execute()
+	-- Roblox keeps Escape for its own menu: F10 also toggles OA's
+	if Keys.GetBinding(C.K_F10) == "" then
+		Keys.SetBinding(C.K_F10, "togglemenu")
+	end
 	U.UI_Init()
 	Client.uiActive = true
 	U.UI_SetActiveMenu(C.UIMENU_MAIN)

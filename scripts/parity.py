@@ -198,6 +198,15 @@ frame.Size = UDim2.fromOffset(%(w)d, %(h)d)
 frame.BackgroundTransparency = 1
 frame.ClipsDescendants = true
 frame.Parent = bg
+-- scale marker: a 100 px green square right of the screen, so the capture's
+-- scale (the editor may present the viewport scaled) can be measured
+local mark = Instance.new("Frame")
+mark.Name = "ScaleMark"
+mark.Position = UDim2.fromOffset(%(w)d + 20, 0)
+mark.Size = UDim2.fromOffset(100, 100)
+mark.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+mark.BorderSizePixel = 0
+mark.Parent = bg
 gui.Parent = SG
 local Scene = require(src.client.dev.Scene)
 local ok, err = pcall(function()
@@ -238,7 +247,17 @@ def main():
                 ours = os.path.join(ROOT, 'build/parity', name + '.png')
                 ref = os.path.join(ROOT, 'docs/parity/ref', {'menu': 'menu_main', 'hud': 'hud_ffa',
                                                             'scores': 'scoreboard_ffa'}[name] + '.png')
-                subprocess.run(['convert', raw, '-crop', f'{w}x{h}+0+0', '+repage', ours], check=True)
+                # the marker's top rows: nothing else green sits at the top edge
+                geo = subprocess.run(['convert', raw, '-crop', 'x3+0+1', '+repage',
+                                      '-fuzz', '30%', '-fill', 'black', '+opaque', '#00ff00',
+                                      '-trim', '-format', '%w %h %X %Y', 'info:'],
+                                     capture_output=True, text=True, check=True).stdout.split()
+                scale = int(geo[0]) / 100.0
+                cw, ch = round(w * scale), round(h * scale)
+                subprocess.run(['convert', raw, '-crop', f'{cw}x{ch}+0+0', '+repage', '-resize', f'{w}x{h}!',
+                                ours], check=True)
+                if abs(scale - 1) > 0.01:
+                    print(f'  capture scale {scale:.3f}, resampled')
                 side = os.path.join(ROOT, 'docs/parity', name + '_side.png')
                 subprocess.run(['convert', '(', ref, '-resize', f'{w}x{h}', ')', ours, '+append', side], check=True)
                 diff = subprocess.run(['compare', '-metric', 'RMSE', '(', ref, '-resize', f'{w}x{h}', ')', ours,
