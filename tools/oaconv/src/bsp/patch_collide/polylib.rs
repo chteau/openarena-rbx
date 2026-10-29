@@ -31,16 +31,24 @@ pub(super) fn ma(v: &Vec3, s: f32, b: &Vec3) -> Vec3 {
     [v[0] + s * b[0], v[1] + s * b[1], v[2] + s * b[2]]
 }
 
-/// VectorNormalize: returns the old length and leaves a zero vector alone.
+/// ioquake3's VectorNormalize: returns the old length (as `length *
+/// ilength`) and leaves a zero vector alone.
 pub(super) fn normalize(v: &mut Vec3) -> f32 {
-    let length = f64::from(dot(v, v)).sqrt() as f32;
+    let mut length = dot(v, v);
     if length != 0.0 {
-        let ilength = 1.0 / length;
+        let ilength = 1.0 / (f64::from(length).sqrt() as f32);
+        length *= ilength;
         v[0] *= ilength;
         v[1] *= ilength;
         v[2] *= ilength;
     }
     length
+}
+
+/// `-eps <= d <= eps` the way C compares a float against a double
+/// `#define` epsilon: in double.
+pub(super) fn within(d: f32, eps: f64) -> bool {
+    (-eps..=eps).contains(&f64::from(d))
 }
 
 pub(super) fn base_winding_for_plane(normal: &Vec3, dist: f32) -> Winding {

@@ -2,6 +2,9 @@
 local fs = require("@lune/fs")
 local Collision = require("../../src/shared/Collision")
 local BSP = require("../../src/shared/cm/bsp")
+local Blob = require("../../src/shared/cm/blob")
+local luau = require("@lune/luau")
+local serde = require("@lune/serde")
 
 local M = {}
 local b = buffer.create(4)
@@ -31,10 +34,31 @@ function M.ulps(a: number, c: number): number
 	return math.abs(ia - ic)
 end
 
+-- a converted map directory (build/maps/<map>/, oaconv's output): join the
+-- chunk modules of a blob the way the place does
+function M.readBlob(dir: string, name: string): buffer
+	local info = luau.load(fs.readFile(dir .. "/luau/" .. name .. ".luau"))()
+	local chunks = {}
+	for i, c in info.chunks do
+		chunks[i] = luau.load(fs.readFile(dir .. "/luau/" .. c .. ".luau"))()
+	end
+	local b = Blob.join(chunks)
+	assert(buffer.len(b) == info.size, "blob size mismatch")
+	return b
+end
+
+-- the lumps of <map>.bsp, or of a converted map directory through the blob adapter
+function M.lumps(path: string)
+	if fs.isDir(path) then
+		local entities = serde.decode("json", buffer.tostring(M.readBlob(path, "Entities")))
+		return Blob.lumps(M.readBlob(path, "Collision"), entities)
+	end
+	return BSP.parse(buffer.fromstring(fs.readFile(path)))
+end
+
 function M.loadMap(path: string)
-	local buf = buffer.fromstring(fs.readFile(path))
-	local name = string.match(path, "([^/]+)%.bsp$") or path
-	Collision.LoadMap(name, BSP.parse(buf))
+	local name = string.match(path, "([^/]+)%.bsp$") or string.match(path, "([^/]+)/?$") or path
+	Collision.LoadMap(name, M.lumps(path))
 end
 
 function M.words(line: string)

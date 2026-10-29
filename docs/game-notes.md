@@ -1,6 +1,7 @@
 # Game logic notes
 
-These notes cover the Luau port of the collision model, bg_* and g_*,
+These notes cover the Luau port of the collision model, bg_* and g_*
+(OpenArena 0.8.8's gamecode, commit `9e0f0c0`),
 plus the dedicated-server engine around them. They record the decisions
 taken, the evidence behind them, and the places where the port differs
 from the C, with the reason for each.
@@ -10,11 +11,12 @@ from the C, with the reason for each.
 | Path | What | C original |
 | --- | --- | --- |
 | `src/shared/cm/` | collision model: BSP lumps → brushes, patches, traces, PVS/areas | ioq3 `qcommon/cm_*.c` |
+| `src/shared/cm/blob.luau` | the converter's collision and entity blobs → the same lumps | `docs/formats/collision.md`, `entities.md` |
 | `src/shared/Collision.luau` | public face of `cm/` (`Collision.BoxTrace`, ...) | `cm_public.h` |
-| `src/shared/bg/` | pmove, slidemove, item list, trajectories, events | OA `bg_pmove.c`, `bg_slidemove.c`, `bg_misc.c` |
+| `src/shared/bg/` | pmove, slidemove, item list, trajectories, events | OA 0.8.8 `bg_pmove.c`, `bg_slidemove.c`, `bg_misc.c` |
 | `src/shared/q_math.luau`, `q_shared.luau` | float32-exact math, strings, info strings, parsing | `q_math.c`, `q_shared.c` |
 | `src/shared/net/msg.luau` | message bit stream and delta coding | ioq3 `qcommon/msg.c` |
-| `src/server/g_*.luau` | the game module, every g_*.c of OA (large files in `_1`, `_2`, ... parts) | OA `code/game/g_*.c` |
+| `src/server/g_*.luau` | the game module, every g_*.c of OA 0.8.8 (large files in `_1`, `_2`, ... parts) | `vendor/gamecode-088/code/game/g_*.c` |
 | `src/server/bg_alloc.luau`, `ai_stubs.luau` | BG_InitMemory and the bot entry points | `bg_alloc.c`, `ai_main.c` prototypes |
 | `src/server/sv/` | dedicated-server engine: cvars, command buffer, virtual FS, world links, trap layer, frame loop, clients, snapshots, Roblox transport | ioq3 `qcommon/cvar.c`, `cmd.c`, `files.c`, `server/*.c` |
 | `src/server/Game.luau` | loads all of the above and exposes `Init`, `Command` and `Frame` | |
@@ -24,8 +26,12 @@ Every ported file keeps the GPL-2.0 header and names its C source.
 ## How the port was checked
 
 - **Collision and movement**
-  - A native C oracle (`tools/oracle/oracle.c`) links ioq3's `cm_*` and
-    OA's `bg_*` and logs traces and Pmove frames on real maps.
+  - A native C oracle (`tools/oracle/oracle.c`, built by
+    `tools/oracle/build.sh`) links ioq3's `cm_*` and 0.8.8's `bg_*`
+    (`vendor/gamecode-088`) and logs traces and Pmove frames on real maps.
+  - The 9 maps are the 0.8.8 versions: `aggressor`, `oa_ctf2` and
+    `oa_shouse` come from `pak6-patch088.pk3`, which replaces the
+    `pak1-maps.pk3` builds.
   - **Traces:** the Luau port reproduces the oracle's trace logs bit for
     bit.
   - **Pmove:** bit-exact on 9 maps. That is 405,000 frames in resync mode
@@ -33,11 +39,21 @@ Every ported file keeps the GPL-2.0 header and names its C source.
     runs alone for whole scenarios). The runs cover walking, strafe
     jumping, crouching, water, stairs, slopes, jump pads and
     teleporters. Max divergence is 0 ulps.
-  - Run with `lune run tests/oracle/replay_pmove.luau <map.bsp> <log>`.
+  - 180,000 traces (20,000 per map) match bit for bit too.
+  - Run with `lune run tests/oracle/replay_pmove.luau <map.bsp> <log>`
+    (and `replay_cm.luau <map.bsp> traces <log>`).
+- **Converter blobs**
+  - `tests/oracle/blob_vs_bsp.luau <map.bsp> build/maps/<map>` loads a map
+    from its BSP and from oaconv's `Collision`/`Entities` modules (through
+    `cm/blob.luau`) and diffs the clip maps and entity key/values: 0
+    differences on oa_dm1 and oa_ctf2.
+  - The replays accept the converted directory in place of the `.bsp`.
+    Through the blob, both maps reproduce the oracle's traces and Pmove
+    logs bit for bit.
 - **Game module**
   - `tools/check_port.sh --strict` over `src/server`, `src/server/sv`
     (the Roblox-only transport aside) and `msg.luau` runs a static check
-    (57 files, 0 errors). It loads each module and resolves every
+    (56 files, 0 errors). It loads each module and resolves every
     `C.`/`QS.`/`Q.`/`BG.`/`S.` member. It requires every `G.X` call to
     have exactly one definition. It lints for undeclared globals,
     misleading `and/or`, bad format strings and similar mistakes.
@@ -54,29 +70,75 @@ Every ported file keeps the GPL-2.0 header and names its C source.
   - Every snapshot a client decodes is compared with the server's
     frame: 0 mismatches.
 - **Rules**
-  - `tests/server/test_rules.luau` (81 checks) covers:
+  - `tests/server/test_rules.luau` (95 checks) covers:
     - the damage, armor, self-damage, handicap and quad formulas;
     - item respawn timers;
-    - CTF capture, return and auto-return.
+    - CTF capture, return and auto-return;
+    - the 0.8.8 numbering (`STAT_*`, `GT_*`, events, animations) and cvar
+      defaults, and that gametype 13 falls back to FFA.
 - **Benchmarks:** `tests/bench/bench_trace.luau <map>` and
   `tests/bench/bench_server.luau [map] [clients]`.
 
 ## Decisions and deviations
 
-### The vendored gamecode is post-0.8.8
+### The port follows 0.8.8, not OA master
 
-`vendor/gamecode` is OA's later `gamecode` tree, not the 0.8.8 release.
-It has:
+0.8.8 shipped QVMs built from gamecode commit `9e0f0c0` (2012-01-28),
+checked out read-only at `vendor/gamecode-088`. The port was first written
+from `vendor/gamecode` (OA master, 2025) and then aligned file by file with
+`git -C vendor/gamecode diff -w 9e0f0c0 HEAD -- code/game`. Every `g_*`,
+`bg_*` header note names the 0.8.8 source. `tools/gen_consts.py`,
+`gen_structs.py` and `gen_items.py` read the 0.8.8 headers.
 
-- `GT_POSSESSION`;
-- `cg_enableQ` and the Quake-like viewheight;
-- extra footsteps;
-- `g_unlagged`, `g_admin` and `g_killspree`;
-- in pmove: `DF_NO_BUNNY`, `DF_FAST_WATER_MOVE`,
-  `DF_INSTANT_WEAPON_CHANGE` and `PMF_ELIMWARMUP`.
+Master-only things that were removed:
 
-The port follows this tree, because it is the one the task vendors. With
-the extra flags off, everything 0.8.8 does behaves the same.
+- **Possession** (`GT_POSSESSION`, `g_possession.c`, its flag pickup in
+  `BG_CanItemBeGrabbed`, spawns and team code). 0.8.8 has 13 gametypes;
+  `g_gametype 13` is out of range and falls back to FFA.
+- **Pmove:** `cg_enableQ` / `g_enableQ` (the Q1-scale `QUACK_VIEWHEIGHT`),
+  `DF_FAST_WATER_MOVE` (`pm_swimFastScale`), the extra footstep surfaces
+  (`SURF_SNOW` .. `SURF_LEAVES` → `EV_FOOTSTEP_SNOW` ..) and
+  `EV_BULLET_HIT_WOOD/SAND/SNOW/GLASS`, the OA3 torso animations
+  (`TORSO_RUN` .. `TORSO_STRAFE`, `LEGS_STRAFE_LEFT/RIGHT`), and master's
+  "always snap on slick surfaces" with `pmove_float`. 0.8.8's
+  `PM_TorsoAnimation` only picks `TORSO_STAND`/`TORSO_STAND2`, and it runs
+  before `PM_Footsteps`. `PM_SlideMove`'s `if (gravity)` guards are gone
+  (no effect on the result).
+- **Numbering:** master moved `STAT_PERSISTANT_POWERUP` to the end; in
+  0.8.8 it is stat 2, before `STAT_WEAPONS` (3) .. `STAT_MAX_HEALTH` (7).
+  `WP_NUM_INVALID` and the master-only events and animations are gone, so
+  `MAX_TOTALANIMATIONS` is 37.
+- **Map info files:** `MapInfoGet`, `MatchesGametype`, `mapinfo_result_t`
+  and `MapInfoPrint` (`maps/*.info`).
+- **Cvars:** `g_localTeamPref`, `g_enableFS`, `g_grapple`,
+  `g_harvesterFromBodies`, `g_ddCaptureTime`, `g_ddRespawnDelay` (0.8.8
+  waits a fixed 10 s), `g_developer`, `g_emptyCommand`, `g_emptyTime`.
+  `g_runes` is the `g_persistantpowerups` vmCvar again.
+- **Game code:** the elimination door handling, human-only counts
+  (`TeamLivingHumanCount`, `TeamHumanParticipantsCount`,
+  `level.humansEliminated`, `max_humanplayers`, `lastActiveTime`,
+  `cannotWin`), `SelectRandomEntity(Filter)`,
+  `SelectDominationSpawnPoint`, `LogAcc`, `WriteAccForAllClients`,
+  `SendVictoryChallenge`, `TossClientCubesValues`, `whiteListedStr`,
+  `monster_die`, `G_SelectRandomBotInfo`, `G_CountBotPlayersByName`,
+  `StringIsInteger`, `SanitizeChatText`, and the `SelectSpawnPoint`
+  filter argument.
+
+0.8.8 things that master had dropped and are back:
+
+- `shuffle` (`ShuffleTeams`, the `shuffle` server command, the `!shuffle`
+  admin command and the `shuffle` vote, which is in `g_voteNames`'s
+  default);
+- `elimination_grapple`, `CVAR_NORESTART` on the elimination cvars,
+  `pmove_fixed`/`pmove_msec` without change tracking;
+- the elimination and LMS round functions live in `g_main.c` again
+  (`g_main_3.luau`), as 0.8.8 has no `g_elimination.c`;
+- `G_ReadAltKillSettings(ent, skiparg)` as an admin-command handler,
+  `bot_settings_t.team`, the empty `Cmd_Stats_f`;
+- `gamedate` is the QVM build date, `Jan 28 2012`.
+
+`g_mem.c` exists in 0.8.8 but its Makefile builds `bg_alloc.c` instead,
+so it is still not ported.
 
 ### `MISSIONPACK` is not defined
 
@@ -139,7 +201,8 @@ does the same, and `test_rules` checks it.
 
 ### The dropped-flag return time is 30 s, not 40 s
 
-`g_team.h`'s `CTF_FLAG_RETURN_TIME` (40 s) is never used.
+`g_team.h`'s `CTF_FLAG_RETURN_TIME` (40 s) is never used, in 0.8.8 as in
+master.
 `LaunchItem` gives dropped flags `Team_DroppedFlagThink` at +30 s, and
 that is what the port and `test_rules` follow.
 
@@ -199,7 +262,7 @@ Roblox:
 
 `docs/formats/net.md` documents the wire format.
 
-### The lumps interface (for the converter)
+### The lumps interface and the converter's blobs
 
 `Collision.LoadMap(name, lumps)` takes plain tables, and
 `src/shared/cm/cm_load.luau`'s header documents their shape:
@@ -207,13 +270,36 @@ Roblox:
 - `shaders`, `planes`, `nodes`, `leafs`, `leafsurfaces`, `leafbrushes`,
   `models`, `brushes`, `brushsides`, `entities` (string), `visibility`
   (buffer) and `numSurfaces`;
-- `patches`, keyed by surface index, with `shaderNum`, `width`, `height`
-  and `points`.
+- `patches`, keyed by surface index: either `shaderNum`, `width`,
+  `height` and `points` (control points, collision generated at load),
+  or `contents`, `surfaceFlags` and a ready `pc` patchCollide.
 
-`cm/bsp.luau` builds these lumps from an IBSP v46 file, and the tests use
-it. When the converter's collision blob (`docs/formats/collision.md`)
-lands, a thin adapter that turns the blob into this table is all that is
-needed. The server gets maps through `Game.Init({loadMap = function(name)
+Two sources produce them:
+
+- `cm/bsp.luau` parses an IBSP v46 file (the tests use it);
+- `cm/blob.luau` reads the converter's output: `Blob.join(chunks)` joins
+  the chunk buffers, `Blob.lumps(collisionBlob, entitiesJson)` turns the
+  `OACM` blob and the decoded `Entities` JSON into lumps. Patches arrive
+  with their collision generated offline (`PATC`/`PPLN`/`FACE`), so they
+  skip `CM_GeneratePatchCollide`.
+
+The entity string is rebuilt from `entities.json`. JSON keeps neither key
+order nor duplicate keys, so each entity comes out as `classname` and then
+its other keys sorted. Only an entity with duplicate keys, or with both
+`angle` and `angles`, could spawn differently; oa_dm1 and oa_ctf2 have
+none.
+
+Getting the blob path bit-exact took these fixes in the converter's
+`patch_collide.rs`:
+
+- quad facets now list their borders in C's order (top, right, bottom,
+  left);
+- a triangle's third border is the other triangle's plane, then the
+  neighbouring border, then an edge plane, as in C;
+- epsilon tests against the C `#define`s compare in double, and
+  `VectorNormalize` follows ioq3's `1/sqrt` form.
+
+The server gets maps through `Game.Init({loadMap = function(name)
 return lumps end})`.
 
 ## Trap API

@@ -5,9 +5,9 @@
 mod grid;
 mod polylib;
 
-use grid::{Grid, POINT_EPSILON};
+use grid::Grid;
 use polylib::{
-    base_winding_for_plane, chop_winding, cross, dot, ma, normalize, sub, winding_bounds, Vec3,
+    base_winding_for_plane, chop_winding, cross, dot, ma, normalize, sub, winding_bounds, within, Vec3,
     MAX_MAP_BOUNDS, SIDE_BACK, SIDE_FRONT, SIDE_ON,
 };
 
@@ -16,9 +16,10 @@ pub const MAX_FACET_BEVELS: usize = 4 + 6 + 16;
 const MAX_FACETS: usize = 1024;
 const MAX_PATCH_PLANES: usize = 2048;
 const MAX_GRID_SIZE: usize = 129;
-const PLANE_TRI_EPSILON: f32 = 0.1;
-const NORMAL_EPSILON: f32 = 0.0001;
-const DIST_EPSILON: f32 = 0.02;
+// C `#define`s (double); the chop epsilon is the `0.1f` C passes
+const PLANE_TRI_EPSILON: f64 = 0.1;
+const NORMAL_EPSILON: f64 = 0.0001;
+const DIST_EPSILON: f64 = 0.02;
 const ON_EPSILON: f32 = 0.1;
 
 const EN_TOP: usize = 0;
@@ -71,10 +72,10 @@ fn signbits_for_normal(n: &[f32; 4]) -> i32 {
 /// `Some(flipped)` when `plane` matches `p` directly or inverted.
 fn plane_equal(p: &PcPlane, plane: &[f32; 4]) -> Option<bool> {
     let close = |a: &[f32; 4], b: &[f32; 4]| {
-        (a[0] - b[0]).abs() < NORMAL_EPSILON
-            && (a[1] - b[1]).abs() < NORMAL_EPSILON
-            && (a[2] - b[2]).abs() < NORMAL_EPSILON
-            && (a[3] - b[3]).abs() < DIST_EPSILON
+        f64::from((a[0] - b[0]).abs()) < NORMAL_EPSILON
+            && f64::from((a[1] - b[1]).abs()) < NORMAL_EPSILON
+            && f64::from((a[2] - b[2]).abs()) < NORMAL_EPSILON
+            && f64::from((a[3] - b[3]).abs()) < DIST_EPSILON
     };
     if close(&p.plane, plane) {
         return Some(false);
@@ -85,12 +86,12 @@ fn plane_equal(p: &PcPlane, plane: &[f32; 4]) -> Option<bool> {
 
 fn snap_vector(normal: &mut Vec3) {
     for i in 0..3 {
-        if (normal[i] - 1.0).abs() < NORMAL_EPSILON {
+        if f64::from((normal[i] - 1.0).abs()) < NORMAL_EPSILON {
             *normal = [0.0; 3];
             normal[i] = 1.0;
             break;
         }
-        if (normal[i] + 1.0).abs() < NORMAL_EPSILON {
+        if f64::from((normal[i] + 1.0).abs()) < NORMAL_EPSILON {
             *normal = [0.0; 3];
             normal[i] = -1.0;
             break;
@@ -135,7 +136,7 @@ impl Builder {
                 continue;
             }
             let near =
-                |pt: &Vec3| (dot(pt, &normal_of(&p.plane)) - p.plane[3]).abs() <= PLANE_TRI_EPSILON;
+                |pt: &Vec3| within(dot(pt, &normal_of(&p.plane)) - p.plane[3], PLANE_TRI_EPSILON);
             if near(p1) && near(p2) && near(p3) {
                 return i as i32;
             }
@@ -149,9 +150,9 @@ impl Builder {
         }
         let plane = &self.planes[plane_num as usize].plane;
         let d = dot(p, &normal_of(plane)) - plane[3];
-        if d > POINT_EPSILON {
+        if f64::from(d) > PLANE_TRI_EPSILON {
             SIDE_FRONT
-        } else if d < -POINT_EPSILON {
+        } else if f64::from(d) < -PLANE_TRI_EPSILON {
             SIDE_BACK
         } else {
             SIDE_ON
@@ -308,7 +309,7 @@ impl Builder {
                         continue;
                     }
                     let plane = [nrm[0], nrm[1], nrm[2], dot(&w[j], &nrm)];
-                    if w.iter().any(|p| dot(p, &nrm) - plane[3] > 0.1) {
+                    if w.iter().any(|p| f64::from(dot(p, &nrm) - plane[3]) > 0.1) {
                         continue;
                     }
                     if plane_equal(&surface, &plane).is_some() || self.has_border(f, &plane) {
@@ -431,7 +432,7 @@ impl Builder {
                         continue;
                     }
                     facet.num_borders = 4;
-                    for (k, e) in [EN_TOP, EN_BOTTOM, EN_LEFT, EN_RIGHT]
+                    for (k, e) in [EN_TOP, EN_RIGHT, EN_BOTTOM, EN_LEFT]
                         .into_iter()
                         .enumerate()
                     {
@@ -446,7 +447,13 @@ impl Builder {
                     facet.border_no_adjust[0] = no_adjust[EN_TOP];
                     facet.border_planes[1] = borders[EN_RIGHT];
                     facet.border_no_adjust[1] = no_adjust[EN_RIGHT];
-                    facet.border_planes[2] = self.edge_plane_num(g, &gp, i, j, 4);
+                    facet.border_planes[2] = gp[i][j][1];
+                    if facet.border_planes[2] == -1 {
+                        facet.border_planes[2] = borders[EN_BOTTOM];
+                        if facet.border_planes[2] == -1 {
+                            facet.border_planes[2] = self.edge_plane_num(g, &gp, i, j, 4);
+                        }
+                    }
                     self.set_border_inward(&mut facet, g, i, j, 0);
                     self.finish_facet(facet);
 
@@ -456,7 +463,13 @@ impl Builder {
                     facet.border_no_adjust[0] = no_adjust[EN_BOTTOM];
                     facet.border_planes[1] = borders[EN_LEFT];
                     facet.border_no_adjust[1] = no_adjust[EN_LEFT];
-                    facet.border_planes[2] = self.edge_plane_num(g, &gp, i, j, 5);
+                    facet.border_planes[2] = gp[i][j][0];
+                    if facet.border_planes[2] == -1 {
+                        facet.border_planes[2] = borders[EN_TOP];
+                        if facet.border_planes[2] == -1 {
+                            facet.border_planes[2] = self.edge_plane_num(g, &gp, i, j, 5);
+                        }
+                    }
                     self.set_border_inward(&mut facet, g, i, j, 1);
                     self.finish_facet(facet);
                 }

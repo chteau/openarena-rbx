@@ -2,11 +2,12 @@
 //! stored as `cols[i][j]`, matching the C `points[i][j]`; growable instead of
 //! the fixed MAX_GRID_SIZE array.
 
-use super::polylib::{dot, sub, Vec3};
+use super::polylib::{dot, sub, within, Vec3};
 
 pub(super) const SUBDIVIDE_DISTANCE: f32 = 16.0;
-pub(super) const POINT_EPSILON: f32 = 0.1;
-const WRAP_POINT_EPSILON: f32 = 0.1;
+// C `#define`s, so the comparisons against them happen in double
+const POINT_EPSILON: f64 = 0.1;
+const WRAP_POINT_EPSILON: f64 = 0.1;
 
 pub(super) struct Grid {
     pub cols: Vec<Vec<Vec3>>,
@@ -31,8 +32,7 @@ fn subdivide(a: &Vec3, b: &Vec3, c: &Vec3) -> (Vec3, Vec3, Vec3) {
 
 fn compare_points(a: &Vec3, b: &Vec3) -> bool {
     (0..3).all(|i| {
-        let d = a[i] - b[i];
-        (-POINT_EPSILON..=POINT_EPSILON).contains(&d)
+        within(a[i] - b[i], POINT_EPSILON)
     })
 }
 
@@ -50,8 +50,7 @@ impl Grid {
         let last = &self.cols[self.cols.len() - 1];
         self.wrap_width = first.iter().zip(last).all(|(a, b)| {
             (0..3).all(|j| {
-                let d = a[j] - b[j];
-                (-WRAP_POINT_EPSILON..=WRAP_POINT_EPSILON).contains(&d)
+                within(a[j] - b[j], WRAP_POINT_EPSILON)
             })
         });
     }

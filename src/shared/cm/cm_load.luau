@@ -44,7 +44,9 @@ own adapter) only has to produce this shape. All arrays are 0-based:
 		entities     = string,
 		visibility   = buffer? (the raw lump: numClusters, clusterBytes, bits),
 		numSurfaces  = number,
-		patches      = { [surfaceNum] = { shaderNum, width, height, points = {[0]=vec3...} } },
+		patches      = { [surfaceNum] = { shaderNum, width, height, points = {[0]=vec3...} }
+		                 or, already generated (cm/blob.luau),
+		                 { contents, surfaceFlags, width, height, pc = patchCollide } },
 	}
 
 Floats must already be float32 values (they are, when read with readf32).
@@ -314,6 +316,11 @@ local function CMod_LoadPatches(lumps)
 	cm.numSurfaces = lumps.numSurfaces or 0
 	for i, p in lumps.patches or {} do
 		-- FIXME: check for non-colliding patches
+		if p.pc then
+			-- the converter's blob: collision generated offline (blob.luau)
+			cm.surfaces[i] = { checkcount = 0, contents = p.contents, surfaceFlags = p.surfaceFlags, pc = p.pc }
+			continue
+		end
 		local shader = cm.shaders[p.shaderNum]
 		cm.surfaces[i] = {
 			checkcount = 0,
