@@ -103,6 +103,20 @@ H.test("transport.drop kicks, leaving disconnects", function()
 	H.eq(s.playerOf[1], nil)
 end)
 
+H.test("transport.client disconnect stays in the place", function()
+	local s, _, log, kicks = stubs()
+	local alice = { Name = "Alice", UserId = 7 }
+	s.connect(alice, "", 1)
+	-- Alice's client disconnects to the main menu: the engine drops her
+	-- slot, the drop doesn't kick her, and she can connect again
+	s.remove(alice)
+	H.eq(has(log, "disconnect 0"), true)
+	s.onDrop(0, "disconnected")
+	H.eq(#kicks, 0)
+	H.eq(s.connect(alice, "", 1), 0)
+	H.eq(s.playerOf[0], alice)
+end)
+
 -- client/sys/Net: a new gamestate (map change) starts the clock over, as
 -- CL_ClearState does, so the first usercmd of the new level can't carry the
 -- old level's later serverTime

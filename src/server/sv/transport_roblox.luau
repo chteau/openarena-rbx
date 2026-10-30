@@ -168,6 +168,10 @@ function Transport.Start(Game: Game)
 	reliable.OnServerEvent:Connect(function(player: Player, kind: any, data: any, seq: any)
 		if kind == "p" then
 			packet(player, data)
+		elseif kind == "disconnect" then
+			-- the client went back to its menu: drop it from the game, but
+			-- the player stays in the place and can connect again
+			sessions.remove(player)
 		elseif kind == "connect" then
 			if typeof(data) ~= "string" or #data > 1024 then
 				return
