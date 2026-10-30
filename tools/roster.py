@@ -8,6 +8,8 @@ the lune test hosts.
   oaconv's src/roster.rs;
 - shipped .skin files name the kept texture (retexture) in place of a dropped
   one;
+- toned paths ship only from assets/toned (oaconv's overlay), never from the
+  pk3s;
 - scripts/bots.txt moves the bots in bot_models to their kept model and loses
   the other bots whose model is excluded, and botfiles/ the character files
   only they use, so `addbot <name>` finds no such bot;
@@ -27,6 +29,7 @@ from functools import lru_cache
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = os.path.join(ROOT, 'tools/oaconv/roster.json')
 BASEOA = os.path.join(ROOT, 'vendor/oa088/openarena-0.8.8/baseoa')
+TONED = os.path.join(ROOT, 'assets/toned')
 SKIP_PAKS = {'pak2-players-mature.pk3'}
 TEXT_EXT = {'.cfg', '.skin', '.shader', '.arena', '.txt', '.menu'}
 
@@ -56,6 +59,11 @@ def excludes(path):
                 or p in ('scripts/%s.vc' % key, 'scripts/player_%s.shader' % key):
             return True
     return False
+
+
+def toned_only(path):
+    """Whether a path ships only from assets/toned (src/roster.rs)."""
+    return path.lower().startswith(tuple(t.lower() for t in config().get('toned', {})))
 
 
 def bot_blocks(text):
@@ -153,7 +161,7 @@ class Shipped:
         kept = {i['name'].lower() for i in blocks} - self.dropped_bots
         # character files only dropped bots use (and Jenna's, which no bot uses)
         drop_stems = (stems(self.dropped_bots) | self.dropped_bots) - stems(kept)
-        self.owner = {low: v for low, v in everything.items() if not excludes(low) and not (
+        self.owner = {low: v for low, v in everything.items() if not excludes(low) and not toned_only(low) and not (
             low.startswith('botfiles/bots/') and os.path.basename(low).rsplit('_', 1)[0] in drop_stems)}
 
     def _read(self, owner, low):
@@ -215,6 +223,11 @@ def check():
                 tex = line.split(',', 1)[1].strip() if ',' in line else ''
                 if tex and excludes(tex):
                     problems.append('%s names dropped texture %s' % (low, tex))
+                elif tex and toned_only(tex) and not os.path.isfile(os.path.join(TONED, tex.lower())):
+                    problems.append('%s names %s, which ships only toned and assets/toned has no copy' % (low, tex))
+    for low in every:
+        if toned_only(low) and not os.path.isfile(os.path.join(TONED, low)):
+            problems.append('%s is toned-only but assets/toned has no copy' % low)
     for bot, sub in cfg['arena_bots'].items():
         if sub.lower() not in kept_bots:
             problems.append('arena_bots %s -> %s: not a kept bot' % (bot, sub))

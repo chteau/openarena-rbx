@@ -111,9 +111,10 @@ pub fn convert(o: &Options) -> Result<(), String> {
     std::fs::create_dir_all(out).map_err(err(out.display()))?;
     let mut vfs =
         Vfs::open_with_overlay(&o.root, o.overlay.as_deref()).map_err(err(o.root.display()))?;
-    // models outside the roster ship nothing (tools/oaconv/roster.json)
+    // models outside the roster ship nothing (tools/oaconv/roster.json), and
+    // toned-only art ships from the overlay or not at all
     let roster = oaconv::roster::Roster::get();
-    vfs.retain(|p| !roster.excludes(p));
+    vfs.retain(|p, toned| !roster.excludes(p) && (toned || !roster.toned_only(p)));
     let mut shaders = ShaderSet::load(&vfs);
     shaders.shaders.retain(|name, _| !roster.excludes(name));
     let mut manifest = Manifest::load(out).unwrap_or_default();
@@ -251,10 +252,41 @@ mod tests {
                     .collect::<Vec<_>>(),
                 None => vec![format!("players/{k}/"), format!("player_{k}.")],
             })
-            .chain(roster.files.values().flatten().map(|f| f.to_ascii_lowercase()))
+            .chain(
+                roster
+                    .files
+                    .values()
+                    .flatten()
+                    .map(|f| f.to_ascii_lowercase()),
+            )
             .collect();
         let manifest = Manifest::load(&out).unwrap();
-        assert!(manifest.uploads.iter().any(|u| u.path.contains("players/sarge/")));
+        assert!(manifest
+            .uploads
+            .iter()
+            .any(|u| u.path.contains("players/sarge/")));
+        // toned-only art: the converted image is the overlay's, never the pk3's
+        let base = oaconv::vfs::Vfs::open(&oaconv::vfs::default_root(&repo)).unwrap();
+        let png_sha = |bytes: Vec<u8>, p: &str| {
+            let img = oaconv::texture::decode(&bytes, p).unwrap();
+            let small = oaconv::texture::downscale_max(&img, oaconv::texture::MAX_SIZE);
+            oaconv::luau::sha256_hex(&oaconv::texture::encode_png(&small))
+        };
+        for skin in ["skin1", "skin1red", "skin1blue"] {
+            let tga = format!("models/players/beret/{skin}.tga");
+            assert!(roster.toned_only(&tga), "{tga}");
+            let png = format!("images/models/players/beret/{skin}.png");
+            let shipped = oaconv::luau::sha256_hex(&std::fs::read(out.join(&png)).unwrap());
+            let upload = manifest.uploads.iter().find(|u| u.path == png).expect(&png);
+            assert_eq!(upload.sha256, shipped, "{png}");
+            let toned = std::fs::read(repo.join(oaconv::vfs::OVERLAY).join(&tga)).unwrap();
+            assert_eq!(shipped, png_sha(toned, &tga), "{png} is not the toned skin");
+            assert_ne!(
+                shipped,
+                png_sha(base.read(&tga).unwrap(), &tga),
+                "{png} is the pk3 original"
+            );
+        }
         for u in &manifest.uploads {
             assert!(!roster.excludes_output(&u.path), "upload {}", u.path);
         }

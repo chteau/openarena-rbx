@@ -114,9 +114,11 @@ impl Vfs {
         }
     }
 
-    /// Drops every path `keep` refuses, as if no pk3 held it.
-    pub fn retain(&mut self, keep: impl Fn(&str) -> bool) {
-        self.files.retain(|k, _| keep(k));
+    /// Drops every path `keep(path, from_overlay)` refuses, as if no pk3
+    /// held it.
+    pub fn retain(&mut self, keep: impl Fn(&str, bool) -> bool) {
+        self.files
+            .retain(|k, e| keep(k, matches!(e, Entry::Loose(_))));
     }
 
     /// Every resolved (lowercased) path under `prefix` ending in one of `exts`.
