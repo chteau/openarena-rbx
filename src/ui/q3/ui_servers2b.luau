@@ -157,6 +157,11 @@ function U.ArenaServers_DoRefresh()
 				time = maxPing
 			else
 				info = trap.LAN_GetPingInfo(i)
+				if info == "" then
+					-- Roblox: timed out right at maxPing (60 Hz frames land on
+					-- it), still no answer
+					info = U.ArenaServers_NoResponse(adrstr)
+				end
 			end
 
 			-- insert ping results
