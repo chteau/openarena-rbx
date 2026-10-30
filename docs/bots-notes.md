@@ -167,7 +167,7 @@ username when OA's font can't draw the display name.
 
 | OA bot | first SP arena | Roblox user id | shows as |
 |---|---|---|---|
-| Grunt | oa_rpg3dm2 | 828726934 | MiranzaUGC |
+| Grunt | oa_rpg3dm2 | 1274097373 | MoonRb1x |
 | Liz | oa_rpg3dm2 | 73392736 | Mathew |
 | Tony | oa_minia | 260342963 | Berzappy |
 | Penguin | oa_minia | 105519417 | Viken |
