@@ -85,6 +85,8 @@ local function UI_RemoveBotsMenu_SetBotNames()
 		local info =
 			trap.GetConfigString(C.CS_PLAYERS + removeBotsMenuInfo.botClientNums[removeBotsMenuInfo.baseBotNum + n])
 		removeBotsMenuInfo.botnames[n] = Q.CleanStr(string.sub(Q.Info_ValueForKey(info, "n"), 1, 31))
+		-- C's items point at the botnames buffers; a Luau string is a copy
+		removeBotsMenuInfo.bots[n].string = removeBotsMenuInfo.botnames[n]
 		n += 1
 	end
 end

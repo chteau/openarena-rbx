@@ -498,12 +498,54 @@ function G.G_RemoveQueuedBotBegin(clientNum)
 	end
 end
 
+-- Not in OA: friend-bots (docs/bots-notes.md, "Friend-bots"). A bot can
+-- wear a Roblox friend of a human player here: it keeps its botfiles
+-- character, and its name is the friend's with a tag no player name has, so
+-- it can't pass for the person. The OA bot name stays in the userinfo
+-- ("oabot") for kick.
+local FRIEND_TAG = "^3[BOT]^7 "
+
+-- a friend for clientNum (nil: none free, or g_friendBots 0), its team
+-- preferred in team games
+local function FriendBotName(clientNum, team)
+	if G.g_friendBots.integer == 0 then
+		return nil
+	end
+	local side = if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 then team else nil
+	local friend = G.trap_FriendBot(clientNum, side)
+	return friend and FRIEND_TAG .. friend
+end
+
+-- a map change: a friend-bot whose friend's player left (or g_friendBots
+-- 0) takes another friend, or goes back to its OA name
+local function FriendBotRecheck(clientNum)
+	local userinfo = G.trap_GetUserinfo(clientNum)
+	local oabot = QS.Info_ValueForKey(userinfo, "oabot")
+	if oabot == "" or (G.g_friendBots.integer ~= 0 and G.trap_FriendBotValid(clientNum)) then
+		return
+	end
+	local name = FriendBotName(clientNum, QS.Info_ValueForKey(userinfo, "team"))
+	if name == nil then
+		G.trap_FriendBotRelease(clientNum)
+		local botinfo = G.G_GetBotInfoByName(oabot) or ""
+		name = QS.Info_ValueForKey(botinfo, "funname")
+		if name == "" then
+			name = oabot
+		end
+		userinfo = QS.Info_RemoveKey(userinfo, "oabot")
+	end
+	G.trap_SetUserinfo(clientNum, QS.Info_SetValueForKey(userinfo, "name", name))
+end
+
 --[[
 ===============
 G_BotConnect
 ===============
 ]]
 function G.G_BotConnect(clientNum, restart)
+	if restart then
+		FriendBotRecheck(clientNum)
+	end
 	local userinfo = G.trap_GetUserinfo(clientNum)
 
 	local settings = {
@@ -636,6 +678,13 @@ local function G_AddBot(name, skill, team, delay, altname)
 	userinfo = QS.Info_SetValueForKey(userinfo, "skill", QS.va("%5.2f", skill))
 	userinfo = QS.Info_SetValueForKey(userinfo, "team", team)
 
+	-- an explicit altname keeps the bot as named
+	local friend = if altname == nil or altname == "" then FriendBotName(clientNum, team) else nil
+	if friend then
+		userinfo = QS.Info_SetValueForKey(userinfo, "name", friend)
+		userinfo = QS.Info_SetValueForKey(userinfo, "oabot", QS.Info_ValueForKey(botinfo, "name"))
+	end
+
 	bot = G.g_entities[clientNum]
 	bot.r.svFlags = bit32.bor(bot.r.svFlags, C.SVF_BOT)
 	bot.inuse = true
@@ -645,6 +694,7 @@ local function G_AddBot(name, skill, team, delay, altname)
 
 	-- have it connect to the game as a normal client
 	if G.ClientConnect(clientNum, true, true) ~= nil then
+		G.trap_FriendBotRelease(clientNum)
 		return
 	end
 

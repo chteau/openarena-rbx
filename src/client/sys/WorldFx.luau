@@ -71,6 +71,7 @@ end
 -- settings: creating one works, reading it then errors). The first refusal
 -- turns the effect off for the session; the part keeps its static look.
 local editableRefused = false
+local loadWarned = false
 local function editable(part: MeshPart)
 	if editableRefused then
 		return nil
@@ -93,8 +94,15 @@ local function editable(part: MeshPart)
 		return rec
 	end)
 	if not ok or rec == nil then
-		editableRefused = true
-		warn("WorldFx: no EditableMesh here, animated map shaders stay static: " .. tostring(rec))
+		-- only the Security setting turns the effect off for the session; a
+		-- mesh that fails to load leaves just that part static
+		if string.find(tostring(rec), "not accessible", 1, true) then
+			editableRefused = true
+			warn("WorldFx: no EditableMesh here, animated map shaders stay static: " .. tostring(rec))
+		elseif not loadWarned then
+			loadWarned = true
+			warn("WorldFx: " .. part.Name .. " stays static (and any other part that fails the same way): " .. tostring(rec))
+		end
 		return nil
 	end
 	local copy = rec.part

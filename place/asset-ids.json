@@ -8088,6 +8088,422 @@
   "maps/oa_dm2/atlas_4.png": {
    "decal": 81169749424533,
    "image": 103668998845365
+  },
+  "maps/oa_dm2/atlas_5.png": {
+   "decal": 71483692274797,
+   "image": 90667854218946
+  },
+  "maps/oa_dm2/atlas_6.png": {
+   "decal": 97660460398890,
+   "image": 89941726007431
+  },
+  "maps/oa_dm2/atlas_7.png": {
+   "decal": 108973436524884,
+   "image": 95767426698542
+  },
+  "maps/oa_dm2/atlas_8.png": {
+   "decal": 130355380313057,
+   "image": 109528096749025
+  },
+  "maps/oa_dm2/atlas_9.png": {
+   "decal": 134869389426308,
+   "image": 116426565271402
+  },
+  "maps/oa_dm3/atlas_0.png": {
+   "decal": 122760070865523,
+   "image": 95152311868139
+  },
+  "maps/oa_dm3/atlas_1.png": {
+   "decal": 96608457539110,
+   "image": 73992619163031
+  },
+  "maps/oa_dm3/atlas_10.png": {
+   "decal": 90803180138017,
+   "image": 106852138396557
+  },
+  "maps/oa_dm3/atlas_11.png": {
+   "decal": 84433469887728,
+   "image": 120255352692886
+  },
+  "maps/oa_dm3/atlas_12.png": {
+   "decal": 111863583260001,
+   "image": 76196634429695
+  },
+  "maps/oa_dm3/atlas_2.png": {
+   "decal": 106214041133370,
+   "image": 138590238782939
+  },
+  "maps/oa_dm3/atlas_3.png": {
+   "decal": 78205895112498,
+   "image": 78643994716796
+  },
+  "maps/oa_dm3/atlas_4.png": {
+   "decal": 97842909000622,
+   "image": 119109692593153
+  },
+  "maps/oa_dm3/atlas_5.png": {
+   "decal": 94331261795858,
+   "image": 119926253714907
+  },
+  "maps/oa_dm3/atlas_6.png": {
+   "decal": 118336246043214,
+   "image": 130617199736580
+  },
+  "maps/oa_dm3/atlas_7.png": {
+   "decal": 122322912005194,
+   "image": 97066060780740
+  },
+  "maps/oa_dm3/atlas_8.png": {
+   "decal": 79665776332935,
+   "image": 118672141391177
+  },
+  "maps/oa_dm3/atlas_9.png": {
+   "decal": 123085270234238,
+   "image": 85675212124150
+  },
+  "maps/oa_dm4/atlas_0.png": {
+   "decal": 128435519870188,
+   "image": 114195791131171
+  },
+  "maps/oa_dm4/atlas_1.png": {
+   "decal": 140278794973326,
+   "image": 80418353248056
+  },
+  "maps/oa_dm4/atlas_10.png": {
+   "decal": 132182104914193,
+   "image": 135553330141474
+  },
+  "maps/oa_dm4/atlas_11.png": {
+   "decal": 109527831517336,
+   "image": 114640821849698
+  },
+  "maps/oa_dm4/atlas_12.png": {
+   "decal": 128626014626911,
+   "image": 103312030909150
+  },
+  "maps/oa_dm4/atlas_2.png": {
+   "decal": 138674037621154,
+   "image": 91648530557796
+  },
+  "maps/oa_dm4/atlas_3.png": {
+   "decal": 77153560426608,
+   "image": 133627182016047
+  },
+  "maps/oa_dm4/atlas_4.png": {
+   "decal": 103678856941954,
+   "image": 94943783459451
+  },
+  "maps/oa_dm4/atlas_5.png": {
+   "decal": 122139503547247,
+   "image": 124510966353545
+  },
+  "maps/oa_dm4/atlas_6.png": {
+   "decal": 123357306042880,
+   "image": 94856897187965
+  },
+  "maps/oa_dm4/atlas_7.png": {
+   "decal": 95128277272711,
+   "image": 85739406894380
+  },
+  "maps/oa_dm4/atlas_8.png": {
+   "decal": 120704862635389,
+   "image": 136386193700011
+  },
+  "maps/oa_dm4/atlas_9.png": {
+   "decal": 126186141891841,
+   "image": 88303797840142
+  },
+  "maps/oa_dm5/atlas_0.png": {
+   "decal": 86556178759751,
+   "image": 100492637899592
+  },
+  "maps/oa_dm5/atlas_1.png": {
+   "decal": 111506363308859,
+   "image": 112552739253601
+  },
+  "maps/oa_dm5/atlas_10.png": {
+   "decal": 92575716766777,
+   "image": 120130119138053
+  },
+  "maps/oa_dm5/atlas_11.png": {
+   "decal": 127751355821753,
+   "image": 127000189260453
+  },
+  "maps/oa_dm5/atlas_12.png": {
+   "decal": 77523892802752,
+   "image": 136155793696818
+  },
+  "maps/oa_dm5/atlas_13.png": {
+   "decal": 93828502861150,
+   "image": 115670109005862
+  },
+  "maps/oa_dm5/atlas_2.png": {
+   "decal": 95637390217401,
+   "image": 104285310653670
+  },
+  "maps/oa_dm5/atlas_3.png": {
+   "decal": 116161921308700,
+   "image": 112682859922575
+  },
+  "maps/oa_dm5/atlas_4.png": {
+   "decal": 124480828310966,
+   "image": 111852182699536
+  },
+  "maps/oa_dm5/atlas_5.png": {
+   "decal": 107613543523817,
+   "image": 77856165010528
+  },
+  "maps/oa_dm5/atlas_6.png": {
+   "decal": 83335530659766,
+   "image": 109389720194760
+  },
+  "maps/oa_dm5/atlas_7.png": {
+   "decal": 88837985726247,
+   "image": 134491778814064
+  },
+  "maps/oa_dm5/atlas_8.png": {
+   "decal": 72562490994908,
+   "image": 89867024075857
+  },
+  "maps/oa_dm5/atlas_9.png": {
+   "decal": 132921641850007,
+   "image": 123260729143413
+  },
+  "maps/oa_dm6/atlas_0.png": {
+   "decal": 118318422287296,
+   "image": 134460855678088
+  },
+  "maps/oa_dm6/atlas_1.png": {
+   "decal": 88842942670783,
+   "image": 136701058015301
+  },
+  "maps/oa_dm6/atlas_10.png": {
+   "decal": 72907043375033,
+   "image": 112385308972070
+  },
+  "maps/oa_dm6/atlas_11.png": {
+   "decal": 103662807919581,
+   "image": 81523928526922
+  },
+  "maps/oa_dm6/atlas_12.png": {
+   "decal": 81766478585043,
+   "image": 71865124255382
+  },
+  "maps/oa_dm6/atlas_13.png": {
+   "decal": 98876058678473,
+   "image": 94172524309225
+  },
+  "maps/oa_dm6/atlas_2.png": {
+   "decal": 113952500009082,
+   "image": 98250675276838
+  },
+  "maps/oa_dm6/atlas_3.png": {
+   "decal": 96395627828739,
+   "image": 87542542173632
+  },
+  "maps/oa_dm6/atlas_4.png": {
+   "decal": 113999288501467,
+   "image": 133493558710579
+  },
+  "maps/oa_dm6/atlas_5.png": {
+   "decal": 87640015473418,
+   "image": 75494445796138
+  },
+  "maps/oa_dm6/atlas_6.png": {
+   "decal": 116727987803144,
+   "image": 109369229503440
+  },
+  "maps/oa_dm6/atlas_7.png": {
+   "decal": 102358008046816,
+   "image": 74203573743713
+  },
+  "maps/oa_dm6/atlas_8.png": {
+   "decal": 102125849962268,
+   "image": 70611648054416
+  },
+  "maps/oa_dm6/atlas_9.png": {
+   "decal": 110330669251552,
+   "image": 103868131338860
+  },
+  "maps/oa_dm7/atlas_0.png": {
+   "decal": 128608742492245,
+   "image": 101899343843384
+  },
+  "maps/oa_dm7/atlas_1.png": {
+   "decal": 121493067539681,
+   "image": 88074182719848
+  },
+  "maps/oa_dm7/atlas_10.png": {
+   "decal": 137788185842740,
+   "image": 118328019929005
+  },
+  "maps/oa_dm7/atlas_11.png": {
+   "decal": 124882309898166,
+   "image": 108026886192118
+  },
+  "maps/oa_dm7/atlas_12.png": {
+   "decal": 100036500742499,
+   "image": 78359011464501
+  },
+  "maps/oa_dm7/atlas_13.png": {
+   "decal": 102214163648975,
+   "image": 132887795587169
+  },
+  "maps/oa_dm7/atlas_2.png": {
+   "decal": 103973268744189,
+   "image": 70593522068643
+  },
+  "maps/oa_dm7/atlas_3.png": {
+   "decal": 95524174083394,
+   "image": 86746537899899
+  },
+  "maps/oa_dm7/atlas_4.png": {
+   "decal": 112030093714210,
+   "image": 130277425765874
+  },
+  "maps/oa_dm7/atlas_5.png": {
+   "decal": 129228229752641,
+   "image": 107923853983202
+  },
+  "maps/oa_dm7/atlas_6.png": {
+   "decal": 101898375448507,
+   "image": 108093171367589
+  },
+  "maps/oa_dm7/atlas_7.png": {
+   "decal": 107303441304609,
+   "image": 106414265021352
+  },
+  "maps/oa_dm7/atlas_8.png": {
+   "decal": 92422352914405,
+   "image": 74997808652691
+  },
+  "maps/oa_dm7/atlas_9.png": {
+   "decal": 87674194169526,
+   "image": 139307498635807
+  },
+  "maps/oa_koth1/atlas_0.png": {
+   "decal": 81224482119219,
+   "image": 98067823227010
+  },
+  "maps/oa_koth1/atlas_1.png": {
+   "decal": 80224773012698,
+   "image": 81925211763878
+  },
+  "maps/oa_koth1/atlas_10.png": {
+   "decal": 70597736558158,
+   "image": 86107451052240
+  },
+  "maps/oa_koth1/atlas_11.png": {
+   "decal": 70409451360300,
+   "image": 94898807982945
+  },
+  "maps/oa_koth1/atlas_12.png": {
+   "decal": 140634770112925,
+   "image": 106977872335109
+  },
+  "maps/oa_koth1/atlas_2.png": {
+   "decal": 126125953608181,
+   "image": 128570813072577
+  },
+  "maps/oa_koth1/atlas_3.png": {
+   "decal": 139047989259317,
+   "image": 104679547790823
+  },
+  "maps/oa_koth1/atlas_4.png": {
+   "decal": 138717470454199,
+   "image": 118038440696685
+  },
+  "maps/oa_koth1/atlas_5.png": {
+   "decal": 95406827355499,
+   "image": 94671368482656
+  },
+  "maps/oa_koth1/atlas_6.png": {
+   "decal": 84703788416789,
+   "image": 105066842902666
+  },
+  "maps/oa_koth1/atlas_7.png": {
+   "decal": 138714310801128,
+   "image": 86359898737553
+  },
+  "maps/oa_koth1/atlas_8.png": {
+   "decal": 117786781548564,
+   "image": 83051649777848
+  },
+  "maps/oa_koth1/atlas_9.png": {
+   "decal": 99234330832357,
+   "image": 72757392719918
+  },
+  "maps/oa_koth2/atlas_0.png": {
+   "decal": 83472729524972,
+   "image": 86185818684090
+  },
+  "maps/oa_koth2/atlas_1.png": {
+   "decal": 88977041400980,
+   "image": 96676241472833
+  },
+  "maps/oa_koth2/atlas_10.png": {
+   "decal": 134406571026597,
+   "image": 102248343582172
+  },
+  "maps/oa_koth2/atlas_11.png": {
+   "decal": 121268410485825,
+   "image": 90503222289633
+  },
+  "maps/oa_koth2/atlas_12.png": {
+   "decal": 89511384579034,
+   "image": 72198305620264
+  },
+  "maps/oa_koth2/atlas_2.png": {
+   "decal": 93462411731280,
+   "image": 76634933810038
+  },
+  "maps/oa_koth2/atlas_3.png": {
+   "decal": 130267069651320,
+   "image": 137265748958498
+  },
+  "maps/oa_koth2/atlas_4.png": {
+   "decal": 71690086175942,
+   "image": 129265355448191
+  },
+  "maps/oa_koth2/atlas_5.png": {
+   "decal": 134558495207634,
+   "image": 77704874949922
+  },
+  "maps/oa_koth2/atlas_6.png": {
+   "decal": 114550697709949,
+   "image": 96255721651953
+  },
+  "maps/oa_koth2/atlas_7.png": {
+   "decal": 119387794947909,
+   "image": 82070924138994
+  },
+  "maps/oa_koth2/atlas_8.png": {
+   "decal": 89562439448095,
+   "image": 119180955702631
+  },
+  "maps/oa_koth2/atlas_9.png": {
+   "decal": 87357376608696,
+   "image": 83030542552985
+  },
+  "maps/oa_minia/atlas_0.png": {
+   "decal": 109830287246134,
+   "image": 122465413833291
+  },
+  "maps/oa_minia/atlas_1.png": {
+   "decal": 130276936789289,
+   "image": 70740995238007
+  },
+  "maps/oa_minia/atlas_10.png": {
+   "decal": 111747872215804,
+   "image": 133812853101906
+  },
+  "maps/oa_minia/atlas_11.png": {
+   "decal": 71771542964263,
+   "image": 131548581521442
+  },
+  "maps/oa_minia/atlas_12.png": {
+   "decal": 140210751955753,
+   "image": 108102870308270
   }
  },
  "models": {

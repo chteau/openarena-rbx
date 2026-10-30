@@ -160,6 +160,25 @@ over in the place.
   those shaders draw static. The client now catches this once
   (`R3D.noEditableMesh`, `WorldFx` `editableRefused`) instead of failing
   every frame. The fix is the experience setting, which was not touched.
+  Since then the sandbox (universe 1113565074) has "Allow Mesh / Image
+  APIs" on (`isMeshTextureApiAccessAllowed: true` from
+  `develop.roblox.com/v1/universes/1113565074/configuration`, 2026-10-30),
+  and EditableMeshes build. The next run still printed "no EditableMesh
+  here ... Invalid mesh.": that was `models/misc/telep`'s `tube` surface,
+  which has no triangles ("Cannot create a MeshPart from an empty mesh"),
+  and the first failure of any surface turned EditableMesh off for the
+  session. Now only "not accessible" does that; a faceless surface is
+  skipped, any other failing surface is left out alone, and a map mesh
+  that fails to load (`WorldFx`: "Failed to load mesh", seen on
+  `world_textures_sfx_flame2`) stays static alone.
+- **OA player models draw fully transparent**, even with EditableMesh on:
+  the build has no body textures for them (`build/images/models/players/`
+  holds only icons, and the upload lock has no `models/players` image),
+  and the surfaces come out SmoothPlastic with Transparency 1, which is an
+  alpha stage taking its alpha from the entity colour (OA leaves it 0 for
+  player parts); that last step was read off the parts, not traced. A bot
+  on an OA model still shows as its gun, shadow and name. Seen live on
+  2026-10-30 (`docs/parity/friendbots/`).
 - Impact marks (bullet holes, scorches) draw as dark quads: the multiplicative
   blend of OA's mark shaders has no Roblox equivalent (`play/dm1_firing.png`).
 

@@ -37,7 +37,7 @@ function G.BotChat_Kill(bs)
 	local name
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_KILL, 0, 1)
 	-- don't chat in tournament mode
@@ -88,7 +88,7 @@ function G.BotChat_EnemySuicide(bs)
 	local name
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	if G.BotNumActivePlayers() <= 1 then return 0 end
 	--
@@ -121,7 +121,7 @@ function G.BotChat_HitTalking(bs)
 	local lasthurt_client
 	local rnd
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	if G.BotNumActivePlayers() <= 1 then return 0 end
 	lasthurt_client = G.g_entities[bs.client].client.lasthurt_client
@@ -162,7 +162,7 @@ function G.BotChat_HitNoDeath(bs)
 	--
 	if lasthurt_client < 0 or lasthurt_client >= C.MAX_CLIENTS then return 0 end
 	--
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	if G.BotNumActivePlayers() <= 1 then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_HITNODEATH, 0, 1)
@@ -195,7 +195,7 @@ function G.BotChat_HitNoKill(bs)
 	local rnd
 	local entinfo = S.aas_entityinfo_t()
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	if G.BotNumActivePlayers() <= 1 then return 0 end
 	rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_HITNOKILL, 0, 1)
@@ -227,7 +227,7 @@ function G.BotChat_Random(bs)
 	local rnd
 	local name
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if G.BotIsObserver(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - TIME_BETWEENCHATTING then return 0 end
 	-- don't chat in tournament mode
@@ -290,7 +290,7 @@ function G.BotChatTest(bs)
 	local weap
 	local num
 
-	if G.bot_nochat.integer ~= 0 then return end
+	if G.BotNoChat(bs) then return end
 
 	num = G.trap_BotNumInitialChats(bs.cs, "game_enter")
 	for _ = 0, num - 1 do
