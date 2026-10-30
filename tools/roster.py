@@ -18,7 +18,8 @@ the lune test hosts.
   for every dropped bot.
 
   tools/roster.py files PREFIX...   the shipped text files under PREFIX, as JSON
-  tools/roster.py check             validate roster.json against the pk3s and src/
+  tools/roster.py check             validate roster.json against the pk3s and src/,
+                                    and the bot chat (tools/check_botchat.py)
 """
 import json
 import os
@@ -325,9 +326,11 @@ def check():
                                                                                line.strip()))
     for p in problems:
         print(p)
+    import check_botchat  # it imports this module
+    chat_ok = check_botchat.check()
     print('roster: %d kept bots, %d dropped (%s), %d problem(s)' % (
         len(kept_bots), len(s.dropped_bots), ' '.join(sorted(s.dropped_bots)), len(problems)))
-    return not problems
+    return not problems and chat_ok
 
 
 def main():
