@@ -5,6 +5,7 @@
 local C = require(script.Parent.Parent.q.Consts)
 local Clock = require(script.Parent.Clock)
 local Cvar = require(script.Parent.Cvar)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local Console = {}
 
@@ -93,12 +94,13 @@ end
 -- Con_DrawNotify: the last NUM_CON_TIMES lines younger than con_notifytime.
 function Console.DrawNotify()
 	local now = Clock.Milliseconds()
-	local y = 0
+	-- top-left, clear of the safe-area insets
+	local x, y = Screen.insets.left + SMALLCHAR_WIDTH, Screen.insets.top
 	local first = math.max(1, #lines - NUM_CON_TIMES + 1)
 	for i = first, #lines do
 		local t = times[i]
 		if t ~= 0 and now - t < con_notifytime.value * 1000 then
-			Console.DrawSmallString(SMALLCHAR_WIDTH, y, lines[i])
+			Console.DrawSmallString(x, y, lines[i])
 			y += SMALLCHAR_HEIGHT
 		end
 	end

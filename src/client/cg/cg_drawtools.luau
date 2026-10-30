@@ -46,6 +46,12 @@ function G.CG_AdjustFrom640(x, y, w, h)
 	return Screen.cgAdjust(G.cgs, x, y, w, h)
 end
 
+-- What the following 2D draws are anchored to (Screen.LEFT/CENTER/RIGHT/
+-- STRETCH, Screen.TOP/CENTER/BOTTOM/STRETCH); see src/ui/Screen.luau.
+function G.CG_SetScreenPlacement(horizontal, vertical)
+	Screen.cgPlace(G.cgs, horizontal, vertical)
+end
+
 function G.CG_FillRect(x, y, width, height, color)
 	trap.R_SetColor(color)
 
@@ -392,7 +398,7 @@ local function UI_DrawBannerString2(x, y, str, color)
 
 	local media = G.cgs.media
 	local ax = x * G.cgs.screenXScale + G.cgs.screenXBias
-	local ay = y * G.cgs.screenYScale
+	local ay = y * G.cgs.screenYScale + G.cgs.screenYBias
 
 	for i = 1, #str do
 		local ch = bit32.band(string.byte(str, i), 127)
@@ -461,7 +467,7 @@ local function UI_DrawProportionalString2(x, y, str, color, sizeScale, charset)
 	trap.R_SetColor(color)
 
 	local ax = x * G.cgs.screenXScale + G.cgs.screenXBias
-	local ay = y * G.cgs.screenXScale
+	local ay = y * G.cgs.screenYScale + G.cgs.screenYBias
 
 	for i = 1, #str do
 		local ch = bit32.band(string.byte(str, i), 127)

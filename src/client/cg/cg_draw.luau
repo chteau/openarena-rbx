@@ -28,6 +28,7 @@ local C = require(script.Parent.Parent.q.Consts)
 local T = require(script.Parent.Parent.q.Types)
 local trap = require(script.Parent.Parent.sys.Trap)
 local BG = require(script.Parent.Parent.adapters.BG)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local FPS_FRAMES = 4
 
@@ -403,7 +404,13 @@ function G.CG_DrawStatusBar()
 		return
 	end
 
+	-- on the bottom edge: the background spans the screen, the ammo block
+	-- keeps to the left corner, health and head to the centre, armor (and
+	-- harvester skulls) to the right corner
+	local L, M, R, BOTTOM = Screen.LEFT, Screen.CENTER, Screen.RIGHT, Screen.BOTTOM
+
 	-- draw the team background
+	G.CG_SetScreenPlacement(Screen.STRETCH, BOTTOM)
 	if bit32.band(cg.snap.ps.pm_flags, C.PMF_FOLLOW) == 0 then -- If not following anybody:
 		G.CG_DrawTeamBackground(0, 420, 640, 60, 0.33, cg.snap.ps.persistant[C.PERS_TEAM])
 	else -- If we follow find the teamcolor of the guy we follow. It might not be our own team!
@@ -414,6 +421,7 @@ function G.CG_DrawStatusBar()
 	local ps = cg.snap.ps
 
 	-- draw any 3D icons first, so the changes back to 2D are minimized
+	G.CG_SetScreenPlacement(L, BOTTOM)
 	if cent.currentState.weapon ~= 0 and cg_weapons[cent.currentState.weapon].ammoModel ~= 0 then
 		origin[0] = 70
 		origin[1] = 0
@@ -431,6 +439,7 @@ function G.CG_DrawStatusBar()
 		)
 	end
 
+	G.CG_SetScreenPlacement(M, BOTTOM)
 	G.CG_DrawStatusBarHead(185 + C.CHAR_WIDTH * 3 + C.TEXT_ICON_SPACE)
 
 	if cg.predictedPlayerState.powerups[C.PW_REDFLAG] ~= 0 then
@@ -441,6 +450,7 @@ function G.CG_DrawStatusBar()
 		G.CG_DrawStatusBarFlag(185 + C.CHAR_WIDTH * 3 + C.TEXT_ICON_SPACE + C.ICON_SIZE, C.TEAM_FREE)
 	end
 
+	G.CG_SetScreenPlacement(R, BOTTOM)
 	if ps.stats[C.STAT_ARMOR] ~= 0 then
 		origin[0] = 90
 		origin[1] = 0
@@ -483,6 +493,7 @@ function G.CG_DrawStatusBar()
 	--
 	-- ammo
 	--
+	G.CG_SetScreenPlacement(L, BOTTOM)
 	if cent.currentState.weapon ~= 0 then
 		value = ps.ammo[cent.currentState.weapon]
 		if value > -1 then
@@ -527,6 +538,7 @@ function G.CG_DrawStatusBar()
 	end
 
 	-- stretch the health up when taking damage
+	G.CG_SetScreenPlacement(M, BOTTOM)
 	G.CG_DrawField(185, 432, 3, value)
 	G.CG_ColorForHealth(hcolor)
 	trap.R_SetColor(hcolor)
@@ -534,6 +546,7 @@ function G.CG_DrawStatusBar()
 	--
 	-- armor
 	--
+	G.CG_SetScreenPlacement(R, BOTTOM)
 	value = ps.stats[C.STAT_ARMOR]
 	if value > 0 then
 		trap.R_SetColor(statusColors[0])

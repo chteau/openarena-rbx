@@ -163,7 +163,7 @@ function U.UI_DrawConnectScreen(overlay)
 	if not overlay then
 		-- draw the dialog background
 		U.UI_SetColor(Q.colorWhite)
-		U.UI_DrawHandlePic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, U.uis.menuBackShader)
+		U.UI_DrawBackground(U.uis.menuBackShader)
 	end
 
 	-- see what information we should display

@@ -28,6 +28,7 @@ local Q = require(script.Parent.Parent.q.Q)
 local C = require(script.Parent.Parent.q.Consts)
 local T = require(script.Parent.Parent.q.Types)
 local trap = require(script.Parent.Parent.sys.Trap)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 --[[
 Model testing: "testmodel <modelname>" or "testgun <modelname>".
@@ -452,9 +453,8 @@ local function CG_CalcFov(): number
 		end
 	end
 
-	local x = cg.refdef.width / math.tan(fov_x / 360 * math.pi)
-	fov_y = math.atan2(cg.refdef.height, x)
-	fov_y = fov_y * 360 / math.pi
+	-- fov_x so far is a 4:3 FOV (cg_fov, cg_zoomFov): Hor+ for the real view
+	fov_x, fov_y = Screen.fov(fov_x, cg.refdef.width, cg.refdef.height)
 
 	-- warp if underwater
 	local contents = G.CG_PointContents(cg.refdef.vieworg, -1)

@@ -215,7 +215,6 @@ local tail = {
 	{ "cg_weaponOrder", "cg_weaponOrder", "/1/2/4/3/6/7/8/9/5/", C.CVAR_ARCHIVE },
 	{ "cg_chatBeep", "cg_chatBeep", "1", C.CVAR_ARCHIVE },
 	{ "cg_teamChatBeep", "cg_teamChatBeep", "1", C.CVAR_ARCHIVE },
-	{ "cg_wideScreenHud", "cg_wideScreenHud", "0", C.CVAR_ARCHIVE },
 }
 for _, def in tail do
 	table.insert(cvarDefs, def)

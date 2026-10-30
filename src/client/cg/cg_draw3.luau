@@ -27,6 +27,7 @@ local Q = require(script.Parent.Parent.q.Q)
 local C = require(script.Parent.Parent.q.Consts)
 local T = require(script.Parent.Parent.q.Types)
 local trap = require(script.Parent.Parent.sys.Trap)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local ACCBOARD_XPOS = 500
 local ACCBOARD_YPOS = 150
@@ -102,9 +103,12 @@ function G.CG_DrawCrosshair()
 		end
 	end
 
-	local x = G.cg_crosshairX.integer
-	local y = G.cg_crosshairY.integer
-	x, y, w, h = G.CG_AdjustFrom640(x, y, w, h)
+	-- an offset from the view's centre: scaled like the HUD, without its bias
+	G.CG_SetScreenPlacement(Screen.CENTER, Screen.CENTER)
+	local x, y
+	x, y, w, h = G.CG_AdjustFrom640(G.cg_crosshairX.integer, G.cg_crosshairY.integer, w, h)
+	x -= G.cgs.screenXBias
+	y -= G.cgs.screenYBias
 
 	if ca < 0 then
 		ca = 0
@@ -554,9 +558,14 @@ function G.CG_DrawWarmup()
 		false, true, cw, Q.int(cw * 1.5), 0)
 end
 
+-- Each element keeps its 0.8.8 size and its 4:3 offset from the edge it
+-- belongs to (Screen placements); the placement is reset to centred first.
 function G.CG_Draw2D(stereoFrame)
 	local cg = G.cg
 	local cgs = G.cgs
+	local place = G.CG_SetScreenPlacement
+	local L, M, R = Screen.LEFT, Screen.CENTER, Screen.RIGHT
+	local TOP, BOTTOM = Screen.TOP, Screen.BOTTOM
 
 	-- if we are taking a levelshot for the menu, don't draw anything
 	if isSet(cg.levelShot) then
@@ -567,59 +576,75 @@ function G.CG_Draw2D(stereoFrame)
 		return
 	end
 
+	place(M, M)
 	if cg.snap.ps.pm_type == C.PM_INTERMISSION then
 		G.CG_DrawIntermission()
 		return
 	end
 
 	if cg.snap.ps.persistant[C.PERS_TEAM] == C.TEAM_SPECTATOR then
+		place(M, BOTTOM)
 		G.CG_DrawSpectator()
 
 		if stereoFrame == C.STEREO_CENTER then
 			G.CG_DrawCrosshair()
 		end
 
+		place(M, M)
 		G.CG_DrawCrosshairNames()
 	else
 		-- don't draw any status if dead or the scoreboard is being explicitly shown
 		if not isSet(cg.showScores) and cg.snap.ps.stats[C.STAT_HEALTH] > 0 then
 			G.CG_DrawStatusBar()
 
+			place(M, TOP)
 			G.CG_DrawAmmoWarning()
 
 			G.CG_DrawProxWarning()
 			if stereoFrame == C.STEREO_CENTER then
 				G.CG_DrawCrosshair()
 			end
+			place(M, M)
 			G.CG_DrawCrosshairNames()
+			place(M, BOTTOM)
 			G.CG_DrawWeaponSelect()
 
+			place(R, M)
 			G.CG_DrawHoldableItem()
 			G.CG_DrawPersistantPowerup()
 
+			place(M, TOP)
 			G.CG_DrawReward()
 		end
 
 		if cgs.gametype >= C.GT_TEAM and cgs.ffa_gt ~= 1 then
+			place(L, BOTTOM)
 			G.CG_DrawTeamInfo()
 		end
 	end
 
+	place(L, TOP)
 	G.CG_DrawVote()
 	G.CG_DrawTeamVote()
 
+	place(R, BOTTOM)
 	G.CG_DrawLagometer()
 
+	place(R, TOP)
 	G.CG_DrawUpperRight(stereoFrame)
 
+	place(R, BOTTOM)
 	G.CG_DrawLowerRight()
+	place(L, BOTTOM)
 	G.CG_DrawLowerLeft()
 
+	place(M, TOP)
 	if not G.CG_DrawFollow() then
 		G.CG_DrawWarmup()
 	end
 
 	-- don't draw center string if scoreboard is up
+	place(M, M)
 	cg.scoreBoardShowing = G.CG_DrawScoreboard()
 	if not isSet(cg.scoreBoardShowing) then
 		G.CG_DrawCenterDDString()
@@ -627,7 +652,9 @@ function G.CG_Draw2D(stereoFrame)
 		G.CG_DrawCenterString()
 	end
 
+	place(R, M)
 	cg.accBoardShowing = G.CG_DrawAccboard()
+	place(M, M)
 end
 
 function G.CG_DrawTourneyScoreboard()
@@ -638,6 +665,7 @@ function G.CG_DrawActive(stereoView)
 	local cg = G.cg
 
 	-- optionally draw the info screen instead
+	G.CG_SetScreenPlacement(Screen.CENTER, Screen.CENTER)
 	if cg.snap == nil then
 		G.CG_DrawInformation()
 		return

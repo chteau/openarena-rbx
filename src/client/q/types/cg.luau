@@ -539,6 +539,8 @@ function T.cgs_t()
 		screenXScale = 0,
 		screenYScale = 0,
 		screenXBias = 0,
+		screenYBias = 0,
+		screenLayout = nil :: any,
 		serverCommandSequence = 0,
 		processedSnapshotNum = 0,
 		localServer = false,
@@ -766,6 +768,7 @@ function T.uiStatic_t()
 		xscale = 0,
 		yscale = 0,
 		bias = 0,
+		ybias = 0,
 		demoversion = false,
 		firstdraw = false,
 	}

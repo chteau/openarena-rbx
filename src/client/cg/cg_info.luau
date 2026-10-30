@@ -27,6 +27,7 @@ local C = require(script.Parent.Parent.q.Consts)
 local Q = require(script.Parent.Parent.q.Q)
 local trap = require(script.Parent.Parent.sys.Trap)
 local BG = require(script.Parent.Parent.adapters.BG)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local MAX_LOADING_PLAYER_ICONS = 16
 local MAX_LOADING_ITEM_ICONS = 26
@@ -138,7 +139,9 @@ function G.CG_DrawInformation()
 		levelshot = trap.R_RegisterShaderNoMip("menu/art/unknownmap")
 	end
 	trap.R_SetColor(nil)
-	G.CG_DrawPic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, levelshot)
+	-- the 4:3 levelshot covers the whole screen
+	local s1, t1, s2, t2 = Screen.cover(cgs.glconfig.vidWidth, cgs.glconfig.vidHeight)
+	trap.R_DrawStretchPic(0, 0, cgs.glconfig.vidWidth, cgs.glconfig.vidHeight, s1, t1, s2, t2, levelshot)
 
 	-- blend a detail texture over it
 	local detail = trap.R_RegisterShader("levelShotDetail")
