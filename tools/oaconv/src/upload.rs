@@ -135,7 +135,7 @@ fn upload_one(
             .create_model_asset(
                 &u.name,
                 DESCRIPTION,
-                user,
+                rbx_cloud::Owner::User(user),
                 &rbx_cloud::ModelFile {
                     name: file_name,
                     content_type: "model/gltf-binary",

@@ -7,7 +7,7 @@
 set -u
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 LUNE=${LUNE:-$HOME/.local/bin/lune}
-LSP=${LUAU_LSP:-/mnt/data/dev-cache/rbx-native/luau-lsp/bin/1.70.0/luau-lsp}
+LSP=${LUAU_LSP:-luau-lsp}
 cd "$ROOT"
 status=0
 files=()

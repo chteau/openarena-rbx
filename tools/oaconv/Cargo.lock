@@ -1302,6 +1302,7 @@ dependencies = [
 [[package]]
 name = "rbx_cloud"
 version = "0.1.0"
+source = "git+https://github.com/chteau/rbx-native?branch=dev#45ccafb70871e026723c5d211be0d6a8772383e0"
 dependencies = [
  "futures-lite",
  "getrandom 0.3.4",

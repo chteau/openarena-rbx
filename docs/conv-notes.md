@@ -7,7 +7,7 @@ behind them. Formats live in `docs/formats/`.
 
 ```sh
 cd tools/oaconv
-export CARGO_TARGET_DIR=/mnt/data/Documents/Dev/openarena-rbx-wt/target-conv
+export CARGO_TARGET_DIR=${CARGO_TARGET_DIR:-target}
 cargo build --release
 B=$CARGO_TARGET_DIR/release/oaconv
 $B convert --repo ../..                       # everything into build/
