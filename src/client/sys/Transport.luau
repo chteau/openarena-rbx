@@ -349,6 +349,12 @@ function Transport.Start()
 			reliable:FireServer("connect", userinfo, st.outgoingSequence)
 		end,
 		disconnect = function()
+			-- tell the server we left (CL_Disconnect's "disconnect" command),
+			-- so it frees the slot now rather than timing us out and kicking
+			-- the player from the place while they sit in the main menu
+			if connected then
+				reliable:FireServer("disconnect")
+			end
 			connected = false
 		end,
 		command = function(seq: number, text: string)
