@@ -1,6 +1,6 @@
 /vendor
 /build/
-/target/
+target/
 *.rbxl.lock
 .forge/
 __pycache__/
