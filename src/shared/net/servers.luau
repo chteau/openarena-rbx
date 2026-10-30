@@ -35,6 +35,16 @@ local function fnv(s: string): number
 	return h
 end
 
+-- The name a Roblox player plays under, on the server and in the client's
+-- name cvar: the display name (moderated by Roblox), or the username when it
+-- has characters OA's font lacks.
+function S.playerName(displayName: string, username: string): string
+	if displayName == "" or string.find(displayName, "[^%w_ ]") then
+		return username
+	end
+	return displayName
+end
+
 -- the join code of a server: its JobId (public) or PrivateServerId
 -- (reserved). It starts with a digit, as q3_ui's favorites and Specify
 -- expect of an address ("first character must be numeric").

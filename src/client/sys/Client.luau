@@ -18,6 +18,7 @@ local Snd = require(script.Parent.Snd)
 local FS = require(script.Parent.FS)
 local LAN = require(script.Parent.LAN)
 local Screen = require(script.Parent.Parent.Parent.ui.Screen)
+local Servers = require(script.Parent.Parent.Parent.shared.net.servers)
 
 local Client = {}
 
@@ -594,6 +595,11 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number?, t
 	U.UI_Init()
 	Client.uiActive = true
 	U.UI_SetActiveMenu(C.UIMENU_MAIN)
+	-- the server names a player by their Roblox name: the menus show the same
+	local me = Players.LocalPlayer
+	if me then
+		Cvar.Set("name", Servers.playerName(me.DisplayName, me.Name))
+	end
 	-- after Cvar.onChange is set above: LAN chains its favorites hook to it
 	LAN.Register()
 	LAN.Start(opts.teleportData)

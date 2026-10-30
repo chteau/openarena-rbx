@@ -226,6 +226,13 @@ H.test("servers.validate_spec", function()
 	H.eq(S.startupText(sp), "set g_spSkill 3\nspmap oa_dm1")
 end)
 
+H.test("servers.player_name", function()
+	H.eq(S.playerName("Chee", "Cheeteau"), "Chee")
+	H.eq(S.playerName("Chee Two_3", "Cheeteau"), "Chee Two_3")
+	H.eq(S.playerName("", "Cheeteau"), "Cheeteau")
+	H.eq(S.playerName("Ché", "Cheeteau"), "Cheeteau")
+end)
+
 H.test("servers.validate_arrival", function()
 	H.eq(S.validateArrival({ kind = "join" }), nil)
 	H.eq(S.validateArrival({ oa = 1, kind = "admin" }), nil)
