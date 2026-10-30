@@ -6,6 +6,29 @@
 local HttpService = game:GetService("HttpService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+-- First: no Roblox chat window, input bar, bubbles or player list. OA
+-- draws its own chat (sys/Chat.luau) and Tab is its +scores.
+pcall(function()
+	local tcs = game:GetService("TextChatService")
+	tcs.ChatWindowConfiguration.Enabled = false
+	tcs.ChatInputBarConfiguration.Enabled = false
+	tcs.BubbleChatConfiguration.Enabled = false
+end)
+task.spawn(function()
+	-- SetCoreGuiEnabled can fail until the CoreGui is up: retry
+	local StarterGui = game:GetService("StarterGui")
+	for _ = 1, 100 do
+		local ok = pcall(function()
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.PlayerList, false)
+			StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, false)
+		end)
+		if ok and not StarterGui:GetCoreGuiEnabled(Enum.CoreGuiType.PlayerList) then
+			return
+		end
+		task.wait(0.1)
+	end
+end)
+
 local oa = ReplicatedStorage:WaitForChild("OA")
 local client = oa:WaitForChild("client")
 local sys = client:WaitForChild("sys")

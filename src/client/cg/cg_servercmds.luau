@@ -878,6 +878,27 @@ local function CG_RemoveChatEscapeChar(text: string): string
 	return out
 end
 
+-- CG_ServerCommand's "chat" and "tchat"
+function G.CG_ChatMessage(cmd: string, arg: string)
+	if cmd == "chat" then
+		if G.cg_teamChatsOnly.integer == 0 then
+			if G.cg_chatBeep.integer ~= 0 then
+				trap.S_StartLocalSound(G.cgs.media.talkSound, C.CHAN_LOCAL_SOUND)
+			end
+			local text = CG_RemoveChatEscapeChar(string.sub(arg, 1, C.MAX_SAY_TEXT - 1))
+			G.CG_Printf(Q.va("%s\n", text))
+		end
+		return
+	end
+
+	if G.cg_teamChatBeep.integer ~= 0 then
+		trap.S_StartLocalSound(G.cgs.media.talkSound, C.CHAN_LOCAL_SOUND)
+	end
+	local text = CG_RemoveChatEscapeChar(string.sub(arg, 1, C.MAX_SAY_TEXT - 1))
+	CG_AddToTeamChat(text)
+	G.CG_Printf(Q.va("%s\n", text))
+end
+
 local function CG_ServerCommand()
 	local cmd = G.CG_Argv(0)
 
@@ -901,24 +922,15 @@ local function CG_ServerCommand()
 		return
 	end
 
-	if cmd == "chat" then
-		if G.cg_teamChatsOnly.integer == 0 then
-			if G.cg_chatBeep.integer ~= 0 then
-				trap.S_StartLocalSound(G.cgs.media.talkSound, C.CHAN_LOCAL_SOUND)
-			end
-			local text = CG_RemoveChatEscapeChar(string.sub(G.CG_Argv(1), 1, C.MAX_SAY_TEXT - 1))
-			G.CG_Printf(Q.va("%s\n", text))
-		end
+	if cmd == "chat" or cmd == "tchat" then
+		G.CG_ChatMessage(cmd, G.CG_Argv(1))
 		return
 	end
 
-	if cmd == "tchat" then
-		if G.cg_teamChatBeep.integer ~= 0 then
-			trap.S_StartLocalSound(G.cgs.media.talkSound, C.CHAN_LOCAL_SOUND)
-		end
-		local text = CG_RemoveChatEscapeChar(string.sub(G.CG_Argv(1), 1, C.MAX_SAY_TEXT - 1))
-		CG_AddToTeamChat(text)
-		G.CG_Printf(Q.va("%s\n", text))
+	-- Roblox: the "name: " part of a player's line, whose text Roblox
+	-- delivers filtered (sys/Chat.luau joins them and calls CG_ChatMessage)
+	if cmd == "rchat" then
+		trap.ChatFrame(G.CG_Argv(1), G.CG_Argv(2), G.CG_Argv(3))
 		return
 	end
 	if cmd == "vchat" then

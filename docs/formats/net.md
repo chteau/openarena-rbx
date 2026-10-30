@@ -323,7 +323,8 @@ These are the commands the game sends, as `cg_servercmds.c` parses them:
 | `cs` | configstring update |
 | `print` | console print |
 | `cp` | centerprint |
-| `chat`, `tchat` | chat |
+| `chat`, `tchat` | chat (bots and the server) |
+| `rchat <MessageId> <chat\|tchat> "<prefix>"` | Roblox only: the name prefix of a player's line, whose text TextChatService delivers filtered (`server/sv/chat_roblox.luau`) |
 | `vchat`, `vtchat`, `vtell`, `tell` | voice chat and tells |
 | `scores` | scoreboard |
 | `tinfo` | team overlay |
