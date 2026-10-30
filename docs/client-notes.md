@@ -192,7 +192,8 @@ the axis is converted, never the Euler angles.
 | S_* | Snd | `Sound` with `PlaybackRegion` into the atlases, `Attachment` emitters, `SoundService:SetListener` |
 | FS_* | FS | read-only pack (`Files` module) + in-memory writes |
 | UpdateScreen | Client.UpdateScreen | redraws; see "Walls" |
-| CIN_*, PC_*, LAN_*, CD key, camera paths, GetEntityToken | Trap | inert (see "Walls") |
+| LAN_* | LAN (server browser over the Servers remote) | see ARCHITECTURE.md, "Multiplayer on Roblox servers" |
+| CIN_*, PC_*, CD key, camera paths, GetEntityToken | Trap | inert (see "Walls") |
 
 ### 2D (R2D)
 
@@ -759,9 +760,10 @@ normalised RMSE over the whole frame.
 - **trap_UpdateScreen during loading**: Roblox presents only when the script
   yields; CG_Init runs in one frame, so its loading screen is built but not
   seen unless loading spans frames.
-- **Out of scope on Roblox**: demos, mods, the server browser and "specify
-  server", cinematics, CD keys (`ui_roblox.luau` answers those menus: the
-  MULTIPLAYER entry joins the place's match, the rest show a message);
+- **Out of scope on Roblox**: demos, mods, cinematics, CD keys
+  (`ui_roblox.luau` answers those menus with a message). The server browser
+  and "specify server" list Roblox servers (`docs/ARCHITECTURE.md`,
+  "Multiplayer on Roblox servers");
   `quit`, `screenshot`, `vid_restart`, `snd_restart` are no-ops.
 - **rbx-native gaps met on the way** (not walls for Roblox itself):
   `Folder:WaitForChild` is missing (the port indexes children directly),

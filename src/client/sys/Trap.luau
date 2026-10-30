@@ -3,6 +3,7 @@
 -- follow .forge/cheats/trap.md (also summarised in docs/client-notes.md).
 -- Subsystems are required lazily so a ported module loads without them.
 local C = require(script.Parent.Parent.q.Consts)
+local LAN = require(script.Parent.LAN)
 
 local sys = script.Parent
 local cache = {}
@@ -403,22 +404,13 @@ end
 function trap.PC_SourceFileAndLine(): number
 	return 0
 end
-function trap.LAN_GetServerCount(): number
-	return 0
-end
-function trap.LAN_GetPingQueueCount(): number
-	return 0
-end
-function trap.LAN_ClearPing() end
-function trap.LAN_GetPing(): (string, number)
-	return "", 0
-end
-function trap.LAN_GetPingInfo(): string
-	return ""
-end
-function trap.LAN_GetServerAddressString(): string
-	return ""
-end
+-- the server browser (sys/LAN.luau, cl_ui.c's LAN_*)
+trap.LAN_GetServerCount = LAN.GetServerCount
+trap.LAN_GetPingQueueCount = LAN.GetPingQueueCount
+trap.LAN_ClearPing = LAN.ClearPing
+trap.LAN_GetPing = LAN.GetPing
+trap.LAN_GetPingInfo = LAN.GetPingInfo
+trap.LAN_GetServerAddressString = LAN.GetServerAddressString
 function trap.GetCDKey(): string
 	return ""
 end

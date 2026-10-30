@@ -126,7 +126,9 @@ function U.ServerOptions_StatusBar_Allrockets(ptr)
 end
 
 function U.ServerOptions_StatusBar_Pure(ptr)
-	U.UI_DrawString(320, 440, "Require identical pk3 files", bit32.bor(C.UI_CENTER, C.UI_SMALLFONT), Q.colorWhite)
+	-- Roblox: pure checks don't exist here; this toggle lists the server in
+	-- Arena Servers (sv_public, sys/LAN.luau)
+	U.UI_DrawString(320, 440, "List in Arena Servers, else join by code", bit32.bor(C.UI_CENTER, C.UI_SMALLFONT), Q.colorWhite)
 end
 
 function U.ServerOptions_StatusBar_Oneway(ptr)
@@ -322,7 +324,7 @@ function U.ServerOptions_SetMenuItems()
 	end
 
 	so.hostname.field.buffer = string.sub(U.UI_Cvar_VariableString("sv_hostname"), 1, 63)
-	so.pure.curvalue = Q.Com_Clamp(0, 1, cv("sv_pure"))
+	so.pure.curvalue = Q.Com_Clamp(0, 1, cv("sv_public")) -- Roblox: was sv_pure
 	so.lan.curvalue = Q.Com_Clamp(0, 1, cv("sv_lanforcerate"))
 	so.instantgib.curvalue = Q.Com_Clamp(0, 1, cv("g_instantgib"))
 	so.rockets.curvalue = Q.Com_Clamp(0, 1, cv("g_rockets"))
@@ -517,7 +519,7 @@ function U.ServerOptions_MenuInit(multiplayer)
 	end
 
 	y += step
-	radio(so.pure, "Pure Server:", y, U.ServerOptions_StatusBar_Pure)
+	radio(so.pure, "Public Server:", y, U.ServerOptions_StatusBar_Pure)
 
 	if so.multiplayer then
 		y += step

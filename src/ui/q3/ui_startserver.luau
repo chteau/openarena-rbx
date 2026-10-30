@@ -778,7 +778,7 @@ function U.ServerOptions_Start()
 	trap.Cvar_SetValue("fraglimit", clamp(0, fraglimit, fraglimit))
 	trap.Cvar_SetValue("capturelimit", clamp(0, flaglimit, flaglimit))
 	trap.Cvar_SetValue("g_friendlyfire", friendlyfire)
-	trap.Cvar_SetValue("sv_pure", pure)
+	trap.Cvar_SetValue("sv_public", pure) -- Roblox: the Public Server toggle, was sv_pure
 	trap.Cvar_SetValue("sv_lanForceRate", lan)
 	trap.Cvar_SetValue("g_instantgib", instantgib)
 	trap.Cvar_SetValue("g_rockets", rockets)

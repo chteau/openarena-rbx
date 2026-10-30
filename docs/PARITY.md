@@ -48,6 +48,14 @@ ids. These are listed once here, not on every row.
 | single player level select | draws | play `menu_sp.png` |
 | first connect (name, rate) | draws, accepts | play `first_connect.png` (was crashing: fixed) |
 | multiplayer / server browser -> local server | works | play (join path used for every playtest) |
+| Arena Servers (Internet / Local / Favorites tabs, sort, gametype filter, show full/empty, SERVER INFO, Join) | works on Roblox servers; ping `?` except for your own server, nettype `RBX` | play on Sober `servers/internet_public.png`, `servers/favorites.png`, `servers/internet_after_teleport.png`, MCP `servers/browser_local.png`; tests (servers.test) |
+| Specify (join by code) | works; port ignored | play `servers/specify_code.png` -> `servers/rejoin_private.png` (empty private server restarted with its settings) |
+| Add to favorites | works, saved per user in a DataStore | play `servers/private_serverinfo.png`, `servers/favorites.png` (read back in the next server) |
+| Start Server -> reserved server | works; "Pure Server" is "Public Server" (listed or code only) | play `servers/start_server_options.png`, `servers/private_arrival_ingame.png`; CTF settings (capturelimit, timelimit, maxclients, bots per team) seen in the server's InitGame |
+| host in-game menu (ADD BOTS, REMOVE BOTS, RESTART ARENA) and Start Server from the host | works (rcon allow-list, no `say`) | play `servers/host_ingame_menu.png`, `servers/host_addbots.png`, `servers/host_apply_ctf.png` |
+| Single Player arena in a solo reserved server | works | play `servers/sp_solo.png` |
+| public server rotation (FFA / TDM / CTF, bot_minplayers) | works | play (rotation with bots, registry entry dumped server side); tests (test_servers) |
+| password-protected servers (needPass menu) | not ported | Roblox reserved servers are private by code instead |
 | loading screen (map, items) | draws | play `loading.png` |
 | HUD: health, ammo, armor, weapon icon, score boxes, pickup line, crosshair, crosshair names | draws | play `dm1_respawn.png`, `dm1_pickup.png`, `dm1_firing.png`; edit `hud_side.png` |
 | HUD: CTF flag status and team scores, team chat | draws | play `ctf2_red.png`, `ctf2_red_side.png` |

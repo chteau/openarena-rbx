@@ -181,6 +181,120 @@ What uses it:
   kept too.
 - `place/assemble.py --players` refuses a dropped model.
 
+## Multiplayer on Roblox servers
+
+Roblox has no LAN and no master server, so OA's multiplayer menus are
+backed by Roblox's own servers. Every Roblox server of the experience is
+one OA server (the game server already runs inside it); what it is decides
+how it starts (`src/server/sv/servers_roblox.luau`, called by the boot
+script):
+
+| kind | made by | starts with | listed |
+|---|---|---|---|
+| public | Roblox matchmaking (joining the experience) | the dedicated-style rotation in `src/server/sv/servers_config.luau`: FFA / TDM / CTF through q3's `nextmap` chain (`set d1 "...; set nextmap vstr d2"`), `bot_minplayers 4`, maps the place lacks skipped | yes |
+| host | Start Server (`TeleportService:ReserveServer`) | the creator's settings, as the cvars ServerOptions_Start sets, then `map` and the `addbot` lines | if "Public Server" was on, else by code only |
+| sp | a single player arena (`spmap`) | `g_spSkill N; spmap <map>`: that player alone | never |
+| private | a reserved server whose settings were lost (or expired after 1 h) | the rotation | no |
+| studio | Studio, rbx-native's runtime, lune (no TeleportService / MemoryStore) | the place's `Startup` attribute or the first map: the single-server behaviour of before | - |
+
+A public server still uses the `Startup` attribute when the place has one
+(dev playtests); `assemble.py --startup ""` builds a place that runs the
+rotation.
+
+**Registry.** A `MemoryStoreService` SortedMap (`OAServers`), key = the
+server's join code, value = JobId, PlaceId, the access code of a reserved
+server, hostname, map, gametype, clients, bots, maxclients, reserved,
+public. Every server but SP ones writes its entry every 10 s with a 30 s
+expiry (a crashed server drops out by itself) and removes it in
+`BindToClose` (`servers_registry.luau`). A listing pages `GetRangeAsync`
+(200 a page, 2 pages at most) and is cached 5 s for every player of that
+server. MemoryStore's quota is 1000 + 100 x concurrent users request units
+a minute for the experience; a server writes 6 a minute. Any failed call
+backs the registry off (2 s doubling to 60 s, the last good listing is
+served meanwhile). Access codes never leave the servers.
+
+**Join codes.** Six characters from a 32-letter alphabet without 0/O/1/I,
+the first a digit (q3_ui's favorites and Specify want an address whose
+first character is numeric), hashed (FNV-1a) from the JobId or
+PrivateServerId
+(`src/shared/net/servers.luau`). The in-game SERVER INFO menu shows it as
+`sv_code`, and `cl_currentServerAddress` is set to it so "Add to
+favorites" works. The code is the browser's server "address".
+
+**Browser.** `ui_servers2.c` and `ui_specifyserver.c` are ported; their
+engine side (`localservers`, `globalservers`, `ping`, `connect <address>`
+and the `LAN_*` traps) is `src/client/sys/LAN.luau`, talking to the
+`ReplicatedStorage.OANet.Servers` RemoteFunction (rate limited per player).
+The source list maps to:
+
+The server you are on is always in the list (first, marked by its
+measured ping), listed or not.
+
+- **Internet**: every public server (sv_master1 is set; Internet(2)-(5)
+  have no master, so ioq3's skip lands on Favorites, as in OA). The
+  gametype filter and "show full / show empty" are the master protocol's
+  words (`ffa`, `ctf`, ..., `full`, `empty`).
+- **Local**: this server plus the public servers friends are on
+  (`Player:GetFriendsOnline`, matched by JobId). A region would need an
+  HTTP geo lookup (an experience setting), so friends it is.
+- **Favorites**: q3_ui's `server1..16` cvars, mirrored to a DataStore key
+  per user (`OAFavorites`, `u<UserId>`), loaded at start; a change is
+  written back at most every 30 s and only while
+  `GetRequestBudgetForRequestType` is above 10.
+- **Specify**: the address field takes a join code (the port field is
+  ignored). A private server is reachable this way only. When nobody is
+  in it the server is gone (Roblox closes an empty reserved server), so
+  the code is looked up in `OAReserved` and the same reserved server
+  starts again with its settings. SP records are never joinable.
+
+**Ping.** A Roblox client can't reach another server, so no ping can be
+measured: the server you are on shows `Player:GetNetworkPing` (a round
+trip), every other one shows `?` (sorted after known pings, never dropped
+as slow). The netnames column says `RBX`.
+
+**Teleports.** Join: `TeleportAsync` with `TeleportOptions.ServerInstanceId`
+(public) or `ReservedServerAccessCode` (reserved). Start Server and SP:
+the server validates the request (`servers.validateSpec`: gametype, a map
+the place has, the allowed cvars clamped, bot names, at most 11 bots),
+filters the hostname through `TextService`, reserves, writes the settings
+to the `OAReserved` SortedMap under the server's join code (1 h,
+renewed every time the server starts), and
+teleports the player. The reserved server reads them back from there on
+arrival (trusted, written by a server); only if that read fails does it
+take its first player's TeleportData, checked the same way. The menus
+are unchanged: `map`/`spmap` capture the cvars the menu just set and the
+`addbot`/`team` lines it queues behind them (`LAN.Map`). TeleportData
+carries the player's archived cvars (name, model, colours, SP progress
+are client cvars and a teleport starts a fresh client) and the team; the
+client checks it (`servers.validateArrival`), applies it and connects
+straight away.
+
+**Host.** The creator of a host or SP server is its host: `sv_running 1`
+on their client enables q3_ui's ADD BOTS / REMOVE BOTS / RESTART ARENA,
+and `addbot`, `clientkick`, `kick`, `map_restart` and `rcon <cmd>` go to
+the server's rcon, limited to the commands and cvars those menus and a
+server admin need (no `say`: text other players see must pass Roblox's
+filter; `sv_hostname` is re-filtered when it changes). Start Server from
+the host restarts their server with the new settings, as OA's listen
+server does, instead of reserving another. Apply and rcon text goes
+through `Cbuf_AddText` and runs in the next server frame, never inside
+the RemoteFunction handler.
+
+**Experience settings.** None changed; MemoryStore, DataStore and
+TeleportService need none, but teleports need a published place (the
+play sandbox is one).
+
+**Testing it live.** rbx-native's Play publishes the place to the
+sandbox and runs one Sober client, but ends the session ("Play ended: you
+left the game", `StopReason::PlayerLeft`) as soon as that player leaves
+the first server, which a teleport is, and kills Sober. So the live run
+used Play only to publish, then started Sober alone on the place
+(`flatpak run org.vinegarhq.Sober "roblox://placeId=<id>"`), driven by a
+scratch LocalScript that walks the menus and prints markers to Sober's
+output. One account is in one server at a time and the server it leaves
+closes, so two servers alive in the registry together needs a second
+account; the registry paging and expiry are covered by the lune tests.
+
 ## Content notes for Roblox
 
 - OA has blood and gibs (`cg_gibs`, `com_blood`). These are kept behind
