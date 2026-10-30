@@ -192,7 +192,10 @@ function R2D.DrawStretchPic(x, y, w, h, s1, t1, s2, t2, hShader: number)
 		if path == "*white" or path == "$whiteimage" then
 			solid(x, y, w, h, r, g, b, a)
 		else
-			local img = Assets.Image(path)
+			local img, standIn = Assets.StageImage(st, path)
+			if standIn then
+				r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
+			end
 			if img then
 				local m = ShaderFx.texMatrix(st, timeSec)
 				if m[2] == 0 and m[4] == 0 then

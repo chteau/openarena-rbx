@@ -186,15 +186,55 @@ pub fn images(
             );
         }
     }
+    // The stage the client draws (R3D: the first one with an image) of an
+    // effect shader (not a map surface or map model), when Roblox can't
+    // blend it (add, filter, ...), also gets an alpha-blended stand-in per
+    // blendFunc: `images/<stem>~<suffix>.png` (texture::blend_to_alpha).
+    let mut derived: BTreeMap<String, BTreeSet<[String; 2]>> = BTreeMap::new();
+    for s in shaders.shaders.values() {
+        if s.name.starts_with("textures/") || s.name.starts_with("models/mapobjects/") {
+            continue;
+        }
+        let Some(st) = s
+            .stages
+            .iter()
+            .find(|st| st.maps.first().is_some_and(|m| !m.starts_with('$')))
+        else {
+            continue;
+        };
+        let Some(blend) = st
+            .blend
+            .as_ref()
+            .filter(|b| texture::blend_suffix(b).is_some())
+        else {
+            continue;
+        };
+        for img in st.maps.iter().filter_map(|m| vfs.find_image(m)) {
+            derived.entry(img).or_default().insert(blend.clone());
+        }
+    }
+    let derived_name = |p: &str, blend: &[String; 2]| {
+        let suffix = texture::blend_suffix(blend).unwrap_or_default();
+        format!("{}{suffix}", strip_ext(p))
+    };
     let results: Vec<(&String, ImageResult)> = paths
         .par_iter()
         .map(|p| {
             let r = (|| {
                 let img = texture::decode(&vfs.read(p).ok_or("unreadable")?, p)?;
                 let small = texture::downscale_max(&img, texture::MAX_SIZE);
-                let dest = out.join(image_output(p));
-                std::fs::create_dir_all(dest.parent().unwrap()).map_err(|e| e.to_string())?;
-                std::fs::write(&dest, texture::encode_png(&small)).map_err(|e| e.to_string())?;
+                let write = |name: &str, img: &image::RgbaImage| -> Result<(), String> {
+                    let dest = out.join(image_output(name));
+                    std::fs::create_dir_all(dest.parent().unwrap()).map_err(|e| e.to_string())?;
+                    std::fs::write(&dest, texture::encode_png(img)).map_err(|e| e.to_string())
+                };
+                write(p, &small)?;
+                for blend in derived.get(p).into_iter().flatten() {
+                    write(
+                        &derived_name(p, blend),
+                        &texture::blend_to_alpha(&small, blend),
+                    )?;
+                }
                 Ok((
                     small.dimensions() != img.dimensions(),
                     texture::has_alpha(&small),
@@ -204,12 +244,24 @@ pub fn images(
         })
         .collect();
     let mut failed = Vec::new();
-    let (mut uploaded, mut downscaled, mut alpha) = (0, 0, 0);
+    let (mut uploaded, mut downscaled, mut alpha, mut stand_ins) = (0, 0, 0, 0);
     for (p, r) in &results {
         match r {
             Ok((down, a)) => {
                 downscaled += *down as usize;
                 alpha += *a as usize;
+                for blend in derived.get(*p).into_iter().flatten() {
+                    let name = derived_name(p, blend);
+                    manifest
+                        .add_upload(
+                            out,
+                            &out.join(image_output(&name)),
+                            UploadKind::Image,
+                            &display_name("OA", &name),
+                        )
+                        .map_err(err(&name))?;
+                    stand_ins += 1;
+                }
                 if !p.starts_with("textures/") || live.contains(*p) {
                     let dest = out.join(image_output(p));
                     manifest
@@ -227,7 +279,7 @@ pub fn images(
         }
     }
     println!(
-        "images: {} converted, {downscaled} downscaled, {uploaded} to upload, {} failed",
+        "images: {} converted, {downscaled} downscaled, {uploaded} to upload (+{stand_ins} blend stand-ins), {} failed",
         results.len() - failed.len(),
         failed.len()
     );
@@ -237,6 +289,7 @@ pub fn images(
         "downscaled": downscaled,
         "with_alpha": alpha,
         "uploads": uploaded,
+        "blend_stand_ins": stand_ins,
         "failed": failed,
     });
     Ok(())

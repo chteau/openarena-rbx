@@ -74,6 +74,33 @@ function Assets.Image(path: string?)
 	return index.images[stripExt(path)]
 end
 
+-- blendFunc factor -> the converter's code for it (tools/oaconv texture.rs)
+local FACTOR = {
+	gl_one = "1", gl_zero = "0", gl_src_alpha = "sa", gl_one_minus_src_alpha = "isa",
+	gl_src_color = "sc", gl_one_minus_src_color = "isc", gl_dst_color = "dc",
+	gl_one_minus_dst_color = "idc", gl_dst_alpha = "da", gl_one_minus_dst_alpha = "ida",
+}
+
+-- The image a shader stage draws (`path`: ShaderFx.stageImage), and true
+-- when it's the converter's alpha-blended stand-in for a blendFunc Roblox
+-- can't do (add, filter, ...: `<image>~<src>_<dst>`, texture::blend_to_alpha
+-- in tools/oaconv). A stand-in carries the blend in its alpha, so the stage
+-- colour's brightness becomes opacity (ShaderFx.foldBrightness).
+function Assets.StageImage(st, path: string?)
+	if path == nil then
+		return nil, false
+	end
+	local bf = st.blendFunc
+	local s, d = bf and FACTOR[bf[1]], bf and FACTOR[bf[2]]
+	if s and d and not (s == "1" and d == "0") and not (s == "sa" and d == "isa") then
+		local img = index.images[stripExt(path) .. "~" .. s .. "_" .. d]
+		if img and img.id then
+			return img, true
+		end
+	end
+	return Assets.Image(path), false
+end
+
 -- shaders ------------------------------------------------------------------
 -- handle -> { name, def (shader table or nil for an implicit image shader),
 --             image (first image entry or nil), remap (handle) }
