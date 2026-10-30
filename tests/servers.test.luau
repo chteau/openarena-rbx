@@ -535,6 +535,7 @@ H.test("servers.lan_client", function()
 	Cmd.ExecuteText(C.EXEC_NOW, "map oa_ctf2")
 	Cmd.ExecuteText(C.EXEC_NOW, "addbot sarge 4 red")
 	Cmd.ExecuteText(C.EXEC_NOW, "addbot tony 4 blue")
+	Cmd.ExecuteText(C.EXEC_NOW, "team blue")
 	run()
 	H.eq(calls[1].op, "host")
 	local spec = calls[1].arg
@@ -545,6 +546,7 @@ H.test("servers.lan_client", function()
 	H.eq(#spec.bots, 2)
 	H.eq(spec.bots[2].team, "blue")
 	H.eq(calls[1].arrival.oa, 1)
+	H.eq(calls[1].arrival.team, "blue")
 	-- the same from the host of a hosted server: applied here
 	LAN.server = function()
 		return { live = true, kind = "host", code = "HERE22", host = 5 }

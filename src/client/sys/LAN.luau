@@ -294,6 +294,13 @@ function LAN.Register()
 	for _, name in { "addbot", "clientkick", "kick", "map_restart", "rcon" } do
 		Cmd.AddCommand(name, hostCommand(name))
 	end
+	Cmd.AddCommand("team", function()
+		if capture then
+			capture.team = Cmd.Argv(1)
+		else
+			LAN.forward("team " .. Cmd.Args())
+		end
+	end)
 	local prev = Cvar.onChange
 	Cvar.onChange = function(v)
 		if prev then
