@@ -36,8 +36,10 @@ for _, path in files do
 			missing = t[name] == nil
 		elseif prefix == "G" or prefix == "U" then
 			local tbl = if prefix == "G" then G else U
-			-- only calls: G.Foo( must resolve
-			missing = tbl[name] == nil and src:find("%f[%w_]" .. prefix .. "%." .. name .. "%s*%(") ~= nil
+			-- only calls (G.Foo( must resolve) and the shared constants
+			-- (U.ID_GO): a nil id silently matches no menu event
+			missing = tbl[name] == nil
+				and (src:find("%f[%w_]" .. prefix .. "%." .. name .. "%s*%(") ~= nil or name:match("^[A-Z][A-Z0-9_]*$") ~= nil)
 		end
 		-- optional hooks the code tests for first (`if G.X ~= nil`), and the
 		-- pmove entry points BG only has once src/shared lands (BG.hasPmove)

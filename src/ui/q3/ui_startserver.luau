@@ -61,6 +61,12 @@ local ID_PLAYER_TYPE = 25
 local ID_MAXCLIENTS = 26
 local ID_GO = 28
 local ID_BACK = 29
+-- ui_startserver2 builds the server options menu around these
+U.ID_STARTSERVERNEXT = ID_STARTSERVERNEXT
+U.ID_PLAYER_TYPE = ID_PLAYER_TYPE
+U.ID_MAXCLIENTS = ID_MAXCLIENTS
+U.ID_GO = ID_GO
+U.ID_BACK = ID_BACK
 
 local PLAYER_SLOTS = 12
 
