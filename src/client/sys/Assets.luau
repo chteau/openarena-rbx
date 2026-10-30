@@ -103,13 +103,17 @@ end
 
 -- shaders ------------------------------------------------------------------
 -- handle -> { name, def (shader table or nil for an implicit image shader),
---             image (first image entry or nil), remap (handle) }
+--             image (first image entry or nil), remap (handle), model }
 local shaders = { [0] = { name = "<default>" } }
 local shaderByName: { [string]: number } = {}
 
-function Assets.RegisterShader(name: string, mip: boolean?): number
+-- `model`: a skin's or an md3 surface's shader (R_FindShader with
+-- LIGHTMAP_NONE), whose implicit form is lit and opaque where the others'
+-- (LIGHTMAP_2D) is vertex-coloured and alpha-blended; ioq3 keeps the two apart
+function Assets.RegisterShader(name: string, mip: boolean?, model: boolean?): number
 	local key = stripExt(name)
-	local h = shaderByName[key]
+	local cacheKey = if model then key .. "\0model" else key
+	local h = shaderByName[cacheKey]
 	if h then
 		return h
 	end
@@ -138,8 +142,8 @@ function Assets.RegisterShader(name: string, mip: boolean?): number
 		end
 	end
 	h = #shaders + 1
-	shaders[h] = { name = name, key = key, def = def, image = image }
-	shaderByName[key] = h
+	shaders[h] = { name = name, key = key, def = def, image = image, model = model }
+	shaderByName[cacheKey] = h
 	return h
 end
 
@@ -190,7 +194,7 @@ function Assets.RegisterSkin(name: string): number
 	for line in text:gmatch("[^\r\n]+") do
 		local surf, shader = line:match("^%s*([^,]+),%s*(%S*)")
 		if surf and not surf:match("^tag_") then
-			skin[string.lower(surf)] = if shader and shader ~= "" then Assets.RegisterShader(shader) else 0
+			skin[string.lower(surf)] = if shader and shader ~= "" then Assets.RegisterShader(shader, true, true) else 0
 		end
 	end
 	local h = #skins + 1
