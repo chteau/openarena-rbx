@@ -80,22 +80,32 @@ end)
 -- Map/mode changes the menus issue: on a live Roblox server they start a
 -- reserved server (sys/LAN.luau); where teleports don't exist (Studio,
 -- rbx-native's runtime) they become votes on the one server there is.
+-- One vote carries both: a gametype that differs from the server's rides
+-- along as `callvote map <map> <gametype>` (g_cmds_3's map vote).
+local function sendMapVote(map: string)
+	local gt = Cvar.VariableIntegerValue("g_gametype")
+	local current = tonumber(string.match(Net.ConfigString(C.CS_SERVERINFO), "\\g_gametype\\(%d+)"))
+	if current ~= nil and current ~= gt then
+		Net.SendClientCommand(("callvote map %s %d"):format(map, gt))
+	else
+		Net.SendClientCommand("callvote map " .. map)
+	end
+end
+-- a `map` given before the game is up (from the main menu) waits for it: a
+-- client command sent earlier is lost, and sv_floodProtect drops one that
+-- follows the client's own within a second
+local pendingMap: string? = nil
+local pendingSince: number? = nil
 local function mapVote()
 	local map = Cmd.Argv(1)
 	if LAN.Map(Cmd.Argv(0), map) then
 		return
 	end
 	if map ~= "" then
-		-- one vote per command: sv_floodProtect ignores a second client
-		-- command within a second, and a vote in progress refuses another.
-		-- A gametype change goes first; the map vote follows from a new
-		-- `map` once it passed.
-		local gt = Cvar.VariableIntegerValue("g_gametype")
-		local current = tonumber(string.match(Net.ConfigString(C.CS_SERVERINFO), "\\g_gametype\\(%d+)"))
-		if Net.state >= C.CA_CONNECTED and current ~= nil and current ~= gt then
-			Net.SendClientCommand(("callvote g_gametype %d"):format(gt))
+		if Net.state == C.CA_ACTIVE then
+			sendMapVote(map)
 		else
-			Net.SendClientCommand("callvote map " .. map)
+			pendingMap, pendingSince = map, nil
 		end
 	end
 	-- in the game the vote is all: when it passes, the server changes map
@@ -215,6 +225,7 @@ function Client.Disconnect()
 	end
 	Net.state = C.CA_DISCONNECTED
 	Client.connectRequested = false
+	pendingMap = nil
 	if U then
 		U.UI_SetActiveMenu(C.UIMENU_MAIN)
 	end
@@ -266,6 +277,13 @@ function Client.Frame(dtSec: number)
 
 	if Net.state == C.CA_PRIMED and not Client.cgameActive and Client.connectRequested then
 		initCGame()
+	end
+	if pendingMap and Net.state == C.CA_ACTIVE then
+		pendingSince = pendingSince or now
+		if now - pendingSince >= 1500 then
+			sendMapVote(pendingMap)
+			pendingMap = nil
+		end
 	end
 	Net.SetCGameTime(now, cl_timeNudge.integer)
 	Client.UpdateScreen()
