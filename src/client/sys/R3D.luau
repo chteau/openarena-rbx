@@ -186,7 +186,9 @@ local function buildSurface(model, s, parent: Instance)
 	-- Security settings (creating one works there, using it errors "not
 	-- accessible"): without it no surface is drawn. Any other error is this
 	-- surface's own ("Invalid mesh."), and only it is left out
-	if R3D.noEditableMesh then
+	-- a surface with no triangles can't be a MeshPart ("Mesh has no faces",
+	-- models/misc/telep's tube)
+	if R3D.noEditableMesh or s.numTriangles == 0 then
 		return nil
 	end
 	local ok, err = pcall(function()

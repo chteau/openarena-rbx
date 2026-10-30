@@ -608,10 +608,11 @@ and killed from the Server data model with `G_Damage` (a plain `kill` is
   `g_robloxAvatars 0` emptied `OAAvatars` within a second and `1` rebuilt
   it;
 - bots: Sarge and Grism fought and fragged each other and the player, but
-  OA models are **invisible in this sandbox** (EditableMesh is refused, see
-  `docs/assembly-notes.md`), so a bot shows only as its gun, shadow and
-  name (`bot_alongside.png`, `shoot.png` on the right); that is the
-  experience setting, not the avatars.
+  OA models are **invisible in this sandbox**, so a bot shows only as its
+  gun, shadow and name (`bot_alongside.png`, `shoot.png` on the right).
+  The console's "no EditableMesh here" was one faceless surface turning
+  EditableMesh off for the session, not the experience setting; the OA
+  models stay invisible for want of their textures (`docs/assembly-notes.md`).
 
 Found and fixed during the run: the AnimationConstraint rig (no Motor6Ds,
 the copy was refused and the client drew OA models), a template cached as

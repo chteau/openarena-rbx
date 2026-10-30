@@ -1763,8 +1763,11 @@ local function SV_GetPlayerByHandle()
 		if QS.Q_stricmp(QS.Q_CleanStr(cl.name), s) == 0 then
 			return cl
 		end
-		-- a friend-bot also answers to its OA bot name
-		if cl.isBot and QS.Q_stricmp(QS.Info_ValueForKey(cl.userinfo, "oabot"), s) == 0 then
+	end
+	-- then a friend-bot by its OA bot name, after every shown name
+	for i = 0, maxclients() - 1 do
+		local cl = svs.clients[i]
+		if cl.state ~= SV.CS_FREE and cl.isBot and QS.Q_stricmp(QS.Info_ValueForKey(cl.userinfo, "oabot"), s) == 0 then
 			return cl
 		end
 	end

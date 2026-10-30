@@ -125,6 +125,8 @@ local function UI_AddBotsMenu_SetBotNames()
 	for n = 0, 6 do
 		local info = U.UI_GetBotInfoByNumber(addBotsMenuInfo.sortedBotNums[addBotsMenuInfo.baseBotNum + n])
 		addBotsMenuInfo.botnames[n] = string.sub(Q.Info_ValueForKey(info, "name"), 1, 31)
+		-- C's items point at the botnames buffers; a Luau string is a copy
+		addBotsMenuInfo.bots[n].string = addBotsMenuInfo.botnames[n]
 	end
 end
 

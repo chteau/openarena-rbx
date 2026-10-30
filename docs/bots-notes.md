@@ -199,8 +199,10 @@ lines, "entered the game" and the other broadcasts, the server console and
 log (`ClientUserinfoChanged`, `Kill:`), and the add/remove bot menus. OA
 draws no name over a player's head and the avatar's Humanoid name display
 is off, so there is no overhead name to tag. The OA bot name stays in the
-userinfo as `oabot`: `kick sarge` and `kick "[BOT] Alice"` both work, and
-the remove bots menu kicks by client number.
+userinfo as `oabot`: `kick "[BOT] Alice"` and `kick sarge` both work (a
+shown name is matched first, so `kick sarge` takes a bot shown as "Sarge"
+before a friend-bot that is Sarge underneath), and the remove bots menu
+kicks by client number.
 
 Look: the friend's `HumanoidDescription` becomes an R15 model in
 `OAAvatars` as `c<clientNum>`, exactly as for a player (`docs/client-notes.md`,
@@ -230,6 +232,30 @@ log's `ClientUserinfoChanged` and `Kill:` lines, the "entered the game"
 broadcast and a chat line; the OA-name fallback; `bot_friendChat` 0/1 and
 `bot_nochat`; kick by either name releasing the friend; the map change
 reassignment; and `g_friendBots 0`.
+
+Live on 2026-10-30, in real Roblox (Sober through rbx-native's Play, built
+from rbx-native dev 56b8d364, Chee's play sandbox, universe 1113565074 /
+place 3086963177): a 4.6 MB place from `place/assemble.py --maps oa_dm1
+--players sarge,grism`, `addbot sarge 2; addbot grism 2; addbot sarge 2
+free 0 Sarge` run in the Server data model over MCP `execute_luau`, the
+client driven the same way. The two bots took two of Chee's friends and
+the third, given an alt name, stayed Sarge. Pictures in
+`docs/parity/friendbots/`:
+
+- `avatar_crosshair.png`: a friend-bot drawn as its friend's avatar, the
+  crosshair name `[BOT] <name>`; the OA-model bot on the left is only its
+  gun (see `docs/assembly-notes.md`, OA player models);
+- `killfeed_scoreboard.png`: "Sarge was railed by [BOT] ...", "... ate
+  [BOT] ...'s rocket", "Fragged by [BOT] ..." and the scoreboard with both
+  friend-bots, their headshots and the Sarge fallback;
+- `addbot_menu.png`: "Wears: <next friend> [BOT]";
+- `removebot_menu.png`: the tagged names.
+
+The console showed a friend-bot's chat line with the tag (`bot_friendChat
+1`), and `g_robloxAvatars 0` emptied `OAAvatars` while the names kept their
+tag; 1 brought the avatars back. The add and remove bots menus showed no
+names at all before this (the items copied the name strings once, while C
+points at buffers filled later); fixed.
 
 Found on the way: after a `map` command every bot failed to reconnect
 ("BotAISetupClient failed", from `G_BotConnect`'s `trap_AAS_Initialized`

@@ -384,6 +384,7 @@ function SVB.SV_BotInitCvars()
 	E.Cvar_Get("bot_testclusters", "0", BC.CVAR_CHEAT) --test the AAS clusters
 	E.Cvar_Get("bot_fastchat", "0", 0) --fast chatting bots
 	E.Cvar_Get("bot_nochat", "0", 0) --disable chats
+	E.Cvar_Get("bot_friendChat", "0", 0) --not in OA: friend-bots use the chats
 	E.Cvar_Get("bot_pause", "0", BC.CVAR_CHEAT) --pause the bots thinking
 	E.Cvar_Get("bot_report", "0", BC.CVAR_CHEAT) --get a full report in ctf
 	E.Cvar_Get("bot_grapple", "0", 0) --enable grapple

@@ -183,7 +183,13 @@ check(G.BotNoChat({ client = B.Assassin }), "bot_nochat still applies")
 h.Game.Command("bot_nochat 0")
 h.Game.Command("bot_friendChat 0")
 
--- kick by the OA name, then by the shown name
+-- kick: a bot shown as "Sarge" goes before the friend-bot whose OA name it
+-- is, then the OA name, then the shown name
+h.Game.Command("addbot sarge 4 free 0 Sarge")
+frames(10)
+h.Game.Command("kick Sarge")
+frames(5)
+check(bots().Sarge == nil and bots()[TAG .. "Alice"] ~= nil, "kick: a shown name first")
 h.Game.Command("kick Sarge")
 frames(5)
 check(bots()[TAG .. "Alice"] == nil and FB.Worn(alice) == nil and wearing[alice] == nil, "kick by OA name releases the friend")
