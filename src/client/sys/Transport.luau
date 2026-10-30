@@ -35,6 +35,10 @@ Transport.onGamestate = nil :: (() -> ())?
 local st: any
 
 local function reset()
+	-- the packet numbers we send keep counting across a reconnect: the
+	-- connect message names the first one, so the server can tell the old
+	-- connection's late packets from the new one's
+	local outgoing = if st then st.outgoingSequence else 1
 	st = {
 		serverId = 0,
 		checksumFeed = 0,
@@ -44,7 +48,7 @@ local function reset()
 		reliableSequence = 0,
 		reliableAcknowledge = 0,
 		reliableCommands = {},
-		outgoingSequence = 1,
+		outgoingSequence = outgoing,
 		baselines = {},
 		snapshots = {},
 		parseEntities = {},
@@ -101,6 +105,11 @@ local function parseGamestate(msg)
 	st.serverId = serverIdOf(cs[K.CS_SYSTEMINFO]) or 0
 	st.snapshots = {}
 	st.snap = nil
+	-- CL_ClearState: the usercmds resent with each packet belong to the old
+	-- level. Left in, the oldest one would be the first usercmd of the new
+	-- gamestate (SV_ClientEnterWorld's lastUsercmd) and its later
+	-- serverTime would hide every move after it.
+	st.cmds = {}
 	Net.ReceiveGamestate(cs, st.serverCommandSequence, clientNum)
 	if Transport.onGamestate then
 		Transport.onGamestate()
@@ -306,16 +315,25 @@ function Transport.Start()
 		end
 	end
 
+	-- packets between a reconnect request and its answer belong to the old
+	-- connection
 	unreliable.OnClientEvent:Connect(function(data)
-		if typeof(data) == "buffer" then
+		if connected and typeof(data) == "buffer" then
 			Transport.Receive(data)
 		end
 	end)
-	reliable.OnClientEvent:Connect(function(kind, data)
+	reliable.OnClientEvent:Connect(function(kind, data, firstSequence)
 		if kind == "p" and typeof(data) == "buffer" then
-			Transport.Receive(data)
+			if connected then
+				Transport.Receive(data)
+			end
 		elseif kind == "connected" then
 			connected = true
+			-- the server's packets on this connection start here; anything
+			-- older still in flight is the previous connection's
+			if typeof(firstSequence) == "number" then
+				st.serverMessageSequence = firstSequence - 1
+			end
 			-- a fresh connection: the server's first gamestate follows
 			send(writePacket({}))
 		elseif kind == "refused" then
@@ -328,7 +346,7 @@ function Transport.Start()
 		connect = function(userinfo: string)
 			reset()
 			connected = false
-			reliable:FireServer("connect", userinfo)
+			reliable:FireServer("connect", userinfo, st.outgoingSequence)
 		end,
 		disconnect = function()
 			connected = false

@@ -6,7 +6,9 @@
 --     takes four clients through connect -> begin -> team join -> play
 --     for 30 s of random input (moving, jumping, firing) with no error;
 --  3. map_restart and map changes keep the clients;
---  4. the vote system and the tourney queue.
+--  4. the vote system and the tourney queue;
+--  5. a reconnect from the same address keeps the slot with no drop, and
+--     the client stays through map changes after it.
 local W = require("./world")
 local MSG = require("../../src/shared/net/msg")
 local K = require("../../src/shared/consts")
@@ -300,6 +302,57 @@ do
 	w.clients[1] = nil
 	w:run(3)
 	check(team(2) == TEAM_FREE, "tourney: the queued spectator joins when a player leaves")
+end
+
+-- 5: reconnect (sv_client.c SV_DirectConnect: same address, same slot,
+-- no drop) and map changes after it
+do
+	local w = W.new()
+	w:command("set g_doWarmup 0")
+	w:command("map oa_dm1")
+	local a = w:connect("Alice")
+	local b = w:connect("Bob")
+	w:run(2)
+	check(active(w) == 2, "reconnect: both clients active first")
+	local addr = w.SV.svs.clients[a.clientNum].address
+	local sentBefore = w.SV.svs.clients[a.clientNum].outgoingSequence
+	-- the client restarts its connection (the transport's "connect" again)
+	local a2 = require("./fakeclient").new("Alice")
+	a2.outgoingSequence = a.outgoingSequence
+	a2.wish = require("../../src/shared/structs").usercmd_t()
+	local n = w.SV.SV_DirectConnect(
+		"\\name\\Alice\\model\\sarge\\headmodel\\sarge\\handicap\\100\\snaps\\20\\rate\\25000",
+		a2, addr, w.SV.GuidFor(1), a2.outgoingSequence
+	)
+	check(n == a.clientNum, "reconnect: same slot")
+	check(a.disconnected == nil, "reconnect: no disconnect command to the old connection")
+	local dropLine = false
+	for _, text in b.commands do
+		if string.find(text, "disconnected", 1, true) or string.find(text, "reconnect", 1, true) then
+			dropLine = true
+		end
+	end
+	check(not dropLine, "reconnect: no drop broadcast")
+	check(w.SV.svs.clients[a.clientNum].outgoingSequence >= sentBefore, "reconnect: packet numbers keep counting")
+	w.clients[a.clientNum] = a2
+	a2.clientNum = a.clientNum
+	a2.serverMessageSequence = w.SV.svs.clients[a.clientNum].outgoingSequence - 1
+	w:run(2)
+	check(a2.gamestates == 1, "reconnect: the new connection gets a gamestate")
+	check(active(w) == 2, "reconnect: both clients back in the game")
+	check(b.disconnected == nil, "reconnect: the other client is untouched")
+	-- an old-connection packet arriving late is ignored
+	local late = w.SV.svs.clients[a.clientNum].incomingSequence
+	w.SV.SV_PacketEvent(a.clientNum, a:writePacket({}))
+	check(w.SV.svs.clients[a.clientNum].incomingSequence == late, "reconnect: a late old packet is dropped")
+
+	w:command("map oa_dm5")
+	w:run(2)
+	check(active(w) == 2, "reconnect then map change: both in the game")
+	w:command("map_restart 0")
+	w:run(2)
+	check(active(w) == 2, "reconnect then map_restart: both in the game")
+	check(a2.disconnected == nil and b.disconnected == nil, "no client was ever disconnected")
 end
 
 print(string.format("integration: %d failure(s), %.1fs", failures, os.clock() - t0))

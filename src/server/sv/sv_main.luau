@@ -823,20 +823,27 @@ end
 -- the stable pseudo address that stands in for the IP; `guid` the
 -- account's cl_guid (SV.GuidFor). Returns the client number, or nil and
 -- the reason it was refused.
-function SV.SV_DirectConnect(userinfo: string, handle: any, address: string?, guid: string?): (number?, string?)
+function SV.SV_DirectConnect(userinfo: string, handle: any, address: string?, guid: string?, firstSequence: number?): (number?, string?)
 	if sv.state ~= SV.SS_GAME then
 		return nil, "Server is not running."
 	end
 
-	-- quick reject: a reconnect from the same address reuses its slot
+	-- if there is already a slot for this address, reuse it: ioq3 goes
+	-- straight to gotnewcl with no drop, no disconnect command and no
+	-- GAME_CLIENT_DISCONNECT ("this doesn't work because it nukes the
+	-- players userinfo"), so the player stays in the game
 	local newcl = nil
+	local reconnect = false
 	for i = 0, maxclients() - 1 do
 		local cl = svs.clients[i]
 		if cl.state ~= SV.CS_FREE and not cl.isBot and address and cl.address == address then
-			if cl.state >= SV.CS_CONNECTED then
-				SV.SV_DropClient(cl, "reconnect")
+			if cl.state == SV.CS_ZOMBIE then
+				-- the old connection was already dropped: start fresh
+				cl.state = SV.CS_FREE
+			else
+				Com_Printf("%s:reconnect\n", address)
+				reconnect = true
 			end
-			cl.state = SV.CS_FREE
 			newcl = cl
 			break
 		end
@@ -873,9 +880,19 @@ function SV.SV_DirectConnect(userinfo: string, handle: any, address: string?, gu
 
 	-- build a new connection, accept the new client
 	local clientNum = newcl.index
+	-- Roblox: the two remotes can reorder, so the packet sequences carry
+	-- over a reconnect (packets of the old connection then always number
+	-- below the new one's) and the client names where its own restart
+	local outgoing = if reconnect then newcl.outgoingSequence else nil
 	local fresh = SV.newClient(clientNum)
 	for k, v in fresh do
 		newcl[k] = v
+	end
+	if outgoing then
+		newcl.outgoingSequence = outgoing
+	end
+	if firstSequence then
+		newcl.incomingSequence = firstSequence - 1
 	end
 	local ent = W.SV_GentityNum(clientNum)
 	newcl.gentity = ent
@@ -890,6 +907,10 @@ function SV.SV_DirectConnect(userinfo: string, handle: any, address: string?, gu
 	local denied = G.vmMain(C.GAME_CLIENT_CONNECT, clientNum, true, false)
 	if type(denied) == "string" then
 		newcl.state = SV.CS_FREE
+		if reconnect then
+			-- the game still had this client: free its entity too
+			G.vmMain(C.GAME_CLIENT_DISCONNECT, clientNum)
+		end
 		return nil, denied
 	end
 

@@ -32,6 +32,10 @@ Net.serverTime = 0
 Net.oldServerTime = 0
 Net.serverTimeDelta = 0
 Net.extrapolatedSnapshot = false
+-- the last server command the cgame executed: a cgame restarted by a new
+-- gamestate (map change) carries on from there, as CL_InitCGame does. A
+-- new connection (CL_Connect clears clc) starts from 0.
+Net.lastExecutedServerCommand = 0
 
 -- Outgoing side, set by the transport: { command = (seq, text) -> (), usercmds = (cmds) -> () }
 Net.transport = nil :: any
@@ -50,9 +54,22 @@ function Net.ReceiveGamestate(cs: { [number]: string }, commandSequence: number,
 		configstrings[i] = s
 	end
 	serverCommandSequence = commandSequence
+	if Net.lastExecutedServerCommand > commandSequence then
+		-- numbered by an earlier connection
+		Net.lastExecutedServerCommand = commandSequence
+	end
 	Net.clientNum = clientNum
 	table.clear(snapshots)
 	latest = nil
+	-- CL_ClearState: the clock starts over with the new level. Until the
+	-- first snapshot sets it again, usercmds carry serverTime 0, so the
+	-- first one (SV_ClientEnterWorld's lastUsercmd) can't be stamped with
+	-- the old level's later time and hide every move after it.
+	Net.serverTime = 0
+	Net.oldServerTime = 0
+	Net.serverTimeDelta = 0
+	Net.newSnapshots = false
+	Net.extrapolatedSnapshot = false
 	Net.state = C.CA_PRIMED
 end
 
@@ -145,6 +162,8 @@ end
 -- CL_GetServerCommand: tokenizes command n into Cmd's argv; false when the
 -- engine consumed it (big configstring pieces).
 function Net.GetServerCommand(n: number): boolean
+	-- CG_Init on a new gamestate starts after this one (clc.lastExecutedServerCommand)
+	Net.lastExecutedServerCommand = n
 	if n <= serverCommandSequence - MAX_RELIABLE_COMMANDS then
 		error("CL_GetServerCommand: a reliable command was cycled out")
 	end
