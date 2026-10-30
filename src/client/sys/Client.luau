@@ -206,9 +206,19 @@ function Client.Connect()
 	end
 end
 
+-- set while a frame draws (Client.UpdateScreen)
+local drawing = false
+local restartPending = false
+
 -- A new gamestate (map change, map_restart from the server side): cgame
 -- starts again on the next frame, as CL_ParseGamestate -> CL_InitCGame.
+-- The frame can yield (a mesh loading), which lets the gamestate in while
+-- the cgame draws: it then finishes that frame on the old level first.
 function Client.RestartCGame()
+	if drawing then
+		restartPending = true
+		return
+	end
 	if Client.cgameActive then
 		G.CG_Shutdown()
 		Client.cgameActive = false
@@ -293,12 +303,25 @@ end
 -- SCR_UpdateScreen. The cgame also calls it while loading (trap_UpdateScreen):
 -- Roblox only presents when the script yields, so those calls build the
 -- loading screen but the player sees it only if loading spans frames.
-local drawing = false
+local drawScreen
 function Client.UpdateScreen()
 	if drawing then
 		return
 	end
+	-- an error in one frame must not leave `drawing` set, which would
+	-- freeze the screen for good
 	drawing = true
+	local ok, err = xpcall(drawScreen, debug.traceback)
+	drawing = false
+	if restartPending then
+		restartPending = false
+		Client.RestartCGame()
+	end
+	if not ok then
+		warn("SCR_UpdateScreen: " .. tostring(err))
+	end
+end
+function drawScreen()
 	local now = Client.realtime
 	R2D.BeginFrame()
 	R3D.BeginFrame()
@@ -331,7 +354,6 @@ function Client.UpdateScreen()
 	end
 	R2D.EndFrame()
 	R3D.EndFrame()
-	drawing = false
 end
 
 -- Roblox input -> Q3 keys --------------------------------------------------------------
