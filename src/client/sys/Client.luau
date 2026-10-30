@@ -15,6 +15,7 @@ local Assets = require(script.Parent.Assets)
 local R3D = require(script.Parent.R3D)
 local Snd = require(script.Parent.Snd)
 local FS = require(script.Parent.FS)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local Client = {}
 
@@ -283,7 +284,7 @@ function Client.UpdateScreen()
 		U.UI_Refresh(now)
 	end
 	if chat then
-		Console.DrawSmallString(8, 64, (if chat.team then "say_team: " else "say: ") .. chat.text .. "_")
+		Console.DrawSmallString(Screen.insets.left + 8, Screen.insets.top + 64, (if chat.team then "say_team: " else "say: ") .. chat.text .. "_")
 	end
 	if Console.open then
 		Console.DrawConsole(R2D.width, R2D.height)
@@ -378,6 +379,49 @@ end
 -- headless smoke test call this and step Client.Frame themselves).
 -- Start: the LocalScript entry point.
 local resize: () -> () = function() end
+
+-- The safe area (notches, the Roblox topbar) as insets from the screen
+-- edges: a probe ScreenGui with CoreUISafeInsets against the full-screen
+-- root. Engines without ScreenInsets fall back to the topbar inset alone.
+local safeProbe: ScreenGui? = nil
+local function safeInsets(root: Instance): Screen.Insets
+	local ok, insets = pcall(function()
+		if safeProbe == nil then
+			local probe = Instance.new("ScreenGui")
+			probe.Name = "OASafeArea"
+			probe.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
+			probe.Parent = root.Parent
+			safeProbe = probe
+		end
+		local r, p = root :: ScreenGui, safeProbe :: ScreenGui
+		local r0, p0 = r.AbsolutePosition, p.AbsolutePosition
+		local r1, p1 = r0 + r.AbsoluteSize, p0 + p.AbsoluteSize
+		return {
+			left = math.max(0, p0.X - r0.X),
+			top = math.max(0, p0.Y - r0.Y),
+			right = math.max(0, r1.X - p1.X),
+			bottom = math.max(0, r1.Y - p1.Y),
+		}
+	end)
+	if ok then
+		return insets
+	end
+	local topLeft = game:GetService("GuiService"):GetGuiInset()
+	return { left = 0, top = topLeft.Y, right = 0, bottom = 0 }
+end
+
+-- A new viewport size or safe area: the cgame and q3_ui re-read glconfig
+-- and redo their screen layout (live, like a vid_restart without one).
+local function screenChanged()
+	if U ~= nil and U.uis ~= nil and U.uis.glconfig ~= nil then
+		R2D.GetGlconfig(U.uis.glconfig)
+		Screen.uiSetup(U.uis)
+	end
+	if G ~= nil and G.cgs ~= nil and G.cgs.screenLayout ~= nil then
+		R2D.GetGlconfig(G.cgs.glconfig)
+		Screen.cgSetup(G.cgs)
+	end
+end
 function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?)
 	opts = opts or {}
 	local Players = game:GetService("Players")
@@ -387,16 +431,31 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?
 		gui.Name = "OpenArena"
 		gui.IgnoreGuiInset = true
 		gui.ResetOnSpawn = false
+		-- full screen, notch area included: Screen.insets keeps the HUD clear of it
+		pcall(function()
+			gui.ScreenInsets = Enum.ScreenInsets.None
+			gui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.None
+		end)
 		gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 		gui.DisplayOrder = 10
 		gui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
 		root = gui
 	end
 	R2D.root = root
+	local key = ""
 	resize = function()
 		local cam = workspace.CurrentCamera
 		local size = if opts.width then Vector2.new(opts.width, opts.height) else (cam and cam.ViewportSize or Vector2.new(640, 480))
 		R2D.width, R2D.height = math.floor(size.X), math.floor(size.Y)
+		if opts.root == nil then
+			Screen.insets = safeInsets(root)
+		end
+		local ins = Screen.insets
+		local k = table.concat({ R2D.width, R2D.height, ins.left, ins.top, ins.right, ins.bottom }, " ")
+		if k ~= key then
+			key = k
+			screenChanged()
+		end
 	end
 	resize()
 	local scene = Instance.new("Folder")

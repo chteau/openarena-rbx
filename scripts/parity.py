@@ -2,7 +2,7 @@
 """Visual parity driver: renders the client's fixtures (src/client/dev/Scene)
 in rbx-native's editor over MCP and puts them next to the reference shots.
 
-  scripts/parity.py [--push] [menu hud scores]
+  scripts/parity.py [--push] [--size WxH] [menu hud scores]
 
 Needs a running rbxstudio (with the MCP beta on) that can resolve
 rbxasset://openarena/... from its asset cache (scripts/client-dev-assets.py
@@ -15,6 +15,9 @@ Each fixture is drawn into a 640x360 frame (half the reference) on a magenta
 background (the reference shots clear to magenta: r_clear 1), captured,
 cropped (build/parity/<name>.png) and put beside the reference in
 docs/parity/<name>_side.png (reference left, ours right).
+
+--size WxH draws the frame at another size (another aspect) instead and
+only writes build/parity/<name>_<W>x<H>.png, with no reference beside it.
 """
 import base64
 import json
@@ -101,7 +104,11 @@ def modules():
     """(instance path under ReplicatedStorage.OA, source) for every module."""
     out = []
     src = os.path.join(ROOT, 'src')
-    for dirpath, _, files in os.walk(src):
+    for dirpath, dirs, files in os.walk(src):
+        # src/shared uses require-by-string, which rbx-native's edit runtime
+        # lacks: the fixtures run on the client's fallback bg_misc instead
+        if dirpath == src:
+            dirs[:] = [d for d in dirs if d != 'shared']
         for f in sorted(files):
             if not f.endswith('.luau') or f.endswith('.client.luau') or f.endswith('.server.luau'):
                 continue
@@ -230,21 +237,27 @@ def capture(mcp, name):
 def main():
     args = sys.argv[1:]
     do_push = '--push' in args
+    size = None
+    if '--size' in args:
+        i = args.index('--size')
+        size = tuple(int(v) for v in args[i + 1].split('x'))
+        del args[i:i + 2]
     names = [a for a in args if not a.startswith('--')] or ['menu', 'hud', 'scores']
+    fw, fh = size or (W, H)
     mcp = MCP()
     try:
         if do_push:
             push(mcp)
         for name in names:
-            print(name, mcp.luau(RUN % {'name': name, 'w': W, 'h': H}))
+            print(name, mcp.luau(RUN % {'name': name, 'w': fw, 'h': fh}))
             time.sleep(1.0)
             jpg = capture(mcp, name)
             with tempfile.TemporaryDirectory(dir=os.path.join(ROOT, 'build')) as tmp:
                 raw = os.path.join(tmp, 'raw.jpg')
                 open(raw, 'wb').write(jpg)
-                w, h = W, H
+                w, h = fw, fh
                 os.makedirs(os.path.join(ROOT, 'build/parity'), exist_ok=True)
-                ours = os.path.join(ROOT, 'build/parity', name + '.png')
+                ours = os.path.join(ROOT, 'build/parity', name + (f'_{w}x{h}' if size else '') + '.png')
                 ref = os.path.join(ROOT, 'docs/parity/ref', {'menu': 'menu_main', 'hud': 'hud_ffa',
                                                             'scores': 'scoreboard_ffa'}[name] + '.png')
                 # the marker's top rows: nothing else green sits at the top edge
@@ -258,6 +271,9 @@ def main():
                                 ours], check=True)
                 if abs(scale - 1) > 0.01:
                     print(f'  capture scale {scale:.3f}, resampled')
+                if size:
+                    print(f'  {ours}')
+                    continue
                 side = os.path.join(ROOT, 'docs/parity', name + '_side.png')
                 subprocess.run(['convert', '(', ref, '-resize', f'{w}x{h}', ')', ours, '+append', side], check=True)
                 diff = subprocess.run(['compare', '-metric', 'RMSE', '(', ref, '-resize', f'{w}x{h}', ')', ours,

@@ -26,6 +26,7 @@ local G = require(script.Parent.G)
 local Q = require(script.Parent.Parent.q.Q)
 local C = require(script.Parent.Parent.q.Consts)
 local trap = require(script.Parent.Parent.sys.Trap)
+local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local SCOREBOARD_X = 0
 
@@ -385,7 +386,9 @@ function G.CG_DrawOldTourneyScoreboard()
 
 	-- draw the dialog background
 	local color = Q.vec4(0, 0, 0, 1)
+	G.CG_SetScreenPlacement(Screen.STRETCH, Screen.STRETCH)
 	G.CG_FillRect(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, color)
+	G.CG_SetScreenPlacement(Screen.CENTER, Screen.CENTER)
 
 	color[0] = 1
 	color[1] = 1

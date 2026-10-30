@@ -289,7 +289,7 @@ local function UI_DrawBannerString2(x, y, str, color)
 	trap.R_SetColor(color)
 
 	local ax = x * uis.xscale + uis.bias
-	local ay = y * uis.yscale
+	local ay = y * uis.yscale + uis.ybias
 
 	for i = 1, #str do
 		local ch = band(string.byte(str, i), 127)
@@ -362,7 +362,7 @@ local function UI_DrawProportionalString2(x, y, str, color, sizeScale, charset)
 	trap.R_SetColor(color)
 
 	local ax = x * uis.xscale + uis.bias
-	local ay = y * uis.yscale
+	local ay = y * uis.yscale + uis.ybias
 
 	for i = 1, #str do
 		local ch = band(string.byte(str, i), 127)
@@ -495,7 +495,7 @@ local function UI_DrawString2(x, y, str, color, charw, charh)
 	trap.R_SetColor(color)
 
 	local ax = x * uis.xscale + uis.bias
-	local ay = y * uis.yscale
+	local ay = y * uis.yscale + uis.ybias
 	local aw = charw * uis.xscale
 	local ah = charh * uis.yscale
 
@@ -660,19 +660,11 @@ function U.UI_MouseEvent(dx, dy)
 	end
 
 	-- update mouse screen position
-	uis.cursorx += dx
-	if uis.cursorx < -uis.bias then
-		uis.cursorx = -uis.bias
-	elseif uis.cursorx > C.SCREEN_WIDTH + uis.bias then
-		uis.cursorx = C.SCREEN_WIDTH + uis.bias
-	end
-
-	uis.cursory += dy
-	if uis.cursory < 0 then
-		uis.cursory = 0
-	elseif uis.cursory > C.SCREEN_HEIGHT then
-		uis.cursory = C.SCREEN_HEIGHT
-	end
+	-- the cursor reaches every screen edge, past the centred 640x480
+	local left, top = Screen.uiToVirtual(uis, 0, 0)
+	local right, bottom = Screen.uiToVirtual(uis, uis.glconfig.vidWidth, uis.glconfig.vidHeight)
+	uis.cursorx = math.clamp(uis.cursorx + dx, left, right)
+	uis.cursory = math.clamp(uis.cursory + dy, top, bottom)
 
 	local menu = uis.activemenu
 
@@ -849,6 +841,14 @@ function U.UI_AdjustFrom640(x, y, w, h)
 	return Screen.uiAdjust(U.uis, x, y, w, h)
 end
 
+-- A decorative 4:3 full-screen background, covering the whole screen
+-- (cropped, never stretched) instead of pillarboxing.
+function U.UI_DrawBackground(hShader)
+	local w, h = U.uis.glconfig.vidWidth, U.uis.glconfig.vidHeight
+	local s1, t1, s2, t2 = Screen.cover(w, h)
+	trap.R_DrawStretchPic(0, 0, w, h, s1, t1, s2, t2, hShader)
+end
+
 function U.UI_DrawNamedPic(x, y, width, height, picname)
 	local hShader = trap.R_RegisterShaderNoMip(picname)
 	x, y, width, height = U.UI_AdjustFrom640(x, y, width, height)
@@ -929,9 +929,9 @@ function U.UI_Refresh(realtime)
 		if uis.activemenu.fullscreen then
 			-- draw the background
 			if uis.activemenu.showlogo then
-				U.UI_DrawHandlePic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, uis.menuBackShader)
+				U.UI_DrawBackground(uis.menuBackShader)
 			else
-				U.UI_DrawHandlePic(0, 0, C.SCREEN_WIDTH, C.SCREEN_HEIGHT, uis.menuBackNoLogoShader)
+				U.UI_DrawBackground(uis.menuBackNoLogoShader)
 			end
 		end
 

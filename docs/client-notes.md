@@ -150,8 +150,8 @@ Master-only things removed:
   supporters", the extra footstep and impact sounds (`FOOTSTEP_SNOW`..,
   `IMPACTSOUND_GLASS`.., `SURF_SNOW`.., `EV_FOOTSTEP_WOOD`..), the
   Possession gametype (`GT_POSSESSION`), map-info gametype support.
-- q3_ui: `UI_DrawBackgroundPic` (menu backgrounds are a 640x480 handle pic
-  again, so they pillarbox), `ui_browserHidePrivate`,
+- q3_ui: `UI_DrawBackgroundPic` (menu backgrounds are one full-screen pic
+  again; see "Widescreen" for how it covers a wide screen), `ui_browserHidePrivate`,
   `ui_pos_scorelimit`/`ui_pos_timelimit`, the 2018 copyright line, the
   `fixedlegs`/`fixedtorso` UI player options, the text-effect helpers,
   and the vote, start-server, controls, video, player and challenges menus
@@ -159,7 +159,7 @@ Master-only things removed:
   nothing in 0.8.8 calls `UI_SystemConfigMenu`.
 
 Kept although no C source has them: the engine layer (`sys/*`,
-`ui_roblox.luau`) and the opt-in `cg_wideScreenHud` (default 0).
+`ui_roblox.luau`) and the widescreen layout below.
 
 The release `ui.qvm` is not byte-for-byte `9e0f0c0`: it draws `^70.8.8` in
 the main menu's corner where the source says `^7OAX` (ported as the QVM
@@ -196,12 +196,7 @@ the axis is converted, never the Euler angles.
 
 ### 2D (R2D)
 
-- Screen math lives in `src/ui/Screen.luau` only. The cgame HUD stretches
-  to the screen like OA 0.8.8 (`xscale = w/640`, no bias); `cg_wideScreenHud 1`
-  (new, archived, default 0) switches to leilei's 4:3-centred layout.
-  q3_ui always centres 4:3 (`uis.bias`).
-  As in ioquake3's `SCR_DrawScreenField`, `Client.UpdateScreen` clears a
-  wide screen to black under a full-screen menu, so the menus pillarbox.
+- Screen math lives in `src/ui/Screen.luau` only; see "Widescreen" below.
 - A stretch pic is one `ImageLabel` per shader stage: UVs map to
   `ImageRectOffset/Size`, `R_SetColor` x `rgbGen/alphaGen` to
   `ImageColor3/ImageTransparency`. UVs past 0..1 are cut into one label per
@@ -307,6 +302,73 @@ trusts it (Q3 doesn't), which drew black boxes behind icons.
   become `callvote g_gametype N` + `callvote map X`; the server has to
   accept them.
 
+## Widescreen
+
+OA 0.8.8 is laid out for 4:3 (its 640x480 virtual screen, cg_fov as a 4:3
+FOV) and stretches the HUD over a wider screen. Roblox players use every
+aspect, so the port lays out for each one instead; at 4:3 with no safe-area
+insets everything lands exactly where 0.8.8 puts it (`tests/screen.test.luau`,
+and every drawn label of the menu, HUD and scoreboard fixtures compared
+against the stretch at 640x480 and 1024x768). There is no cvar for the old
+stretch: `cg_wideScreenHud` is gone.
+
+- **3D view, Hor+** (`Screen.fov`, called by `CG_CalcFov`): cg_fov,
+  cg_zoomFov and the fixed 90 of intermission and `DF_FIXED_FOV` stay 4:3
+  horizontal FOVs. The view keeps that 4:3 view's vertical FOV and widens
+  the horizontal one with the aspect; narrower than 4:3 it keeps the
+  horizontal FOV instead (Vert+), so no aspect sees less than 4:3:
+  `fov_y = 2 atan(tan(fov/2) * max(3/4, h/w))`, `fov_x = 2 atan(tan(fov_y/2) * w/h)`.
+  `zoomSensitivity` (from fov_y) and the gun's fov drop (from cg_fov) are
+  unchanged; the view weapon is in the same scene, so it follows the camera.
+- **HUD anchored, never stretched.** The 640x480 area scales uniformly by
+  `s = min(safe width / 640, h / 480)` (so a narrow screen shrinks the HUD to
+  fit), and each element is drawn under a placement
+  (`G.CG_SetScreenPlacement`, the idea of Spearmint's `CG_SetScreenPlacement`):
+  left/right/top/bottom keep the element's 4:3 offset from that edge of the
+  safe area, centre uses the screen's centre, stretch fills the screen.
+  `CG_Draw2D` sets them per element:
+
+  | element | placement |
+  |---|---|
+  | status bar: team background | stretch, bottom |
+  | status bar: ammo (and its icon) | left, bottom |
+  | status bar: health, head, carried flag | centre, bottom |
+  | status bar: armor, harvester skulls | right, bottom |
+  | weapon select, spectator text | centre, bottom |
+  | upper right stack (team overlay 1, FPS, timer, snapshot, attacker, speed, LMS/DOM/CTF-E status, follow) | right, top |
+  | lower right stack (team overlay 2, score box, powerups), lagometer, disconnect icon | right, bottom |
+  | lower left stack (team overlay 3, pickup notification), team chat box | left, bottom |
+  | vote, team vote | left, top |
+  | holdable item, persistant powerup, accuracy board | right, centre |
+  | ammo/prox warnings, rewards, warmup, following | centre, top |
+  | crosshair, crosshair names, center prints, scoreboard, intermission, info screen | centre |
+  | tourney scoreboard backdrop | stretch |
+
+  The console notify lines (obituaries, chat, "entered the game") and the
+  chat input are engine text in real pixels at the top left, moved in by
+  the insets. The levelshot of the info screen covers the screen
+  (`Screen.cover`: cropped, not stretched). 0.8.8 has no 2D zoom mask or
+  full-screen damage/powerup overlay; those effects are 3D, in the view.
+- **Menus.** q3_ui stays a centred 4:3 layout (`uis.bias`, `uis.ybias` when
+  narrower than 4:3). The full-screen backgrounds (`menuback*`, the connect
+  screen) cover the whole screen (`U.UI_DrawBackground`), so there are no
+  pillarbox bars. The cursor reaches every screen edge, side areas included
+  (virtual x below 0 or past 640).
+- **Live.** `Client` checks the viewport (`workspace.CurrentCamera.ViewportSize`)
+  and the safe area every frame; on a change both the cgame and q3_ui re-read
+  glconfig and redo their layout. The safe area is a probe ScreenGui with
+  `ScreenInsets = CoreUISafeInsets` measured against the full-screen root
+  (`ScreenInsets = None`, `SafeAreaCompatibility = None`), so notches and the
+  Roblox topbar are kept clear; without `ScreenInsets` it falls back to
+  `GuiService:GetGuiInset()`. In a Roblox client the topbar inset moves the
+  top-anchored elements down even at 4:3.
+
+Shots from rbx-native's editor (`scripts/parity.py --size WxH`):
+`docs/parity/widescreen/{hud,scores,menu}_{16x9,21x9,4x3,3x4}.png`, drawn at
+640x360, 640x274, 560x420 and 300x400 (the frame the fixture draws into is
+the screen, so no window resize is needed). They show 2D only: edit mode has
+no EditableMesh, so no 3D models.
+
 ## Parity (docs/parity)
 
 Reference shots come from OA 0.8.8's own QVMs and data (see "Walls" for the
@@ -318,7 +380,9 @@ engine), `scripts/oa-ref.sh <name> <console commands>` (for the in-game shots:
 editor over MCP, runs a fixture from `src/client/dev/Scene.luau` and takes
 `screen_capture`. Ours is drawn at 640x360 (the editor viewport is 962x453
 and rbx-native has no `UIScale`), the reference is scaled down to match;
-`*_side.png` is reference left, ours right. The editor may present its
+`*_side.png` is reference left, ours right. The push leaves out `src/shared`:
+its require-by-string doesn't run in rbx-native's edit runtime, so the
+fixtures use the client's fallback `bg_misc`. The editor may present its
 viewport scaled in the capture; a 100 px marker measures that and ours is
 resampled back (0.54 here), which softens it slightly. RMSE is ImageMagick's
 normalised RMSE over the whole frame.

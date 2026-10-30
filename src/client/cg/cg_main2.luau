@@ -383,8 +383,6 @@ function G.CG_StartMusic()
 	trap.S_StartBackgroundTrack(parm1, parm2)
 end
 
-G.wideAdjustX = 0
-
 function G.CG_Init(serverMessageNum, serverCommandSequence, clientNum)
 	-- clear everything
 	T.reset(G.cgs, T.cgs_t)
@@ -429,7 +427,7 @@ function G.CG_Init(serverMessageNum, serverCommandSequence, clientNum)
 	trap.GetGlconfig(cgs.glconfig)
 
 	local Screen = require(script.Parent.Parent.Parent.ui.Screen)
-	G.wideAdjustX = Screen.cgSetup(G.cgs, G.cg_wideScreenHud and G.cg_wideScreenHud.integer ~= 0)
+	Screen.cgSetup(G.cgs)
 
 	-- get the gamestate from the client system
 	trap.GetGameState(cgs.gameState)

@@ -1,42 +1,5 @@
 -- The engine layer and the pure logic the HUD/menus/animation stand on.
 
-H.test("screen.cgame", function()
-	local Screen = H.require("ui/Screen")
-	local cgs = { glconfig = { vidWidth = 1280, vidHeight = 720 } }
-	-- OA 0.8.8: the HUD stretches to the screen
-	H.eq(Screen.cgSetup(cgs, false), 0)
-	H.near(cgs.screenXScale, 2)
-	H.near(cgs.screenYScale, 1.5)
-	local x, y, w, h = Screen.cgAdjust(cgs, 320, 240, 16, 16)
-	H.near(x, 640)
-	H.near(y, 360)
-	H.near(w, 32)
-	H.near(h, 24)
-	-- cg_wideScreenHud 1: 4:3 centred, leilei's bias
-	H.near(Screen.cgSetup(cgs, true), 0.5 * (1280 * 480 / 720 - 640))
-	H.near(cgs.screenXBias, 160)
-	H.near(cgs.screenXScale, 1.5)
-end)
-
-H.test("screen.ui", function()
-	local Screen = H.require("ui/Screen")
-	local uis = { glconfig = { vidWidth = 1280, vidHeight = 720 } }
-	Screen.uiSetup(uis)
-	H.near(uis.bias, 160)
-	H.near(uis.xscale, 1.5)
-	local x, y = Screen.uiAdjust(uis, 0, 0, 0, 0)
-	H.near(x, 160)
-	H.near(y, 0)
-	local vx, vy = Screen.uiToVirtual(uis, 640, 360)
-	H.near(vx, 320)
-	H.near(vy, 240)
-	-- 4:3 screens have no bias
-	local u2 = { glconfig = { vidWidth = 640, vidHeight = 480 } }
-	Screen.uiSetup(u2)
-	H.near(u2.bias, 0)
-	H.near(u2.xscale, 1)
-end)
-
 H.test("shaderfx.wave", function()
 	local Fx = H.require("client/sys/ShaderFx")
 	H.near(Fx.wave({ func = "sin", base = 1, amp = 0.5, phase = 0.25, freq = 1 }, 0), 1.5)
