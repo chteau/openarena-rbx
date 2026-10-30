@@ -153,7 +153,7 @@ function U.ArenaServers_DoRefresh()
 			local info
 			if time > maxPing then
 				-- stale it out
-				info = ""
+				info = U.ArenaServers_NoResponse(adrstr)
 				time = maxPing
 			else
 				info = trap.LAN_GetPingInfo(i)

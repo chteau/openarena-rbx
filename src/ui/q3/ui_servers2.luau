@@ -620,7 +620,9 @@ function U.ArenaServers_UpdateMenu()
 		table.insert(b, " ")
 
 		-- Com_sprintf( b, 8, ... ) then b += 6
-		if U.g_onlyhumans == 0 then
+		if servernodeptr.maxclients == 0 then
+			s = "--/-- " -- no answer, no counts
+		elseif U.g_onlyhumans == 0 then
 			s = string.sub(Q.va("%2d/%2d ", servernodeptr.numclients, servernodeptr.maxclients), 1, 6)
 		else
 			s = string.sub(Q.va("%2d/%2d ", servernodeptr.humanclients, servernodeptr.maxclients), 1, 6)
@@ -784,6 +786,12 @@ function U.ArenaServers_Insert(adrstr: string, info: string, pingtime: number)
 	end
 end
 
+-- Roblox: a server that doesn't answer (a dead join code) is listed by its
+-- code and marked "No Response", not as a blank row
+function U.ArenaServers_NoResponse(adrstr: string): string
+	return Q.Info_SetValueForKey(Q.Info_SetValueForKey("", "hostname", adrstr), "mapname", "No Response")
+end
+
 --[[
 =================
 ArenaServers_InsertFavorites
@@ -795,7 +803,6 @@ function U.ArenaServers_InsertFavorites()
 	local g = U.g_arenaservers
 
 	-- resync existing results with new or deleted cvars
-	local info = Q.Info_SetValueForKey("", "hostname", "No Response")
 	for i = 0, g.numfavoriteaddresses - 1 do
 		-- find favorite address in refresh list
 		local j = 0
@@ -808,7 +815,7 @@ function U.ArenaServers_InsertFavorites()
 
 		if j >= U.g_numfavoriteservers.value then
 			-- not in list, add it
-			U.ArenaServers_Insert(g.favoriteaddresses[i], info, U.ArenaServers_MaxPing())
+			U.ArenaServers_Insert(g.favoriteaddresses[i], U.ArenaServers_NoResponse(g.favoriteaddresses[i]), U.ArenaServers_MaxPing())
 		end
 	end
 end

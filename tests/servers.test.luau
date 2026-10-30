@@ -189,6 +189,23 @@ H.test("servers.sort", function()
 	H.eq(list[1].hostname, "FAR")
 end)
 
+H.test("servers.dead_favorite", function()
+	local U = H.require("ui/q3/U")
+	H.require("ui/q3/ui_servers2")
+	H.require("ui/q3/ui_servers2b")
+	local g = U.g_arenaservers
+	local keep = { g.numservers, g.maxservers, g.serverlist, U.g_servertype }
+	U.g_servertype = H.require("client/sys/LAN").UIAS_FAVORITES
+	g.numservers, g.maxservers, g.serverlist = { value = 0 }, 4, { [0] = U.ArenaServers_newServernode() }
+	U.ArenaServers_Insert("2DEAD2", U.ArenaServers_NoResponse("2DEAD2"), U.ArenaServers_MaxPing())
+	local n = g.serverlist[0]
+	H.eq(n.adrstr, "2DEAD2")
+	H.eq(n.hostname, "2DEAD2")
+	H.eq(n.mapname, "NO RESPONSE")
+	H.eq(n.maxclients, 0)
+	g.numservers, g.maxservers, g.serverlist, U.g_servertype = keep[1], keep[2], keep[3], keep[4]
+end)
+
 local function maps(name)
 	return name == "oa_dm1" or name == "oa_ctf2"
 end
