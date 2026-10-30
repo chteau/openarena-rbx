@@ -66,6 +66,9 @@ H.test("assets.model_implicit_shader", function()
 	local r, _, _, a = Fx.stageColor(st, 0, { 0.5, 0.5, 0.5, 0 })
 	H.near(r, 0.5)
 	H.near(a, 1)
+	-- with the entity's light (R3D's light grid), lightingDiffuse takes it
+	r = Fx.stageColor(st, 0, { 0, 0, 0, 0 }, { 0.7, 0.6, 0.5 })
+	H.near(r, 0.7)
 	-- the same image as a 2D shader stays vertex-coloured and blended
 	st = Fx.drawStages(A.Shader(A.RegisterShader("models/players/test/skin.tga", true)))[1]
 	H.eq(Fx.blendMode(st), "alpha")

@@ -126,7 +126,7 @@ end
 
 -- shader -> (image id or nil, blend mode, colour/alpha from the first stage,
 -- whether the image is an alpha-blended stand-in for the blend mode)
-local function shaderLook(h: number, rgba, timeSec: number)
+local function shaderLook(h: number, rgba, timeSec: number, light: { number }?)
 	local sh = Assets.Shader(h)
 	if sh == nil then
 		return nil, "opaque", 1, 1, 1, 1
@@ -137,7 +137,7 @@ local function shaderLook(h: number, rgba, timeSec: number)
 		return nil, "opaque", 1, 1, 1, 1
 	end
 	local vert = { rgba[1] / 255, rgba[2] / 255, rgba[3] / 255, rgba[4] / 255 }
-	local r, g, b, a = ShaderFx.stageColor(st, timeSec, vert)
+	local r, g, b, a = ShaderFx.stageColor(st, timeSec, vert, light)
 	local img, standIn = Assets.StageImage(st, ShaderFx.stageImage(st, timeSec))
 	if standIn then
 		r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
@@ -306,6 +306,21 @@ local function surfaceShader(e, s): number
 	return if s.shaders[1] then Assets.RegisterShader(s.shaders[1], true, true) else 0
 end
 
+-- rgbGen lightingDiffuse's light for a whole entity (R_SetupEntityLighting):
+-- the light grid at its origin, the directed part taken at half strength
+-- (an average facing) instead of per vertex, doubled for the map's
+-- overbright bits as the lightmaps baked into the atlas are
+local function entityLight(e): { number }
+	local amb, dir, ldir = { [0] = 0, 0, 0 }, { [0] = 0, 0, 0 }, { [0] = 0, 0, 0 }
+	R3D.LightForPoint(e.origin, amb, dir, ldir)
+	local min = if bit32.band(e.renderfx, C.RF_MINLIGHT) ~= 0 then 32 else 0
+	local out = table.create(3)
+	for i = 0, 2 do
+		out[i + 1] = math.clamp(2 * (amb[i] + min + 0.5 * dir[i]) / 255, 0, 1)
+	end
+	return out
+end
+
 local function drawModel(t, e, timeSec: number, firstPerson: boolean)
 	local inst = modelInstance(t, e.hModel)
 	if inst == nil then
@@ -320,12 +335,14 @@ local function drawModel(t, e, timeSec: number, firstPerson: boolean)
 	local frame = if nf > 0 then math.clamp(e.frame, 0, nf - 1) else 0
 	local oldframe = if nf > 0 then math.clamp(e.oldframe, 0, nf - 1) else 0
 	local back = e.backlerp
+	local light = nil
 	for _, surf in inst.surfaces do
 		local part: MeshPart = surf.part
 		part.CFrame = if surf.offset then cf * surf.offset else cf
 		part.Parent = inst.folder
 		local sh = surfaceShader(e, surf.s)
-		local img, mode, r, g, b, a, standIn = shaderLook(sh, e.shaderRGBA, timeSec - (e.shaderTime or 0))
+		light = light or entityLight(e)
+		local img, mode, r, g, b, a, standIn = shaderLook(sh, e.shaderRGBA, timeSec - (e.shaderTime or 0), light)
 		if img and part.TextureID ~= img then
 			part.TextureID = img
 		end
