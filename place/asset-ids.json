@@ -368,17 +368,33 @@
    "decal": 105262886286639,
    "image": 72209919700600
   },
+  "images/gfx/damage/bullet_mrk~0_isc.png": {
+   "decal": 85855641361320,
+   "image": 79963337967512
+  },
   "images/gfx/damage/bulletmult.png": {
    "decal": 120836815758804,
    "image": 138781105100699
+  },
+  "images/gfx/damage/bulletmult~dc_sc.png": {
+   "decal": 136314629185236,
+   "image": 91107430622764
   },
   "images/gfx/damage/burn_med_mrk.png": {
    "decal": 112522156420821,
    "image": 137835941953954
   },
+  "images/gfx/damage/burn_med_mrk~0_isc.png": {
+   "decal": 125453812237901,
+   "image": 86939461528030
+  },
   "images/gfx/damage/hole_lg_mrk.png": {
    "decal": 109319180837522,
    "image": 88434090334503
+  },
+  "images/gfx/damage/hole_lg_mrk~0_isc.png": {
+   "decal": 86967173320501,
+   "image": 119691673748191
   },
   "images/gfx/damage/plasma_mrk.png": {
    "decal": 93935564441386,
@@ -388,13 +404,25 @@
    "decal": 93407579209410,
    "image": 81779821695460
   },
+  "images/gfx/damage/shadow~0_isc.png": {
+   "decal": 82979244530274,
+   "image": 136444648476240
+  },
   "images/gfx/fx/decals/bulletgeneric.png": {
    "decal": 128166048823830,
    "image": 99985761987853
   },
+  "images/gfx/fx/decals/bulletgeneric~dc_sc.png": {
+   "decal": 135987149070408,
+   "image": 83718376947905
+  },
   "images/gfx/fx/decals/bulletmetal.png": {
    "decal": 115993759885859,
    "image": 111543922807498
+  },
+  "images/gfx/fx/decals/bulletmetal~dc_sc.png": {
+   "decal": 78885634015359,
+   "image": 114621812542133
   },
   "images/gfx/fx/decals/markatlas.png": {
    "decal": 94807753979328,
@@ -456,6 +484,10 @@
    "decal": 86398402028765,
    "image": 104746486338709
   },
+  "images/gfx/fx/flares/blur~1_1.png": {
+   "decal": 125272055664691,
+   "image": 135992766461529
+  },
   "images/gfx/fx/flares/largeglow.png": {
    "decal": 90922218755996,
    "image": 101556912963056
@@ -500,6 +532,10 @@
    "decal": 77766563345700,
    "image": 86405325722026
   },
+  "images/gfx/fx/spec/robawt~sa_1.png": {
+   "decal": 87606824732728,
+   "image": 130757748389711
+  },
   "images/gfx/fx/spec/skin.png": {
    "decal": 101202141086862,
    "image": 89001547727239
@@ -512,6 +548,10 @@
    "decal": 92639129059046,
    "image": 86999509493722
   },
+  "images/gfx/fx/spec/spots~1_1.png": {
+   "decal": 124376087175814,
+   "image": 137006012862311
+  },
   "images/gfx/fx/water/waves.png": {
    "decal": 89008969697070,
    "image": 133550593902331
@@ -519,6 +559,10 @@
   "images/gfx/misc/flare.png": {
    "decal": 81441783760239,
    "image": 121219451920321
+  },
+  "images/gfx/misc/flare~1_1.png": {
+   "decal": 103380148397391,
+   "image": 95808355177196
   },
   "images/gfx/misc/hastesmoke.png": {
    "decal": 124261462247083,
@@ -547,6 +591,10 @@
   "images/gfx/misc/tracer2.png": {
    "decal": 125207465430074,
    "image": 118460133212914
+  },
+  "images/gfx/misc/tracer2~1_1.png": {
+   "decal": 127032398492518,
+   "image": 78679828925579
   },
   "images/gfx/newbg/blackfading.png": {
    "decal": 83303069133358,
@@ -1320,6 +1368,10 @@
    "decal": 108087925039875,
    "image": 109540784882075
   },
+  "images/menu/art/addbotred~dc_0.png": {
+   "decal": 107778782658599,
+   "image": 94089023718699
+  },
   "images/menu/art/arrows_horz_0.png": {
    "decal": 121511976217420,
    "image": 89861009996502
@@ -1367,6 +1419,10 @@
   "images/menu/art/cutred.png": {
    "decal": 94909674700159,
    "image": 96201799681568
+  },
+  "images/menu/art/cutred~dc_0.png": {
+   "decal": 92918685626987,
+   "image": 103463402408947
   },
   "images/menu/art/delete_0.png": {
    "decal": 86217952997142,
@@ -2252,6 +2308,14 @@
    "decal": 103867532639773,
    "image": 101879622176531
   },
+  "images/models/players/gargoyle/morphedwings_red~1_1.png": {
+   "decal": 94375855724917,
+   "image": 100728262490256
+  },
+  "images/models/players/gargoyle/morphedwings~1_1.png": {
+   "decal": 126253909174583,
+   "image": 86454367373746
+  },
   "images/models/players/gargoyle/pm.png": {
    "decal": 117893933159406,
    "image": 114528917242156
@@ -2720,6 +2784,10 @@
    "decal": 112574493077536,
    "image": 104083155298404
   },
+  "images/models/powerups/armor/shard_env~1_1.png": {
+   "decal": 118939715828282,
+   "image": 96633242334643
+  },
   "images/models/powerups/armor/yellowarmor.png": {
    "decal": 120610198896111,
    "image": 97567930004904
@@ -2728,9 +2796,17 @@
    "decal": 139940584171802,
    "image": 101311824744731
   },
+  "images/models/powerups/arstrip~1_1.png": {
+   "decal": 97270850904245,
+   "image": 94433149702114
+  },
   "images/models/powerups/dblrstrip.png": {
    "decal": 137002972580679,
    "image": 83743588764108
+  },
+  "images/models/powerups/dblrstrip~1_1.png": {
+   "decal": 113794054988205,
+   "image": 86978442862607
   },
   "images/models/powerups/doubler.png": {
    "decal": 75371086901137,
@@ -2739,6 +2815,10 @@
   "images/models/powerups/gdstrip.png": {
    "decal": 112330467227503,
    "image": 78585505207013
+  },
+  "images/models/powerups/gdstrip~1_1.png": {
+   "decal": 123140608085330,
+   "image": 90734836491845
   },
   "images/models/powerups/guard.png": {
    "decal": 103096191655427,
@@ -2752,6 +2832,10 @@
    "decal": 104637469705560,
    "image": 130101374933304
   },
+  "images/models/powerups/instant/quadlite~1_1.png": {
+   "decal": 73155276615736,
+   "image": 139996950477565
+  },
   "images/models/powerups/inviso1.png": {
    "decal": 126715588819941,
    "image": 85969755572298
@@ -2764,9 +2848,17 @@
    "decal": 70858557758513,
    "image": 132230141675374
   },
+  "images/models/powerups/scstrip~1_1.png": {
+   "decal": 108925990663172,
+   "image": 95409289546658
+  },
   "images/models/powerups/shield/impact.png": {
    "decal": 138014373944729,
    "image": 130449204847704
+  },
+  "images/models/powerups/shield/impact~1_1.png": {
+   "decal": 132806298320685,
+   "image": 101445420839299
   },
   "images/models/powerups/shield/juiced-drip.png": {
    "decal": 79033443496950,
@@ -2788,6 +2880,10 @@
    "decal": 101037746746625,
    "image": 98200308672257
   },
+  "images/models/powerups/telezap~1_1.png": {
+   "decal": 106223851453612,
+   "image": 118755070381007
+  },
   "images/models/weaphits/bfg.png": {
    "decal": 93395288925202,
    "image": 78498919250364
@@ -2807,6 +2903,10 @@
   "images/models/weaphits/bfg2.png": {
    "decal": 91747644327706,
    "image": 136546636183199
+  },
+  "images/models/weaphits/bfg2~1_1.png": {
+   "decal": 71197955148053,
+   "image": 97180612235321
   },
   "images/models/weaphits/bfg3.png": {
    "decal": 94643872857722,
@@ -2828,6 +2928,14 @@
    "decal": 136979450350619,
    "image": 119689127568350
   },
+  "images/models/weaphits/bfgscroll~1_1.png": {
+   "decal": 82594521615576,
+   "image": 129955321778012
+  },
+  "images/models/weaphits/bfg~1_1.png": {
+   "decal": 79788897368278,
+   "image": 84654815108476
+  },
   "images/models/weaphits/bullet1.png": {
    "decal": 95266992249778,
    "image": 75581874011298
@@ -2844,33 +2952,65 @@
    "decal": 137585800298132,
    "image": 124703922351316
   },
+  "images/models/weaphits/bullet_0000~1_1.png": {
+   "decal": 127258377916795,
+   "image": 73101337031856
+  },
   "images/models/weaphits/bullet_0001.png": {
    "decal": 130430553679269,
    "image": 87925511548320
+  },
+  "images/models/weaphits/bullet_0001~1_1.png": {
+   "decal": 108893957785260,
+   "image": 88020229816047
   },
   "images/models/weaphits/bullet_0002.png": {
    "decal": 104279274902576,
    "image": 93784411648682
   },
+  "images/models/weaphits/bullet_0002~1_1.png": {
+   "decal": 92885954341699,
+   "image": 107608390266792
+  },
   "images/models/weaphits/bullet_0003.png": {
    "decal": 130445444710427,
    "image": 120553579013003
+  },
+  "images/models/weaphits/bullet_0003~1_1.png": {
+   "decal": 111609343705161,
+   "image": 116968512095004
   },
   "images/models/weaphits/bullet_0004.png": {
    "decal": 94469066426144,
    "image": 113950569410751
   },
+  "images/models/weaphits/bullet_0004~1_1.png": {
+   "decal": 113475498647826,
+   "image": 81281200812364
+  },
   "images/models/weaphits/bullet_0005.png": {
    "decal": 105943592912551,
    "image": 83960148754627
+  },
+  "images/models/weaphits/bullet_0005~1_1.png": {
+   "decal": 128112322840254,
+   "image": 116596741278011
   },
   "images/models/weaphits/bullet_0006.png": {
    "decal": 127386877517974,
    "image": 127004632925702
   },
+  "images/models/weaphits/bullet_0006~1_1.png": {
+   "decal": 99625124809059,
+   "image": 71448237244456
+  },
   "images/models/weaphits/bullet_0007.png": {
    "decal": 119141255643595,
    "image": 116014769786843
+  },
+  "images/models/weaphits/bullet_0007~1_1.png": {
+   "decal": 103591186117434,
+   "image": 77052965827006
   },
   "images/models/weaphits/bulletscroll.png": {
    "decal": 131757772202392,
@@ -2880,9 +3020,21 @@
    "decal": 77072084438850,
    "image": 77090902538832
   },
+  "images/models/weaphits/bulletscroll2~1_sa.png": {
+   "decal": 90923482216774,
+   "image": 136022735569977
+  },
+  "images/models/weaphits/bulletscroll~1_1.png": {
+   "decal": 83080953328937,
+   "image": 86945428063567
+  },
   "images/models/weaphits/elecscroll.png": {
    "decal": 105494281716772,
    "image": 77706687878394
+  },
+  "images/models/weaphits/elecscroll~1_1.png": {
+   "decal": 70700650124416,
+   "image": 113638224419968
   },
   "images/models/weaphits/electric.png": {
    "decal": 114884685652247,
@@ -2912,6 +3064,10 @@
    "decal": 93964348580740,
    "image": 77680776243362
   },
+  "images/models/weaphits/plasring~1_1.png": {
+   "decal": 97656934203452,
+   "image": 80832414909029
+  },
   "images/models/weaphits/plasscroll.png": {
    "decal": 76398791236851,
    "image": 136581416753345
@@ -2920,6 +3076,10 @@
    "decal": 73541448602887,
    "image": 136522997162981
   },
+  "images/models/weaphits/plasscroll2~1_1.png": {
+   "decal": 122035218628282,
+   "image": 130923787541909
+  },
   "images/models/weaphits/proxbomb.png": {
    "decal": 73570526720202,
    "image": 139497216690939
@@ -2927,6 +3087,14 @@
   "images/models/weaphits/proxbomb_b.png": {
    "decal": 116953094495553,
    "image": 137296983398088
+  },
+  "images/models/weaphits/proxbomb_b~dc_sc.png": {
+   "decal": 88540449200121,
+   "image": 121199158667809
+  },
+  "images/models/weaphits/proxbomb~dc_sc.png": {
+   "decal": 119052695024642,
+   "image": 71891381946257
   },
   "images/models/weaphits/railscroll.png": {
    "decal": 99482847898226,
@@ -2956,33 +3124,65 @@
    "decal": 110488934643811,
    "image": 82452209827445
   },
+  "images/models/weaphits/rlboom/rlboom_1~1_sa.png": {
+   "decal": 140366704773073,
+   "image": 83098417126559
+  },
   "images/models/weaphits/rlboom/rlboom_2.png": {
    "decal": 138022084095992,
    "image": 132981356155524
+  },
+  "images/models/weaphits/rlboom/rlboom_2~1_sa.png": {
+   "decal": 93949205611480,
+   "image": 86563366559149
   },
   "images/models/weaphits/rlboom/rlboom_3.png": {
    "decal": 105782054941723,
    "image": 131854374920267
   },
+  "images/models/weaphits/rlboom/rlboom_3~1_sa.png": {
+   "decal": 80088811731779,
+   "image": 93095045051724
+  },
   "images/models/weaphits/rlboom/rlboom_4.png": {
    "decal": 118680251715705,
    "image": 92818808680471
+  },
+  "images/models/weaphits/rlboom/rlboom_4~1_sa.png": {
+   "decal": 72289020332614,
+   "image": 113965539009918
   },
   "images/models/weaphits/rlboom/rlboom_5.png": {
    "decal": 119963257101974,
    "image": 118913590166661
   },
+  "images/models/weaphits/rlboom/rlboom_5~1_sa.png": {
+   "decal": 132110243950415,
+   "image": 76698496237480
+  },
   "images/models/weaphits/rlboom/rlboom_6.png": {
    "decal": 74828920301538,
    "image": 94828297925210
+  },
+  "images/models/weaphits/rlboom/rlboom_6~1_sa.png": {
+   "decal": 94836494089548,
+   "image": 137090444308432
   },
   "images/models/weaphits/rlboom/rlboom_7.png": {
    "decal": 76406578706140,
    "image": 98951271792525
   },
+  "images/models/weaphits/rlboom/rlboom_7~1_sa.png": {
+   "decal": 138554477971567,
+   "image": 79943657909541
+  },
   "images/models/weaphits/rlboom/rlboom_8.png": {
    "decal": 100534411568497,
    "image": 122554454981780
+  },
+  "images/models/weaphits/rlboom/rlboom_8~1_sa.png": {
+   "decal": 98503131032174,
+   "image": 107603279504545
   },
   "images/models/weaphits/smokering.png": {
    "decal": 70730869279254,
@@ -3003,6 +3203,10 @@
   "images/models/weapons/nailgun/nailfire.png": {
    "decal": 100179082050900,
    "image": 89797450316059
+  },
+  "images/models/weapons/nailgun/nailfire~1_1.png": {
+   "decal": 121083517925150,
+   "image": 132229882925581
   },
   "images/models/weapons/nailgun/nailgun.png": {
    "decal": 104130349994736,
@@ -3028,6 +3232,10 @@
    "decal": 107214562367308,
    "image": 132044940482860
   },
+  "images/models/weapons/vulcan/muzzy~1_1.png": {
+   "decal": 117585944267043,
+   "image": 73967507219466
+  },
   "images/models/weapons/vulcan/skin.png": {
    "decal": 128389986177090,
    "image": 106333127008884
@@ -3052,9 +3260,17 @@
    "decal": 127762391713074,
    "image": 111072023324277
   },
+  "images/models/weapons2/bfg/f_bfg2~1_1.png": {
+   "decal": 109533514946352,
+   "image": 94965039143321
+  },
   "images/models/weapons2/bfg/f_bfg3.png": {
    "decal": 80961015675702,
    "image": 108668559641360
+  },
+  "images/models/weapons2/bfg/f_bfg3~1_1.png": {
+   "decal": 71598275347094,
+   "image": 70808370182192
   },
   "images/models/weapons2/gauntlet/gauntlet1.png": {
    "decal": 124427272547267,
@@ -3096,13 +3312,25 @@
    "decal": 75234241018512,
    "image": 89917687781895
   },
+  "images/models/weapons2/grenadel/f_grenadel~1_1.png": {
+   "decal": 92091668236195,
+   "image": 118392953050436
+  },
   "images/models/weapons2/grenadel/f_plasma.png": {
    "decal": 71251707938281,
    "image": 102242327827793
   },
+  "images/models/weapons2/grenadel/f_plasma~1_1.png": {
+   "decal": 128758747650800,
+   "image": 73378831724692
+  },
   "images/models/weapons2/grenadel/flare.png": {
    "decal": 80476078565496,
    "image": 93717069452021
+  },
+  "images/models/weapons2/grenadel/flare~1_1.png": {
+   "decal": 99374227604328,
+   "image": 124904305830901
   },
   "images/models/weapons2/grenadel/grenadel.png": {
    "decal": 108726436194074,
@@ -3112,6 +3340,10 @@
    "decal": 128496691309507,
    "image": 73197923083103
   },
+  "images/models/weapons2/grenadel/muzzlside~1_1.png": {
+   "decal": 101169695764947,
+   "image": 123901943607255
+  },
   "images/models/weapons2/grenadel/newgren.png": {
    "decal": 107181917663096,
    "image": 101958558804102
@@ -3120,17 +3352,33 @@
    "decal": 94722569634414,
    "image": 89305046475768
   },
+  "images/models/weapons2/lightning/f_lightning~1_1.png": {
+   "decal": 90246192935549,
+   "image": 89313109638000
+  },
   "images/models/weapons2/lightning/muzzle1.png": {
    "decal": 91026748821157,
    "image": 127040419912318
+  },
+  "images/models/weapons2/lightning/muzzle1~1_sa.png": {
+   "decal": 116680212198621,
+   "image": 109211734043618
   },
   "images/models/weapons2/lightning/muzzle2.png": {
    "decal": 109606532639242,
    "image": 90298765192322
   },
+  "images/models/weapons2/lightning/muzzle2~1_sa.png": {
+   "decal": 130874555631710,
+   "image": 79077761295606
+  },
   "images/models/weapons2/lightning/muzzle3.png": {
    "decal": 137515006408241,
    "image": 115500402307449
+  },
+  "images/models/weapons2/lightning/muzzle3~1_sa.png": {
+   "decal": 75698566743359,
+   "image": 97213143954320
   },
   "images/models/weapons2/lightning/skinlightning.png": {
    "decal": 137729208859064,
@@ -3144,13 +3392,29 @@
    "decal": 130087932143894,
    "image": 133945506463166
   },
+  "images/models/weapons2/machinegun/f_machinegun2~1_1.png": {
+   "decal": 99988254258330,
+   "image": 77402049132750
+  },
   "images/models/weapons2/machinegun/f_machinegun3.png": {
    "decal": 138634125676645,
    "image": 136652862655331
   },
+  "images/models/weapons2/machinegun/f_machinegun3~1_1.png": {
+   "decal": 98345601338817,
+   "image": 117778256710806
+  },
+  "images/models/weapons2/machinegun/f_machinegun~1_1.png": {
+   "decal": 122911794121080,
+   "image": 134637445310585
+  },
   "images/models/weapons2/machinegun/flare.png": {
    "decal": 103053486210000,
    "image": 72949734263995
+  },
+  "images/models/weapons2/machinegun/flare~1_1.png": {
+   "decal": 131273598226826,
+   "image": 90886935502197
   },
   "images/models/weapons2/machinegun/mgun.png": {
    "decal": 94791565108387,
@@ -3160,9 +3424,17 @@
    "decal": 127504230898291,
    "image": 120750588216339
   },
+  "images/models/weapons2/machinegun/muzzley~1_1.png": {
+   "decal": 95758314338145,
+   "image": 81373004594751
+  },
   "images/models/weapons2/machinegun/muzzlside.png": {
    "decal": 81982774486536,
    "image": 77148204194163
+  },
+  "images/models/weapons2/machinegun/muzzlside~1_1.png": {
+   "decal": 132361313167898,
+   "image": 118306062608993
   },
   "images/models/weapons2/machinegun/sight.png": {
    "decal": 104829514592321,
@@ -3180,9 +3452,17 @@
    "decal": 116836453569761,
    "image": 112626776487968
   },
+  "images/models/weapons2/plasma/f_plasma~1_1.png": {
+   "decal": 72784492036596,
+   "image": 132415963648713
+  },
   "images/models/weapons2/plasma/flare.png": {
    "decal": 80210990669200,
    "image": 81469798650592
+  },
+  "images/models/weapons2/plasma/flare~1_1.png": {
+   "decal": 118033316811177,
+   "image": 117767364797498
   },
   "images/models/weapons2/plasma/muzzlside.png": {
    "decal": 123944143143630,
@@ -3204,13 +3484,25 @@
    "decal": 93795869390458,
    "image": 109424761333663
   },
+  "images/models/weapons2/railgun/f_railgun2~1_1.png": {
+   "decal": 133619409876520,
+   "image": 97574816127342
+  },
   "images/models/weapons2/railgun/f_railgun3.png": {
    "decal": 84327587492590,
    "image": 135690858734679
   },
+  "images/models/weapons2/railgun/f_railgun3~1_1.png": {
+   "decal": 134154612707207,
+   "image": 81635664777293
+  },
   "images/models/weapons2/railgun/railcore.png": {
    "decal": 132256791853770,
    "image": 123910192696556
+  },
+  "images/models/weapons2/railgun/railcore~1_1.png": {
+   "decal": 130236710922731,
+   "image": 101926216041467
   },
   "images/models/weapons2/railgun/scrolly.png": {
    "decal": 101753613953273,
@@ -3232,6 +3524,10 @@
    "decal": 129386113544145,
    "image": 95248015183225
   },
+  "images/models/weapons2/rocketl/f_rocketl~1_1.png": {
+   "decal": 108806813104179,
+   "image": 132403913501921
+  },
   "images/models/weapons2/rocketl/flare.png": {
    "decal": 131863894150397,
    "image": 100774529797308
@@ -3243,6 +3539,10 @@
   "images/models/weapons2/rocketl/muzzy.png": {
    "decal": 85601798135630,
    "image": 76877617628818
+  },
+  "images/models/weapons2/rocketl/muzzy~1_1.png": {
+   "decal": 77365580854902,
+   "image": 117374442396330
   },
   "images/models/weapons2/rocketl/skin.png": {
    "decal": 86605638921512,
@@ -3268,6 +3568,10 @@
    "decal": 106639477804623,
    "image": 108483636184722
   },
+  "images/models/weapons2/shotgun/muzzley~1_1.png": {
+   "decal": 81512937859658,
+   "image": 105191855827876
+  },
   "images/models/weapons2/shotgun/shotgun.png": {
    "decal": 132281303307119,
    "image": 138746602462767
@@ -3280,9 +3584,21 @@
    "decal": 105804965124285,
    "image": 131206674802606
   },
+  "images/models/weapons2/shotgun/shotgun_flashside~1_1.png": {
+   "decal": 73901282835630,
+   "image": 110169370991722
+  },
+  "images/models/weapons2/shotgun/shotgun_flash~1_1.png": {
+   "decal": 123308100737132,
+   "image": 109823585504240
+  },
   "images/models/weapons2/shotgun/shotgun_laser.png": {
    "decal": 86696894459854,
    "image": 127286711679045
+  },
+  "images/models/weapons2/shotgun/shotgun_laser~1_1.png": {
+   "decal": 129612100775394,
+   "image": 132110067400504
   },
   "images/models/weapons2/shotgun/shotgun_spec.png": {
    "decal": 99182845997808,
@@ -3312,6 +3628,10 @@
    "decal": 94735213011207,
    "image": 136881291279142
   },
+  "images/sprites/le/blast~1_1.png": {
+   "decal": 131217087879429,
+   "image": 94375428882213
+  },
   "images/sprites/le/blood.png": {
    "decal": 95459374295882,
    "image": 102801611049646
@@ -3328,9 +3648,17 @@
    "decal": 138733011918598,
    "image": 89925597915999
   },
+  "images/sprites/le/glaw~1_1.png": {
+   "decal": 123127126940222,
+   "image": 105777310206996
+  },
   "images/sprites/le/ptrail.png": {
    "decal": 128867466071234,
    "image": 137477436511792
+  },
+  "images/sprites/le/ptrail~sa_1.png": {
+   "decal": 76308265723146,
+   "image": 73473168401398
   },
   "images/sprites/le/smoke1.png": {
    "decal": 93148548569268,
@@ -3360,45 +3688,89 @@
    "decal": 89668206837126,
    "image": 94419246179183
   },
+  "images/sprites/le/spark2~sa_1.png": {
+   "decal": 109737440550145,
+   "image": 72195874749075
+  },
   "images/sprites/le/splash.png": {
    "decal": 94019889205816,
    "image": 112155036459292
+  },
+  "images/sprites/le/splash~1_1.png": {
+   "decal": 111781581246595,
+   "image": 79076861427509
   },
   "images/sprites/multwake1.png": {
    "decal": 120541890048843,
    "image": 118602814324111
   },
+  "images/sprites/multwake1~dc_sc.png": {
+   "decal": 91233285642172,
+   "image": 134159023938186
+  },
   "images/sprites/multwake2.png": {
    "decal": 136540661445438,
    "image": 130844100083220
+  },
+  "images/sprites/multwake2~dc_sc.png": {
+   "decal": 113518198754454,
+   "image": 85297769497498
   },
   "images/sprites/multwake3.png": {
    "decal": 121441295301128,
    "image": 116611944624072
   },
+  "images/sprites/multwake3~dc_sc.png": {
+   "decal": 81927734640232,
+   "image": 139297044094254
+  },
   "images/sprites/multwake4.png": {
    "decal": 104372662545042,
    "image": 94586230544037
+  },
+  "images/sprites/multwake4~dc_sc.png": {
+   "decal": 97110181551339,
+   "image": 77853006771358
   },
   "images/sprites/multwake5.png": {
    "decal": 71080938305733,
    "image": 117478830049419
   },
+  "images/sprites/multwake5~dc_sc.png": {
+   "decal": 103856621231279,
+   "image": 74796520084451
+  },
   "images/sprites/multwake6.png": {
    "decal": 136751030848052,
    "image": 131949743407742
+  },
+  "images/sprites/multwake6~dc_sc.png": {
+   "decal": 87951901796839,
+   "image": 91050569025518
   },
   "images/sprites/multwake7.png": {
    "decal": 139489364047126,
    "image": 112819762960759
   },
+  "images/sprites/multwake7~dc_sc.png": {
+   "decal": 80816786810646,
+   "image": 111225942059406
+  },
   "images/sprites/multwake8.png": {
    "decal": 80853476162396,
    "image": 113114984365860
   },
+  "images/sprites/multwake8~dc_sc.png": {
+   "decal": 116307007873295,
+   "image": 120064201655220
+  },
   "images/sprites/plasmaa.png": {
    "decal": 97878430692172,
    "image": 75861448996272
+  },
+  "images/sprites/plasmaa~sa_1.png": {
+   "decal": 122332326712684,
+   "image": 89247199156087
   },
   "images/sprites/splash.png": {
    "decal": 112694276839029,
@@ -3408,29 +3780,61 @@
    "decal": 91062988123404,
    "image": 104240574659452
   },
+  "images/sprites/splash2~sa_1.png": {
+   "decal": 106309941892988,
+   "image": 101565753893824
+  },
   "images/sprites/splash3.png": {
    "decal": 118548303008249,
    "image": 77208309091450
+  },
+  "images/sprites/splash3~sa_1.png": {
+   "decal": 104261003693462,
+   "image": 90352992968688
   },
   "images/sprites/splash4.png": {
    "decal": 97343821398989,
    "image": 84349698270885
   },
+  "images/sprites/splash4~sa_1.png": {
+   "decal": 128961350943163,
+   "image": 74503404851844
+  },
   "images/sprites/splash5.png": {
    "decal": 74990600055109,
    "image": 138963045323547
+  },
+  "images/sprites/splash5~sa_1.png": {
+   "decal": 96884193843965,
+   "image": 132074889561690
   },
   "images/sprites/splash6.png": {
    "decal": 125940723862151,
    "image": 98660657826127
   },
+  "images/sprites/splash6~sa_1.png": {
+   "decal": 81852348888560,
+   "image": 87701145750224
+  },
+  "images/sprites/splash~1_1.png": {
+   "decal": 114647438233384,
+   "image": 72193316798941
+  },
   "images/team_icon/blueteam01.png": {
    "decal": 129887359034617,
    "image": 109596070558817
   },
+  "images/team_icon/blueteam01~dc_1.png": {
+   "decal": 95725041487255,
+   "image": 87013542995805
+  },
   "images/team_icon/redteam01.png": {
    "decal": 105543784773750,
    "image": 92246016833588
+  },
+  "images/team_icon/redteam01~dc_1.png": {
+   "decal": 134564395955296,
+   "image": 140314561249395
   },
   "images/textures/acc_dm3/brwnwater.png": {
    "decal": 116160016337588,
@@ -4472,6 +4876,10 @@
    "decal": 129411787108076,
    "image": 134819260553716
   },
+  "images/textures/effects/envmapdimb~1_1.png": {
+   "decal": 131291889788939,
+   "image": 106698711113511
+  },
   "images/textures/effects/envmapgold.png": {
    "decal": 72969942797747,
    "image": 102242564162072
@@ -4516,6 +4924,10 @@
    "decal": 89555667284713,
    "image": 102483614722061
   },
+  "images/textures/effects/jumpcirc~1_1.png": {
+   "decal": 130159803852343,
+   "image": 89542178768195
+  },
   "images/textures/effects/largehelth.png": {
    "decal": 86034569416040,
    "image": 79777361928451
@@ -4523,6 +4935,10 @@
   "images/textures/effects/largehelth_spec.png": {
    "decal": 97741404750676,
    "image": 85803534195851
+  },
+  "images/textures/effects/largehelth~sa_1.png": {
+   "decal": 122404840708340,
+   "image": 117424695059301
   },
   "images/textures/effects/mediumhelth.png": {
    "decal": 81023268671565,
@@ -4532,6 +4948,10 @@
    "decal": 123048958538858,
    "image": 124179342824208
   },
+  "images/textures/effects/mediumhelth~sa_1.png": {
+   "decal": 81481194558773,
+   "image": 118489718469597
+  },
   "images/textures/effects/megahelth.png": {
    "decal": 96062313084180,
    "image": 112533125035486
@@ -4539,6 +4959,10 @@
   "images/textures/effects/megahelth_spec.png": {
    "decal": 97034153611591,
    "image": 88233921587875
+  },
+  "images/textures/effects/megahelth~sa_1.png": {
+   "decal": 134275693874710,
+   "image": 78144344681614
   },
   "images/textures/effects/regenmap2.png": {
    "decal": 130406594284438,
@@ -4580,13 +5004,25 @@
    "decal": 96237254940418,
    "image": 90455286042190
   },
+  "images/textures/effects/smallhelth~sa_1.png": {
+   "decal": 107434647051517,
+   "image": 74834146691492
+  },
   "images/textures/effects/tin_blue.png": {
    "decal": 101819882269265,
    "image": 127048645719581
   },
+  "images/textures/effects/tin_blue~1_1.png": {
+   "decal": 122618110725182,
+   "image": 106657264915041
+  },
   "images/textures/effects/tin_red.png": {
    "decal": 103681368583193,
    "image": 114568118928313
+  },
+  "images/textures/effects/tin_red~1_1.png": {
+   "decal": 73917285085452,
+   "image": 75334253303005
   },
   "images/textures/effects/tinfx.png": {
    "decal": 87195827495598,
@@ -4608,9 +5044,17 @@
    "decal": 83202993842645,
    "image": 120285147674448
   },
+  "images/textures/effects/tinfx2~1_1.png": {
+   "decal": 76120010037181,
+   "image": 135976191070711
+  },
   "images/textures/effects/tinfx3.png": {
    "decal": 136097312945466,
    "image": 130792697860202
+  },
+  "images/textures/effects/tinfx~1_1.png": {
+   "decal": 89685232773550,
+   "image": 72229343667464
   },
   "images/textures/evil8_base/e8crete03.png": {
    "decal": 102555811514821,
@@ -4688,29 +5132,57 @@
    "decal": 133209622840781,
    "image": 74846162156197
   },
+  "images/textures/flares/flarey~1_1.png": {
+   "decal": 86769615765791,
+   "image": 97672784280024
+  },
   "images/textures/flares/largeglow.png": {
    "decal": 124574481306638,
    "image": 117542422973519
+  },
+  "images/textures/flares/largeglow~1_1.png": {
+   "decal": 93924279512351,
+   "image": 92543418593510
   },
   "images/textures/flares/lava.png": {
    "decal": 126067790282780,
    "image": 81148376745865
   },
+  "images/textures/flares/lava~1_1.png": {
+   "decal": 133129239546225,
+   "image": 122851150638706
+  },
   "images/textures/flares/newflare.png": {
    "decal": 89309278270769,
    "image": 90047230126337
+  },
+  "images/textures/flares/newflare~1_1.png": {
+   "decal": 84037122579248,
+   "image": 132037730631996
   },
   "images/textures/flares/portalflare.png": {
    "decal": 73806062636315,
    "image": 110011882670462
   },
+  "images/textures/flares/portalflare~1_1.png": {
+   "decal": 72809149853709,
+   "image": 132098317645157
+  },
   "images/textures/flares/twilightflare.png": {
    "decal": 109107021324767,
    "image": 90143486552832
   },
+  "images/textures/flares/twilightflare~1_1.png": {
+   "decal": 138837929533288,
+   "image": 82106246644848
+  },
   "images/textures/flares/wide.png": {
    "decal": 122690549461918,
    "image": 90212018582136
+  },
+  "images/textures/flares/wide~1_1.png": {
+   "decal": 109667478053922,
+   "image": 100862534470701
   },
   "images/textures/gothic_block/blocks17_ow.png": {
    "decal": 82793336442999,
@@ -4832,6 +5304,10 @@
    "decal": 114251532512883,
    "image": 117830172597692
   },
+  "images/textures/liquids/lavafloor~1_1.png": {
+   "decal": 121448004484168,
+   "image": 136237271182384
+  },
   "images/textures/liquids/lavahell.png": {
    "decal": 74634616838024,
    "image": 94308136821708
@@ -4908,6 +5384,10 @@
    "decal": 77172586027089,
    "image": 71330281417828
   },
+  "images/textures/liquids/slime9~1_1.png": {
+   "decal": 120772186070073,
+   "image": 118551347442934
+  },
   "images/textures/liquids/vorwater.png": {
    "decal": 102845469824797,
    "image": 113579927086374
@@ -4964,6 +5444,10 @@
    "decal": 126503174939185,
    "image": 76968755789354
   },
+  "images/textures/oa/bfgfiar~1_1.png": {
+   "decal": 109811842565109,
+   "image": 125505588425103
+  },
   "images/textures/oa/fiar.png": {
    "decal": 112858539031920,
    "image": 139024824770036
@@ -4971,6 +5455,10 @@
   "images/textures/oa/fiar2.png": {
    "decal": 83086568458868,
    "image": 101267613054784
+  },
+  "images/textures/oa/fiar~1_1.png": {
+   "decal": 120298943237242,
+   "image": 124744637126336
   },
   "images/textures/oa/flamelet.png": {
    "decal": 107713477623175,
@@ -4980,37 +5468,73 @@
    "decal": 137448410655973,
    "image": 88396979241353
   },
+  "images/textures/oa/grenfiar~1_1.png": {
+   "decal": 76316695544371,
+   "image": 101069849983485
+  },
   "images/textures/oa/muzzle/muz1.png": {
    "decal": 103179115810006,
    "image": 123801929236598
+  },
+  "images/textures/oa/muzzle/muz1~1_1.png": {
+   "decal": 92842670726324,
+   "image": 94068858891125
   },
   "images/textures/oa/muzzle/muz2.png": {
    "decal": 118907109934489,
    "image": 135636243636452
   },
+  "images/textures/oa/muzzle/muz2~1_1.png": {
+   "decal": 96035802961111,
+   "image": 120388100084434
+  },
   "images/textures/oa/muzzle/muz3.png": {
    "decal": 105084608257217,
    "image": 123206675706635
+  },
+  "images/textures/oa/muzzle/muz3~1_1.png": {
+   "decal": 140606947935658,
+   "image": 76058485988916
   },
   "images/textures/oa/muzzle/muz4.png": {
    "decal": 106560234544928,
    "image": 73029435983829
   },
+  "images/textures/oa/muzzle/muz4~1_1.png": {
+   "decal": 135634074828435,
+   "image": 111106343094878
+  },
   "images/textures/oa/muzzle/muz5.png": {
    "decal": 89837657353767,
    "image": 83067697422639
+  },
+  "images/textures/oa/muzzle/muz5~1_1.png": {
+   "decal": 106347798443834,
+   "image": 92194142429374
   },
   "images/textures/oa/muzzle/muz6.png": {
    "decal": 107896969698518,
    "image": 108484217828842
   },
+  "images/textures/oa/muzzle/muz6~1_1.png": {
+   "decal": 86238070585371,
+   "image": 127289469648882
+  },
   "images/textures/oa/muzzle/muz7.png": {
    "decal": 124170839196498,
    "image": 75588529693774
   },
+  "images/textures/oa/muzzle/muz7~1_1.png": {
+   "decal": 100303364707524,
+   "image": 132498657997659
+  },
   "images/textures/oa/muzzle/muz8.png": {
    "decal": 102566764839456,
    "image": 75284039161430
+  },
+  "images/textures/oa/muzzle/muz8~1_1.png": {
+   "decal": 128358239985487,
+   "image": 76983540186553
   },
   "images/textures/oa/water.png": {
    "decal": 95525756918165,
@@ -5032,6 +5556,14 @@
    "decal": 131887149741382,
    "image": 90170592863801
   },
+  "images/textures/oafx/bfgfx3~1_1.png": {
+   "decal": 114761885974002,
+   "image": 132543032471640
+  },
+  "images/textures/oafx/bfgfx~1_1.png": {
+   "decal": 99311457747590,
+   "image": 113420961808678
+  },
   "images/textures/oafx/burnme.png": {
    "decal": 100667033629553,
    "image": 92933486683657
@@ -5039,6 +5571,10 @@
   "images/textures/oafx/flare.png": {
    "decal": 90406958441065,
    "image": 118391426278142
+  },
+  "images/textures/oafx/flare~1_1.png": {
+   "decal": 136320034460988,
+   "image": 129059524611991
   },
   "images/textures/oafx/greenchrm.png": {
    "decal": 112016399312475,
@@ -5048,6 +5584,10 @@
    "decal": 82085040534579,
    "image": 88821558085184
   },
+  "images/textures/oafx/greenflr1~1_1.png": {
+   "decal": 100147636604602,
+   "image": 83880008677596
+  },
   "images/textures/oafx/greenflr2.png": {
    "decal": 125271141802427,
    "image": 110966057947580
@@ -5056,29 +5596,57 @@
    "decal": 122222834512730,
    "image": 111808947289337
   },
+  "images/textures/oafx/inviso~dc_sc.png": {
+   "decal": 106681495022088,
+   "image": 130048233456497
+  },
   "images/textures/oafx/lbeam3.png": {
    "decal": 96315947156892,
    "image": 134209766435455
+  },
+  "images/textures/oafx/lbeam3~1_1.png": {
+   "decal": 131856871899834,
+   "image": 75965627440192
   },
   "images/textures/oafx/lbeam4.png": {
    "decal": 125694816552223,
    "image": 89949364658565
   },
+  "images/textures/oafx/lbeam4~1_1.png": {
+   "decal": 137321850758933,
+   "image": 128419438140371
+  },
   "images/textures/oafx/lbeam5.png": {
    "decal": 94218605447093,
    "image": 74954942268319
+  },
+  "images/textures/oafx/lbeam5~1_1.png": {
+   "decal": 98300193904576,
+   "image": 133747072630397
   },
   "images/textures/oafx/lbeam6.png": {
    "decal": 127089048776161,
    "image": 116349036150106
   },
+  "images/textures/oafx/lbeam6~1_1.png": {
+   "decal": 77007311624050,
+   "image": 85289314267423
+  },
   "images/textures/oafx/lbeam7.png": {
    "decal": 137273741334010,
    "image": 94103970301707
   },
+  "images/textures/oafx/lbeam7~1_1.png": {
+   "decal": 120751025285021,
+   "image": 117267976536642
+  },
   "images/textures/oafx/lbeam8.png": {
    "decal": 98687426726999,
    "image": 98849927058284
+  },
+  "images/textures/oafx/lbeam8~1_1.png": {
+   "decal": 82005252757817,
+   "image": 77240367783551
   },
   "images/textures/oafx/orangechrm.png": {
    "decal": 91926086558129,
@@ -5092,6 +5660,10 @@
    "decal": 110533848618128,
    "image": 133638376991480
   },
+  "images/textures/oafx/orangeflr1~1_1.png": {
+   "decal": 79460477248853,
+   "image": 93814483565511
+  },
   "images/textures/oafx/orangeflr2.png": {
    "decal": 132147212128448,
    "image": 107746072380583
@@ -5100,9 +5672,17 @@
    "decal": 71137326962342,
    "image": 76537776450175
   },
+  "images/textures/oafx/plastrail~1_sa.png": {
+   "decal": 112706330777479,
+   "image": 81688944761654
+  },
   "images/textures/oafx/quadmultshell.png": {
    "decal": 117189551123702,
    "image": 116329715181226
+  },
+  "images/textures/oafx/quadmultshell~sa_1.png": {
+   "decal": 89030582912257,
+   "image": 113472562158854
   },
   "images/textures/oafx/quadshell.png": {
    "decal": 117043724705151,
@@ -5112,9 +5692,17 @@
    "decal": 136481163277935,
    "image": 74258088315759
   },
+  "images/textures/oafx/regenshell~sa_1.png": {
+   "decal": 70935530360138,
+   "image": 129147158852167
+  },
   "images/textures/oafx/suitshell.png": {
    "decal": 111930067878760,
    "image": 127922254761657
+  },
+  "images/textures/oafx/suitshell~sa_1.png": {
+   "decal": 73388808594174,
+   "image": 133749391437556
   },
   "images/textures/oquartz/+0squarea.png": {
    "decal": 109537038697944,
@@ -5267,6 +5855,10 @@
   "images/textures/oquartz/ulrich24.png": {
    "decal": 76208925714761,
    "image": 117876806609429
+  },
+  "images/textures/oquartz/ulrich24~dc_0.png": {
+   "decal": 132460714330517,
+   "image": 125673142505157
   },
   "images/textures/oquartz/ulrich4.png": {
    "decal": 92854910138085,
@@ -5480,97 +6072,193 @@
    "decal": 113678470063190,
    "image": 71207397423030
   },
+  "images/textures/sfx/130boom/dpexplosion4_0000~1_1.png": {
+   "decal": 72510585262821,
+   "image": 109169378039857
+  },
   "images/textures/sfx/130boom/dpexplosion4_0001.png": {
    "decal": 70416556376536,
    "image": 87557950787098
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0001~1_1.png": {
+   "decal": 80134178988488,
+   "image": 138196832563151
   },
   "images/textures/sfx/130boom/dpexplosion4_0002.png": {
    "decal": 94948767720374,
    "image": 121984889919382
   },
+  "images/textures/sfx/130boom/dpexplosion4_0002~1_1.png": {
+   "decal": 112053624113356,
+   "image": 108846807910736
+  },
   "images/textures/sfx/130boom/dpexplosion4_0003.png": {
    "decal": 97146879500774,
    "image": 98776401102856
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0003~1_1.png": {
+   "decal": 74144305184487,
+   "image": 138157891505496
   },
   "images/textures/sfx/130boom/dpexplosion4_0004.png": {
    "decal": 98518067236348,
    "image": 98843700722797
   },
+  "images/textures/sfx/130boom/dpexplosion4_0004~1_1.png": {
+   "decal": 84988311706998,
+   "image": 114778144386302
+  },
   "images/textures/sfx/130boom/dpexplosion4_0005.png": {
    "decal": 104740461142019,
    "image": 81557559867945
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0005~1_1.png": {
+   "decal": 108928128457192,
+   "image": 122689903506046
   },
   "images/textures/sfx/130boom/dpexplosion4_0006.png": {
    "decal": 119301207704531,
    "image": 111567925985187
   },
+  "images/textures/sfx/130boom/dpexplosion4_0006~1_1.png": {
+   "decal": 81899098661379,
+   "image": 86855412603080
+  },
   "images/textures/sfx/130boom/dpexplosion4_0007.png": {
    "decal": 116348901061588,
    "image": 121299796224192
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0007~1_1.png": {
+   "decal": 137273789193596,
+   "image": 75556976532577
   },
   "images/textures/sfx/130boom/dpexplosion4_0008.png": {
    "decal": 74382879765788,
    "image": 111004157880254
   },
+  "images/textures/sfx/130boom/dpexplosion4_0008~1_1.png": {
+   "decal": 88360386875258,
+   "image": 102797398443866
+  },
   "images/textures/sfx/130boom/dpexplosion4_0009.png": {
    "decal": 95916708088487,
    "image": 106653029468945
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0009~1_1.png": {
+   "decal": 119972521691234,
+   "image": 107311008377912
   },
   "images/textures/sfx/130boom/dpexplosion4_0010.png": {
    "decal": 124699102302677,
    "image": 137213466715493
   },
+  "images/textures/sfx/130boom/dpexplosion4_0010~1_1.png": {
+   "decal": 81508015069472,
+   "image": 130878205322787
+  },
   "images/textures/sfx/130boom/dpexplosion4_0011.png": {
    "decal": 84803805459583,
    "image": 125961729399551
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0011~1_1.png": {
+   "decal": 87011928996144,
+   "image": 87191350312156
   },
   "images/textures/sfx/130boom/dpexplosion4_0012.png": {
    "decal": 105295195598176,
    "image": 120858965507632
   },
+  "images/textures/sfx/130boom/dpexplosion4_0012~1_1.png": {
+   "decal": 103043753421653,
+   "image": 70441471134057
+  },
   "images/textures/sfx/130boom/dpexplosion4_0013.png": {
    "decal": 137158292360725,
    "image": 109140655600082
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0013~1_1.png": {
+   "decal": 76678780900284,
+   "image": 71374418459690
   },
   "images/textures/sfx/130boom/dpexplosion4_0014.png": {
    "decal": 93208365889196,
    "image": 108385434620965
   },
+  "images/textures/sfx/130boom/dpexplosion4_0014~1_1.png": {
+   "decal": 139642793346620,
+   "image": 93814298436060
+  },
   "images/textures/sfx/130boom/dpexplosion4_0015.png": {
    "decal": 70867104403486,
    "image": 113839774754307
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0015~1_1.png": {
+   "decal": 71368694064493,
+   "image": 75207875800225
   },
   "images/textures/sfx/130boom/dpexplosion4_0016.png": {
    "decal": 128282818121069,
    "image": 93858401774427
   },
+  "images/textures/sfx/130boom/dpexplosion4_0016~1_1.png": {
+   "decal": 83342883054050,
+   "image": 91987294503230
+  },
   "images/textures/sfx/130boom/dpexplosion4_0017.png": {
    "decal": 118632446079453,
    "image": 138621407056056
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0017~1_1.png": {
+   "decal": 76390302665223,
+   "image": 115656533811604
   },
   "images/textures/sfx/130boom/dpexplosion4_0018.png": {
    "decal": 100913618124873,
    "image": 139181115487384
   },
+  "images/textures/sfx/130boom/dpexplosion4_0018~1_1.png": {
+   "decal": 110356604266237,
+   "image": 80790638035520
+  },
   "images/textures/sfx/130boom/dpexplosion4_0019.png": {
    "decal": 114018188568836,
    "image": 84621687095417
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0019~1_1.png": {
+   "decal": 102103010372006,
+   "image": 124586555833470
   },
   "images/textures/sfx/130boom/dpexplosion4_0020.png": {
    "decal": 135847440180896,
    "image": 105172280729893
   },
+  "images/textures/sfx/130boom/dpexplosion4_0020~1_1.png": {
+   "decal": 108251337709193,
+   "image": 106165905532264
+  },
   "images/textures/sfx/130boom/dpexplosion4_0021.png": {
    "decal": 96147478480442,
    "image": 99951912973309
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0021~1_1.png": {
+   "decal": 103496035339127,
+   "image": 86043925719568
   },
   "images/textures/sfx/130boom/dpexplosion4_0022.png": {
    "decal": 109232905732359,
    "image": 128923993079196
   },
+  "images/textures/sfx/130boom/dpexplosion4_0022~1_1.png": {
+   "decal": 115169414526964,
+   "image": 123115773176609
+  },
   "images/textures/sfx/130boom/dpexplosion4_0023.png": {
    "decal": 132733662821933,
    "image": 134512473035434
+  },
+  "images/textures/sfx/130boom/dpexplosion4_0023~1_1.png": {
+   "decal": 91486843942711,
+   "image": 129664575344586
   },
   "images/textures/sfx/b_flame1.png": {
    "decal": 126426986515308,
@@ -5667,6 +6355,10 @@
   "images/textures/sfx/detail.png": {
    "decal": 76033683863777,
    "image": 80945364713303
+  },
+  "images/textures/sfx/detail~dc_sc.png": {
+   "decal": 82603900109335,
+   "image": 115003663879716
   },
   "images/textures/sfx/electricslime.png": {
    "decal": 74993293909537,
@@ -5992,6 +6684,10 @@
    "decal": 87872274412438,
    "image": 80712781914131
   },
+  "images/textures/skies/moonspr~1_1.png": {
+   "decal": 76789403928921,
+   "image": 103464536051287
+  },
   "images/textures/skies/multsky1.png": {
    "decal": 91417148823982,
    "image": 124687218117587
@@ -6055,6 +6751,10 @@
   "images/textures/skies/sun.png": {
    "decal": 130975612377091,
    "image": 108659916807861
+  },
+  "images/textures/skies/sun~1_1.png": {
+   "decal": 123650798610417,
+   "image": 74493456263499
   },
   "images/textures/skies/topclouds.png": {
    "decal": 86674581824753,
@@ -6140,9 +6840,17 @@
    "decal": 97218171213317,
    "image": 70630166064089
   },
+  "images/ui/assets/ingame~dc_sc.png": {
+   "decal": 109203538191402,
+   "image": 98052494406383
+  },
   "images/ui/assets/loading.png": {
    "decal": 136447457116758,
    "image": 95670952802776
+  },
+  "images/ui/assets/loading~dc_sc.png": {
+   "decal": 78621142584681,
+   "image": 106130989536670
   },
   "images/ui/assets/medal_accuracy.png": {
    "decal": 70947651514476,
