@@ -270,6 +270,13 @@ end
 function trap.R_AvatarHeadShader(clientNum: number): number
 	return mod("Avatar").HeadShader(clientNum)
 end
+-- friend-bots: the friend the next bot added to team ("", "red", "blue")
+-- would wear, when the server knows (server/sv/avatars_roblox.luau)
+function trap.FriendBotNext(team: string): string?
+	local folder = game:GetService("ReplicatedStorage"):FindFirstChild("OAAvatars")
+	local name = folder and folder:GetAttribute("NextFriendBot" .. team)
+	return if type(name) == "string" then name else nil
+end
 function trap.R_AvatarAnimations()
 	return require(script.Parent.Parent.avatar.AvatarAnim).animations()
 end

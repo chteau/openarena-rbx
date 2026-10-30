@@ -483,6 +483,8 @@ function G.BotSetupDeathmatchAI()
 	G.trap_Cvar_Register(G.bot_grapple, "bot_grapple", "0", 0)
 	G.trap_Cvar_Register(G.bot_fastchat, "bot_fastchat", "0", 0)
 	G.trap_Cvar_Register(G.bot_nochat, "bot_nochat", "0", 0)
+	-- not in OA: 0 keeps friend-bots out of the taunt and insult chat
+	G.trap_Cvar_Register(G.bot_friendChat, "bot_friendChat", "0", 0)
 	G.trap_Cvar_Register(G.bot_testrchat, "bot_testrchat", "0", 0)
 	G.trap_Cvar_Register(G.bot_challenge, "bot_challenge", "0", 0)
 	G.trap_Cvar_Register(G.bot_predictobstacles, "bot_predictobstacles", "1", 0)

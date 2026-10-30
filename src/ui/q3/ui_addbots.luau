@@ -175,6 +175,14 @@ local function UI_AddBotsMenu_Draw()
 
 	-- standard menu drawing
 	U.Menu_Draw(addBotsMenuInfo.menu)
+
+	-- not in OA: the Roblox friend the bot will wear (friend-bots)
+	local m = addBotsMenuInfo
+	local team = string.lower(m.team.itemnames[m.team.curvalue])
+	local friend = trap.FriendBotNext(if team == "free" then "" else team)
+	if friend then
+		U.UI_DrawString(320, m.wearsY, "Wears: " .. friend .. " ^3[BOT]", bit32.bor(C.UI_CENTER, C.UI_SMALLFONT), U.color_white)
+	end
 end
 
 local skillNames = {
@@ -287,6 +295,8 @@ local function UI_AddBotsMenu_Init()
 		m.team.itemnames = teamNames1
 		m.team.generic.flags = C.QMF_GRAYED
 	end
+
+	m.wearsY = y + C.SMALLCHAR_HEIGHT
 
 	m.go.generic.type = C.MTYPE_BITMAP
 	m.go.generic.name = ART_FIGHT0

@@ -663,7 +663,7 @@ function G.BotCheckConsoleMessages(bs)
 		--if there's no match
 		if G.BotMatchMessage(bs, m.message) == 0 then
 			--if it is a chat message
-			if m.type == C.CMS_CHAT and G.bot_nochat.integer == 0 then
+			if m.type == C.CMS_CHAT and not G.BotNoChat(bs) then
 				--
 				if G.trap_BotFindMatch(m.message, match, C.MTCONTEXT_REPLYCHAT) == 0 then
 					G.trap_BotRemoveConsoleMessage(bs.cs, handle)

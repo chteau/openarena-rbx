@@ -569,8 +569,9 @@ are the same either way, since the motors get `AvatarAnim.sample`'s mix.
 - Client: `cg_robloxAvatars 0/1` (archived, default 1), the player setup
   menu's "Show players as: Roblox avatars / OA models" line. With OA
   models, `cg_forceModel` behaves as in OA.
-- Bots never have an avatar; they wear their OA model from the kept roster
-  (`tools/oaconv/roster.json`). The player's own `model` still matters for
+- A bot wears its OA model from the kept roster (`tools/oaconv/roster.json`)
+  unless it is a friend-bot, which gets its friend's avatar through the same
+  path (`docs/bots-notes.md`, "Friend-bots"). The player's own `model` still matters for
   the OA-model view and for anyone with `cg_robloxAvatars 0`, and a
   dropped model is still refused by the server as before.
 

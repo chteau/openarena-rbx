@@ -314,6 +314,7 @@ function G.BotAIStartFrame(time)
 	G.trap_Cvar_Update(G.bot_grapple)
 	G.trap_Cvar_Update(G.bot_fastchat)
 	G.trap_Cvar_Update(G.bot_nochat)
+	G.trap_Cvar_Update(G.bot_friendChat)
 	G.trap_Cvar_Update(G.bot_testrchat)
 	G.trap_Cvar_Update(G.bot_thinktime)
 	G.trap_Cvar_Update(G.bot_memorydump)
@@ -616,6 +617,11 @@ function G.BotAIShutdown(restart)
 		--don't shutdown the bot library
 	else
 		G.trap_BotLibShutdown()
+		-- C unloads the game VM here and this file's statics go with it.
+		-- This module stays loaded: kept, the new map's clock (back near 0)
+		-- would hold botlib's frames, so AAS stays uninitialised while the
+		-- bots reconnect and every one of them is dropped
+		local_time, botlib_residual, lastbotthink_time = 0, 0, 0
 	end
 	return 1
 end

@@ -157,6 +157,87 @@ A port bug fixed on the way: botlib stored `aas_entityinfo_t.valid` as a
 boolean while the AI compares it with 0 (as C does), so every "is this
 entity valid / in the PVS" test passed. It is an int again.
 
+## Friend-bots
+
+Not in OA. A bot can wear the Roblox avatar and display name of a friend of
+a human player in the server. It stays an OA bot in every other way: the
+botfiles character (skill, aim, weapon preferences, chat file) is the one
+`addbot` named.
+
+| piece | where |
+|---|---|
+| who is here, friend lists, who wears whom | `src/server/sv/friendbots.luau` (no Roblox calls, tested under lune) |
+| fetching lists, building the avatar, menu preview | `src/server/sv/avatars_roblox.luau` |
+| `trap_FriendBot`, `trap_FriendBotRelease`, `trap_FriendBotValid`, `SV.FriendBotNext` | `src/server/sv/sv_game.luau` |
+| name, tag, map change recheck | `G_AddBot`, `G_BotConnect` in `src/server/g_bot.luau` |
+| chat gate | `G.BotNoChat` in `src/server/bot/ai_chat_1.luau` |
+| release on drop, kick by OA name | `SV_DropClient`, `SV_GetPlayerByHandle` in `src/server/sv/sv_main.luau` |
+| add bot menu line | `src/ui/q3/ui_addbots.luau`, `trap.FriendBotNext` |
+| tests | `tests/bots/friendbots.luau` |
+
+Friends: when a player joins, the server reads their friend list once
+(`Players:GetFriendsAsync`, every page) and keeps it in memory until they
+leave. A private list or a failing service gives an empty list (a warning
+without the user id). Test players (negative ids) have none.
+
+Assignment: every bot `G_AddBot` adds (`addbot`, `bot_minplayers`, arena
+bots, the menu) asks for a friend unless it was given an explicit alt
+name. It gets the first friend who is neither in the server as a human nor
+worn by another bot, going through the humans in join order and each list
+in Roblox's order; in team games the humans on the bot's team come first.
+No friend left: the bot keeps its OA name and model. A dropped bot gives
+its friend back. At a map change (`G_BotConnect` with `restart`), a bot
+whose friend is no longer a friend of anyone here (their player left) or
+who joined as a human takes another friend, or goes back to its OA name.
+
+Name: the friend's display name when it is printable ASCII without `^ \ ;
+" %` (OA's font and info strings), else their username, with
+`^3[BOT]^7 ` in front: `[BOT] Alice` in yellow and white. It is the bot's
+userinfo `name`, so it is what every name surface shows: the scoreboard,
+obituaries and kill messages, the crosshair name, the team overlay, chat
+lines, "entered the game" and the other broadcasts, the server console and
+log (`ClientUserinfoChanged`, `Kill:`), and the add/remove bot menus. OA
+draws no name over a player's head and the avatar's Humanoid name display
+is off, so there is no overhead name to tag. The OA bot name stays in the
+userinfo as `oabot`: `kick sarge` and `kick "[BOT] Alice"` both work, and
+the remove bots menu kicks by client number.
+
+Look: the friend's `HumanoidDescription` becomes an R15 model in
+`OAAvatars` as `c<clientNum>`, exactly as for a player (`docs/client-notes.md`,
+"Roblox avatars"), so the client draws it, the headshot included. With
+`g_robloxAvatars 0` the bot is drawn with its OA model and keeps the
+friend's tagged name.
+
+Chat: `bot_friendChat` (default 0) keeps friend-bots out of OA's chat
+(`BotChat_*` and the reply chats): insults "from" a real person's friend
+read badly. 1 lets them chat like other bots, the tag on every line since
+it is part of the name. `bot_nochat` still applies to every bot.
+
+Settings: `g_friendBots` (archived, default 1); 0 adds bots exactly as OA
+does (no friend is asked for and the userinfo has no `oabot`). Turning it
+off doesn't rename bots already in, the next map change does. The add bot
+menu shows "Wears: <name> [BOT]" for the friend the next bot would take
+(the server publishes it on `ReplicatedStorage.OAAvatars` as
+`NextFriendBot`, `NextFriendBotred`, `NextFriendBotblue`, once a second).
+
+Privacy: only display names, usernames, user ids and avatars Roblox already
+shows; nothing is written to a DataStore or file, and no user id is printed.
+
+`tests/bots/friendbots.luau` checks the paging fetch and the private list
+against a stubbed `Players`, the assignment rules, and on a running oa_dm1
+server: tagged names in the configstrings, the server's client name, the
+log's `ClientUserinfoChanged` and `Kill:` lines, the "entered the game"
+broadcast and a chat line; the OA-name fallback; `bot_friendChat` 0/1 and
+`bot_nochat`; kick by either name releasing the friend; the map change
+reassignment; and `g_friendBots 0`.
+
+Found on the way: after a `map` command every bot failed to reconnect
+("BotAISetupClient failed", from `G_BotConnect`'s `trap_AAS_Initialized`
+test). C unloads the game VM at the shutdown, resetting ai_main's frame
+statics; the Luau module stays, so the new map's clock (back near zero)
+held botlib's frames and AAS wasn't initialised when the bots reconnected.
+`BotAIShutdown` now resets them when the library shuts down.
+
 ## What is deliberately not ported
 
 - **Reachability and cluster calculation** (`be_aas_reach.c` beyond its

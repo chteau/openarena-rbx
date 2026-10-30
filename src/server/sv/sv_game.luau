@@ -38,6 +38,7 @@ local Cvar = require("./cvar")
 local Cmd = require("./cmd")
 local Fs = require("./fs")
 local Collision = require("../../shared/Collision")
+local FriendBots = require("./friendbots")
 local QS = require("../../shared/q_shared")
 local Q = require("../../shared/q_math")
 local S = require("../../shared/structs")
@@ -201,6 +202,44 @@ end
 
 function G.trap_SetUserinfo(num: number, s: string)
 	SV.SV_SetUserinfo(num, s)
+end
+
+-- friend-bots (friendbots.luau): the human players on the bot's team, by
+-- UserId, so a team bot prefers its own side's friends
+local function sideOf(team: string?): { number }?
+	team = string.lower(team or "")
+	local want = if team == "red" then C.TEAM_RED elseif team == "blue" then C.TEAM_BLUE else nil
+	if want == nil or sv.gameClients == nil then
+		return nil
+	end
+	local ids = {}
+	for i = 0, sv_maxclients() - 1 do
+		local cl = svs.clients[i]
+		local id = tonumber(string.match(cl.address or "", "^rbx:(%d+)$"))
+		if id and cl.state >= SV.CS_CONNECTED and not cl.isBot and sv.gameClients[i].sess.sessionTeam == want then
+			table.insert(ids, id)
+		end
+	end
+	return ids
+end
+
+function G.trap_FriendBot(clientNum: number, team: string?): string?
+	local f = FriendBots.Pick(clientNum, sideOf(team))
+	return f and f.name
+end
+
+function G.trap_FriendBotRelease(clientNum: number)
+	FriendBots.Release(clientNum)
+end
+
+function G.trap_FriendBotValid(clientNum: number): boolean
+	return FriendBots.Valid(clientNum)
+end
+
+-- the friend the next bot added to `team` would wear (the add bot menu)
+function SV.FriendBotNext(team: string?): string?
+	local f = FriendBots.Peek(sideOf(team))
+	return f and f.name
 end
 
 function G.trap_GetServerinfo(): string

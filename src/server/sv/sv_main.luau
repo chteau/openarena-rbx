@@ -44,6 +44,7 @@ local Cmd = require("./cmd")
 local Fs = require("./fs")
 local G = require("../g_local")
 require("./sv_game")
+local FriendBots = require("./friendbots")
 local MSG = require("../../shared/net/msg")
 local Collision = require("../../shared/Collision")
 local QS = require("../../shared/q_shared")
@@ -398,6 +399,7 @@ function SV.SV_DropClient(drop, reason: string)
 
 	if isBot then
 		G.trap_BotFreeClient(drop.index)
+		FriendBots.Release(drop.index)
 		-- bots shouldn't go zombie, as there's no real net connection.
 		drop.state = SV.CS_FREE
 	else
@@ -1759,6 +1761,10 @@ local function SV_GetPlayerByHandle()
 			return cl
 		end
 		if QS.Q_stricmp(QS.Q_CleanStr(cl.name), s) == 0 then
+			return cl
+		end
+		-- a friend-bot also answers to its OA bot name
+		if cl.isBot and QS.Q_stricmp(QS.Info_ValueForKey(cl.userinfo, "oabot"), s) == 0 then
 			return cl
 		end
 	end

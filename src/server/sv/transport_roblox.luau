@@ -134,7 +134,7 @@ function Transport.Start(Game: Game)
 			end
 			clientOf[player] = n
 			playerOf[n] = player
-			Avatars.Set(n, player)
+			Avatars.Set(n, player.UserId)
 			reliable:FireClient(player, "connected", n)
 		end
 	end)

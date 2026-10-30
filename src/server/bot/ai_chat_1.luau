@@ -254,8 +254,17 @@ function G.BotValidChatPosition(bs)
 	return 1
 end
 
+-- bot_nochat, and (not in OA) a friend-bot with bot_friendChat 0: insults
+-- "from" a real person's friend read badly, so they stay quiet
+function G.BotNoChat(bs)
+	if G.bot_nochat.integer ~= 0 then
+		return true
+	end
+	return G.bot_friendChat.integer == 0 and QS.Info_ValueForKey(G.trap_GetUserinfo(bs.client), "oabot") ~= ""
+end
+
 function G.BotChat_EnterGame(bs)
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - SF.TIME_BETWEENCHATTING then return 0 end
 	--don't chat in teamplay
 	if G.TeamPlayIsOn() ~= 0 then return 0 end
@@ -279,7 +288,7 @@ function G.BotChat_EnterGame(bs)
 end
 
 function G.BotChat_ExitGame(bs)
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - SF.TIME_BETWEENCHATTING then return 0 end
 	--don't chat in teamplay
 	if G.TeamPlayIsOn() ~= 0 then return 0 end
@@ -302,7 +311,7 @@ function G.BotChat_ExitGame(bs)
 end
 
 function G.BotChat_StartLevel(bs)
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if G.BotIsObserver(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - SF.TIME_BETWEENCHATTING then return 0 end
 	--don't chat in teamplay
@@ -325,7 +334,7 @@ function G.BotChat_StartLevel(bs)
 end
 
 function G.BotChat_EndLevel(bs)
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if G.BotIsObserver(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - SF.TIME_BETWEENCHATTING then return 0 end
 	-- teamplay
@@ -372,7 +381,7 @@ end
 function G.BotChat_Death(bs)
 	local name
 
-	if G.bot_nochat.integer ~= 0 then return 0 end
+	if G.BotNoChat(bs) then return 0 end
 	if bs.lastchat_time > G.floattime - SF.TIME_BETWEENCHATTING then return 0 end
 	local rnd = G.trap_Characteristic_BFloat(bs.character, C.CHARACTERISTIC_CHAT_DEATH, 0, 1)
 	-- don't chat in tournament mode

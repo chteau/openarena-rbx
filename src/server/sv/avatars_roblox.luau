@@ -16,17 +16,25 @@ any later version. See COPYING.
 -- parts come with the description), and put in ReplicatedStorage.OAAvatars
 -- as "c<clientNum>" with a UserId attribute. The models are never
 -- characters: nothing simulates them, the game's own pmove and bbox stay
--- authoritative. Bots have no avatar and keep their OA model.
+-- authoritative. A friend-bot (friendbots.luau) gets its friend's avatar
+-- the same way; other bots keep their OA model.
 --
 -- g_robloxAvatars (serverinfo, default 1): 0 removes them all.
+--
+-- Friend-bots: each human's friend list is fetched once when they join and
+-- dropped when they leave. The friend the next added bot would wear is
+-- published on the folder (attributes NextFriendBot, NextFriendBotred,
+-- NextFriendBotblue) for the add bot menu.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local FriendBots = require("./friendbots")
+
 local Avatars = {}
 
-local wanted: { [number]: Player } = {}
+local wanted: { [number]: number } = {} -- UserId by clientNum
 local built: { [number]: Model } = {} -- by UserId: the copy every map change clones again
 local enabled = false
 
@@ -48,30 +56,30 @@ local function remove(clientNum: number)
 	end
 end
 
-local function place(clientNum: number, player: Player, model: Model)
+local function place(clientNum: number, userId: number, model: Model)
 	local copy = model:Clone()
 	copy.Name = "c" .. clientNum
-	copy:SetAttribute("UserId", player.UserId)
+	copy:SetAttribute("UserId", userId)
 	copy:SetAttribute("ClientNum", clientNum)
 	remove(clientNum)
 	copy.Parent = folder()
 end
 
-local function build(clientNum: number, player: Player)
-	local model = built[player.UserId]
+local function build(clientNum: number, userId: number)
+	local model = built[userId]
 	if model then
-		place(clientNum, player, model)
+		place(clientNum, userId, model)
 		return
 	end
 	task.spawn(function()
 		local ok, res = pcall(function()
-			local desc = Players:GetHumanoidDescriptionFromUserId(player.UserId)
+			local desc = Players:GetHumanoidDescriptionFromUserId(userId)
 			return Players:CreateHumanoidModelFromDescription(desc, Enum.HumanoidRigType.R15)
 		end)
 		if not ok or res == nil then
 			-- a test player (negative id), or the avatar service failing: the
 			-- player keeps an OA model
-			warn("OpenArena: no Roblox avatar for " .. player.Name .. ": " .. tostring(res))
+			warn("OpenArena: no Roblox avatar for client " .. clientNum .. ": " .. tostring(res))
 			return
 		end
 		local m = res :: Model
@@ -80,23 +88,38 @@ local function build(clientNum: number, player: Player)
 				d:Destroy()
 			end
 		end
-		built[player.UserId] = m
-		if enabled and wanted[clientNum] == player then
-			place(clientNum, player, m)
+		built[userId] = m
+		if enabled and wanted[clientNum] == userId then
+			place(clientNum, userId, m)
 		end
 	end)
 end
 
-function Avatars.Set(clientNum: number, player: Player)
-	wanted[clientNum] = player
+function Avatars.Set(clientNum: number, userId: number)
+	wanted[clientNum] = userId
 	if enabled then
-		build(clientNum, player)
+		build(clientNum, userId)
 	end
 end
 
 function Avatars.Clear(clientNum: number)
+	local userId = wanted[clientNum]
 	wanted[clientNum] = nil
 	remove(clientNum)
+	-- a friend-bot's friend isn't in the server: forget their model
+	if userId and Players:GetPlayerByUserId(userId) == nil then
+		built[userId] = nil
+	end
+end
+
+local function joined(player: Player)
+	if player.UserId <= 0 then
+		return -- a test player has no friends to fetch
+	end
+	FriendBots.SetHuman(player.UserId, true)
+	task.spawn(function()
+		FriendBots.SetFriends(player.UserId, FriendBots.Fetch(Players, player.UserId))
+	end)
 end
 
 function Avatars.Start(Game: any)
@@ -116,16 +139,35 @@ function Avatars.Start(Game: any)
 			folder():ClearAllChildren()
 		end
 	end
+	local function preview()
+		local on = Game.Cvar.VariableIntegerValue("g_friendBots") ~= 0
+		for _, side in { "", "red", "blue" } do
+			folder():SetAttribute("NextFriendBot" .. side, if on then Game.SV.FriendBotNext(side) else nil)
+		end
+	end
+	FriendBots.onWear = function(clientNum: number, friend)
+		if friend then
+			Avatars.Set(clientNum, friend.id)
+		else
+			Avatars.Clear(clientNum)
+		end
+	end
 	update()
 	RunService.Heartbeat:Connect(function(dt: number)
 		since += dt
 		if since >= 1 then
 			since = 0
 			update()
+			preview()
 		end
 	end)
+	Players.PlayerAdded:Connect(joined)
+	for _, player in Players:GetPlayers() do
+		joined(player)
+	end
 	Players.PlayerRemoving:Connect(function(player: Player)
 		built[player.UserId] = nil
+		FriendBots.SetHuman(player.UserId, false)
 	end)
 end
 

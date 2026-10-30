@@ -183,8 +183,9 @@ local function buildSurface(model, s, parent: Instance)
 	end
 	-- EditableMesh exists only in a running client (not in rbx-native's edit
 	-- runtime, not under lune), and only when the experience enables it in its
-	-- Security settings (creating one works there, using it errors): without
-	-- it the surface isn't drawn
+	-- Security settings (creating one works there, using it errors "not
+	-- accessible"): without it no surface is drawn. Any other error is this
+	-- surface's own ("Invalid mesh."), and only it is left out
 	if R3D.noEditableMesh then
 		return nil
 	end
@@ -217,8 +218,12 @@ local function buildSurface(model, s, parent: Instance)
 		surf.part, surf.em, surf.ids, surf.colorIds = mp, em, ids, colors
 	end)
 	if not ok then
-		R3D.noEditableMesh = true
-		warn("R3D: no EditableMesh here, MD3 surfaces won't draw: " .. tostring(err))
+		if string.find(tostring(err), "not accessible", 1, true) then
+			R3D.noEditableMesh = true
+			warn("R3D: no EditableMesh here, MD3 surfaces won't draw: " .. tostring(err))
+		else
+			warn(("R3D: %s#%s not drawn: %s"):format(model.name, s.name, tostring(err)))
+		end
 		return nil
 	end
 	surf.colorKey = ""
