@@ -328,7 +328,9 @@ function LAN.Start(teleportData: any)
 		local s = LAN.server()
 		Cvar.Set("cl_currentServerAddress", s.code, true)
 		if LAN.isHost() then
+			-- what q3_ui checks before offering a listen server's host menus
 			Cvar.Set("sv_running", "1", true)
+			Cvar.Set("bot_enable", "1", true)
 		end
 		if not s.live then
 			return

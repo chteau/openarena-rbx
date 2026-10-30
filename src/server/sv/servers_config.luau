@@ -43,8 +43,9 @@ return {
 		listPages = 2, -- GetRangeAsync pages of 200 per listing at most
 		backoffMax = 60, -- s, doubling from 2 after each failed call
 	},
-	-- Start Server / single player settings, read by the reserved server on
-	-- arrival (SortedMap key = PrivateServerId)
+	-- Start Server / single player settings and access code, key = the
+	-- reserved server's join code: read by the server on every start (which
+	-- renews them), and how `connect <code>` restarts an empty private server
 	reserved = { map = "OAReserved", expiry = 3600, arrivalWait = 30 },
 	-- Favorites: one DataStore key per user, written at most every
 	-- `minInterval` s and only while the write budget is above `minBudget`

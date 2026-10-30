@@ -146,7 +146,6 @@ LAN.fail = function(msg: string)
 		U.UI_SetActiveMenu(C.UIMENU_MAIN)
 	end
 end
-LAN.Register()
 
 -- console / chat ---------------------------------------------------------------------
 function Client.ToggleConsole()
@@ -538,6 +537,8 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number?, t
 	U.UI_Init()
 	Client.uiActive = true
 	U.UI_SetActiveMenu(C.UIMENU_MAIN)
+	-- after Cvar.onChange is set above: LAN chains its favorites hook to it
+	LAN.Register()
 	LAN.Start(opts.teleportData)
 end
 

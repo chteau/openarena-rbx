@@ -57,7 +57,9 @@ H.test("servers.code", function()
 	H.eq(#a, 6)
 	H.eq(S.code("6f1c0b2e-1111-2222-3333-444455556666"), a)
 	H.eq(S.parseCode(string.lower(a) .. ":27960"), a)
+	assert(string.find(a, "^[2-9]"))
 	H.eq(S.parseCode("O0I1ZZ"), nil)
+	H.eq(S.parseCode("ABC234"), nil) -- a code starts with a digit
 	H.eq(S.parseCode(42), nil)
 end)
 
@@ -67,7 +69,7 @@ H.test("servers.registry_heartbeat_expiry", function()
 	local r = Registry.new(map, "asc", function()
 		return clock.t
 	end, CFG)
-	H.eq(r:heartbeat({ code = "AAAAAA", public = true }), true)
+	H.eq(r:heartbeat({ code = "2AAAAA", public = true }), true)
 	H.eq(#r:list(), 1)
 	-- the listing is cached for listCache seconds
 	local calls = map.calls
@@ -75,15 +77,15 @@ H.test("servers.registry_heartbeat_expiry", function()
 	H.eq(map.calls, calls)
 	-- a heartbeat every 10 s keeps it; none for 30 s drops it
 	clock.t += 10
-	r:heartbeat({ code = "AAAAAA", public = true })
+	r:heartbeat({ code = "2AAAAA", public = true })
 	clock.t += 29
 	H.eq(#r:list(), 1)
 	clock.t += 6 -- past the expiry and the listing cache
 	H.eq(#r:list(), 0)
-	H.eq(r:lookup("AAAAAA"), nil)
+	H.eq(r:lookup("2AAAAA"), nil)
 	-- BindToClose removes at once
-	r:heartbeat({ code = "BBBBBB" })
-	r:remove("BBBBBB")
+	r:heartbeat({ code = "3BBBBB" })
+	r:remove("3BBBBB")
 	clock.t += 6
 	H.eq(#r:list(), 0)
 end)
@@ -106,28 +108,28 @@ H.test("servers.registry_backoff", function()
 	local r = Registry.new(map, "asc", function()
 		return clock.t
 	end, CFG)
-	r:heartbeat({ code = "AAAAAA" })
+	r:heartbeat({ code = "2AAAAA" })
 	r:list()
 	map.fail = true
 	clock.t += 6
-	H.eq(r:heartbeat({ code = "AAAAAA" }), false)
+	H.eq(r:heartbeat({ code = "2AAAAA" }), false)
 	H.eq(r.backoff, 2)
 	-- while backing off nothing reaches MemoryStore, the last listing stays
 	local calls = map.calls
-	H.eq(r:heartbeat({ code = "AAAAAA" }), false)
+	H.eq(r:heartbeat({ code = "2AAAAA" }), false)
 	H.eq(#r:list(), 1)
 	H.eq(map.calls, calls)
 	clock.t += 2
-	r:heartbeat({ code = "AAAAAA" })
+	r:heartbeat({ code = "2AAAAA" })
 	H.eq(r.backoff, 4)
 	for _ = 1, 10 do
 		clock.t += r.backoff
-		r:heartbeat({ code = "AAAAAA" })
+		r:heartbeat({ code = "2AAAAA" })
 	end
 	H.eq(r.backoff, 60)
 	map.fail = false
 	clock.t += 60
-	H.eq(r:heartbeat({ code = "AAAAAA" }), true)
+	H.eq(r:heartbeat({ code = "2AAAAA" }), true)
 	H.eq(r.backoff, 0)
 end)
 
@@ -141,11 +143,12 @@ end
 
 H.test("servers.filter", function()
 	local all = {
-		entry("FFA001", 0, 3, 12),
-		entry("CTF001", 4, 2, 12),
-		entry("EMPTY1", 0, 0, 12),
-		entry("FULL01", 0, 12, 12),
-		entry("PRIV01", 0, 2, 12, { public = false }),
+		entry("2FA001", 0, 3, 12),
+		entry("2CTF01", 4, 2, 12),
+		entry("2EMPTY", 0, 0, 12),
+		entry("2FULL1", 0, 12, 12),
+		entry("2PRIV1", 0, 2, 12, { public = false }),
+		entry("2HERE1", 0, 2, 12, { public = false, here = true }),
 	}
 	local function codes(list)
 		local out = {}
@@ -155,11 +158,11 @@ H.test("servers.filter", function()
 		table.sort(out)
 		return table.concat(out, ",")
 	end
-	H.eq(codes(S.filter(all, {})), "CTF001,FFA001")
-	H.eq(codes(S.filter(all, { "ffa" })), "FFA001")
-	H.eq(codes(S.filter(all, { "ffa", "empty", "full" })), "EMPTY1,FFA001,FULL01")
-	H.eq(codes(S.filter(all, { "ctf", "full" })), "CTF001")
-	local info = S.infoString(entry("FFA001", 3, 5, 12, { bots = 2 }))
+	H.eq(codes(S.filter(all, {})), "2CTF01,2FA001,2HERE1")
+	H.eq(codes(S.filter(all, { "ffa" })), "2FA001,2HERE1")
+	H.eq(codes(S.filter(all, { "ffa", "empty", "full" })), "2EMPTY,2FA001,2FULL1,2HERE1")
+	H.eq(codes(S.filter(all, { "ctf", "full" })), "2CTF01")
+	local info = S.infoString(entry("2FA001", 3, 5, 12, { bots = 2 }))
 	H.eq(string.match(info, "\\g_humanplayers\\(%d+)"), "3")
 	H.eq(string.match(info, "\\nettype\\(%d+)"), "3")
 end)
@@ -198,7 +201,7 @@ H.test("servers.validate_spec", function()
 		hostname = 'my "server";\nsay hi\\x',
 		public = true,
 		cvars = { fraglimit = 5000, timelimit = 15.7, rconpassword = 1, sv_maxclients = "8" },
-		bots = { { name = "sarge", skill = 9, team = "red" }, { name = "-none" }, { name = "x; quit" }, { name = "tony", team = "green" } },
+		bots = { { name = "sarge", skill = 9, team = "Red" }, { name = "-none" }, { name = "x; quit" }, { name = "tony", team = "green" } },
 	}, maps)
 	assert(spec)
 	H.eq(spec.map, "oa_dm1")
@@ -209,6 +212,7 @@ H.test("servers.validate_spec", function()
 	H.eq(spec.cvars.sv_maxclients, nil)
 	H.eq(#spec.bots, 2)
 	H.eq(spec.bots[1].skill, 5)
+	H.eq(spec.bots[1].team, "red")
 	H.eq(spec.bots[2].team, nil)
 	H.eq(S.validateSpec({ kind = "host", map = "oa_dm9", gametype = 0 }, maps), nil)
 	H.eq(S.validateSpec({ kind = "rcon", map = "oa_dm1" }, maps), nil)
@@ -251,6 +255,9 @@ local function fakeGame()
 		Command = function(text)
 			table.insert(commands, text)
 		end,
+		Cmd = { Cbuf_AddText = function(text)
+			table.insert(commands, (string.gsub(text, "\n$", "")))
+		end },
 		Cvar = {
 			Get = function(name, value)
 				cvars[name] = cvars[name] or value
@@ -342,7 +349,7 @@ H.test("servers.boot", function()
 	local stores
 	env, _, stores = stubEnv({ privateServerId = "psid-1" })
 	local spec = S.validateSpec({ kind = "host", map = "oa_ctf2", gametype = 4, hostname = "Chee", public = false, cvars = { capturelimit = 5 } }, maps)
-	env.MemoryStoreService:GetSortedMap("OAReserved"):SetAsync("psid-1", { spec = spec, host = 77, access = "ACCESS-1" }, 3600)
+	env.MemoryStoreService:GetSortedMap("OAReserved"):SetAsync(S.code("psid-1"), { spec = spec, host = 77, access = "ACCESS-1" }, 3600)
 	g = fakeGame()
 	s = Servers.new(env, g, maps)
 	text = s:Boot({ maps = { "oa_dm1" }, startup = "map oa_dm1" })
@@ -378,39 +385,42 @@ H.test("servers.join_and_host", function()
 	H.eq(e.bots, 1)
 	H.eq(e.public, true)
 	-- another public server and a private hosted one in the registry
-	stores.OAServers:SetAsync("PUB222", entry("PUB222", 0, 1, 12, { job = "job-b", place = 1234 }), 30)
-	stores.OAServers:SetAsync("PRV333", entry("PRV333", 4, 1, 12, { reserved = true, public = false, access = "ACCESS-9", place = 1234 }), 30)
+	stores.OAServers:SetAsync("2PUB22", entry("2PUB22", 0, 1, 12, { job = "job-b", place = 1234 }), 30)
+	stores.OAServers:SetAsync("2PRV33", entry("2PRV33", 4, 1, 12, { reserved = true, public = false, access = "ACCESS-9", place = 1234 }), 30)
 	local p = { UserId = 5 }
 	local res = s:handle(p, "list")
 	H.eq(#res.entries, 1)
-	H.eq(res.entries[1].code, "PUB222")
+	H.eq(res.entries[1].code, "2PUB22")
 	H.eq(res.entries[1].access, nil)
 	H.eq(res.self.here, true)
 	-- join a public server by its instance, a private one by its access code
-	H.eq(s:handle(p, "join", "pub222", { oa = 1, kind = "join", cvars = { name = "Chee", ["x y"] = "1" } }).ok, true)
+	H.eq(s:handle(p, "join", "2pub22", { oa = 1, kind = "join", cvars = { name = "Chee", ["x y"] = "1" } }).ok, true)
 	H.eq(teleports[1].options.ServerInstanceId, "job-b")
 	H.eq(teleports[1].options.data.cvars.name, "Chee")
 	H.eq(teleports[1].options.data.cvars["x y"], nil)
-	H.eq(s:handle(p, "join", "PRV333").ok, true)
+	H.eq(s:handle(p, "join", "2PRV33").ok, true)
 	H.eq(teleports[2].options.ReservedServerAccessCode, "ACCESS-9")
 	H.eq(s:handle(p, "join", s.code).err, "here")
-	H.eq(s:handle(p, "join", "ZZZZZZ").ok, false)
+	H.eq(s:handle(p, "join", "9ZZZZZ").ok, false)
 	-- Start Server: reserve, leave the settings for the new server, teleport
 	res = s:handle(p, "host", { kind = "host", map = "oa_ctf2", gametype = 4, hostname = "badword arena", public = true, team = "blue" }, { oa = 1, kind = "host", team = "blue" })
 	H.eq(res.ok, true)
 	H.eq(res.code, S.code("psid-1"))
-	local rec = stores.OAReserved:GetAsync("psid-1")
+	local rec = stores.OAReserved:GetAsync(res.code)
 	H.eq(rec.host, 5)
 	H.eq(rec.spec.hostname, "####### arena")
 	H.eq(teleports[3].options.ReservedServerAccessCode, "ACCESS-1")
 	H.eq(teleports[3].options.data.team, "blue")
+	-- its code restarts it once nobody is on it (no registry entry)
+	H.eq(s:handle(p, "join", res.code).ok, true)
+	H.eq(teleports[4].options.ReservedServerAccessCode, "ACCESS-1")
 	H.eq(s:handle(p, "host", { kind = "sp", map = "oa_dm1" }).ok, false)
 end)
 
 H.test("servers.rcon_and_apply", function()
 	local env, _, stores = stubEnv({ privateServerId = "psid-1" })
 	local spec = S.validateSpec({ kind = "host", map = "oa_dm1", gametype = 0 }, maps)
-	env.MemoryStoreService:GetSortedMap("OAReserved"):SetAsync("psid-1", { spec = spec, host = 77 }, 3600)
+	env.MemoryStoreService:GetSortedMap("OAReserved"):SetAsync(S.code("psid-1"), { spec = spec, host = 77 }, 3600)
 	local g = fakeGame()
 	local s = Servers.new(env, g, maps)
 	s:Boot({ maps = { "oa_dm1" } })
@@ -429,7 +439,7 @@ H.test("servers.rcon_and_apply", function()
 	H.eq(s:entry().hostname, "#######")
 	-- Start Server from the host: this server restarts with it
 	H.eq(s:handle(host, "apply", { kind = "host", map = "oa_ctf2", gametype = 4, public = true }).ok, true)
-	H.eq(g.commands[#g.commands], "set g_gametype 4\nmap oa_ctf2")
+	H.eq(g.commands[#g.commands], "set g_gametype 4\nset bot_enable 1\nmap oa_ctf2")
 	H.eq(s.public, true)
 	H.eq(s:handle(guest, "apply", { kind = "host", map = "oa_ctf2", gametype = 4 }).ok, false)
 end)
@@ -449,20 +459,20 @@ H.test("servers.favorites_budget", function()
 	s:Boot({ maps = { "oa_dm1" } })
 	local p = { UserId = 9 }
 	-- no budget: kept pending, not written
-	H.eq(s:handle(p, "favsave", { "ABC234", "nope", "abc235" }).saved, false)
+	H.eq(s:handle(p, "favsave", { "2BC234", "nope", "2bc235" }).saved, false)
 	H.eq(saved.u9, nil)
 	env.budget = function()
 		return 50
 	end
 	clock.t += 31
 	H.eq(s:flushFavorites(9), true)
-	H.eq(table.concat(saved.u9, ","), "ABC234,ABC235")
+	H.eq(table.concat(saved.u9, ","), "2BC234,2BC235")
 	-- at most one write per interval
-	s:handle(p, "favsave", { "ABC236" })
+	s:handle(p, "favsave", { "2BC236" })
 	H.eq(#saved.u9, 2)
 	H.eq(s:flushFavorites(9, true), true)
-	H.eq(saved.u9[1], "ABC236")
-	H.eq(s:handle(p, "favorites").codes[1], "ABC236")
+	H.eq(saved.u9[1], "2BC236")
+	H.eq(s:handle(p, "favorites").codes[1], "2BC236")
 end)
 
 H.test("servers.lan_client", function()
@@ -488,7 +498,7 @@ H.test("servers.lan_client", function()
 		end
 	end
 	LAN.server = function()
-		return { live = true, kind = "public", code = "HERE22", host = 0 }
+		return { live = true, kind = "public", code = "2HERE2", host = 0 }
 	end
 	LAN.userId = function()
 		return 5
@@ -499,7 +509,7 @@ H.test("servers.lan_client", function()
 	LAN.invoke = function(op, arg, arrival)
 		table.insert(calls, { op = op, arg = arg, arrival = arrival })
 		if op == "list" then
-			return { ok = true, self = entry("HERE22", 0, 2, 12, { here = true }), entries = { entry("PUB222", 4, 1, 12), entry("EMPTY2", 0, 0, 12) } }
+			return { ok = true, self = entry("2HERE2", 0, 2, 12, { here = true }), entries = { entry("2PUB22", 4, 1, 12), entry("2EMPTY", 0, 0, 12) } }
 		elseif op == "lookup" then
 			return { ok = true, entry = entry(arg, 0, 1, 12) }
 		end
@@ -509,11 +519,11 @@ H.test("servers.lan_client", function()
 	H.eq(LAN.GetServerCount(1), -1)
 	run()
 	H.eq(LAN.GetServerCount(1), 2)
-	H.eq(LAN.GetServerAddressString(1, 0), "HERE22")
+	H.eq(LAN.GetServerAddressString(1, 0), "2HERE2")
 	-- this server answers with the measured ping, the rest with -1 (unknown)
-	Cmd.ExecuteText(C.EXEC_NOW, "ping HERE22")
-	Cmd.ExecuteText(C.EXEC_NOW, "ping PUB222")
-	Cmd.ExecuteText(C.EXEC_NOW, "ping FAV333")
+	Cmd.ExecuteText(C.EXEC_NOW, "ping 2HERE2")
+	Cmd.ExecuteText(C.EXEC_NOW, "ping 2PUB22")
+	Cmd.ExecuteText(C.EXEC_NOW, "ping 2FAV33")
 	H.eq(LAN.GetPingQueueCount(), 3)
 	H.eq(select(2, LAN.GetPing(0)), 48)
 	H.eq(select(2, LAN.GetPing(1)), -1)
@@ -549,7 +559,7 @@ H.test("servers.lan_client", function()
 	H.eq(calls[1].arrival.team, "blue")
 	-- the same from the host of a hosted server: applied here
 	LAN.server = function()
-		return { live = true, kind = "host", code = "HERE22", host = 5 }
+		return { live = true, kind = "host", code = "2HERE2", host = 5 }
 	end
 	calls = {}
 	Cmd.ExecuteText(C.EXEC_NOW, "map oa_dm1")
@@ -573,7 +583,7 @@ H.test("servers.lan_client", function()
 	H.eq(Cvar.VariableString("sv_running"), "1")
 	-- Studio: no capture, the caller keeps the old vote path
 	LAN.server = function()
-		return { live = false, kind = "studio", code = "HERE22", host = 0 }
+		return { live = false, kind = "studio", code = "2HERE2", host = 0 }
 	end
 	H.eq(LAN.Map("map", "oa_dm1"), false)
 end)

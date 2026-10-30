@@ -35,14 +35,16 @@ local function fnv(s: string): number
 	return h
 end
 
--- the join code of a server: its JobId (public) or PrivateServerId (reserved)
+-- the join code of a server: its JobId (public) or PrivateServerId
+-- (reserved). It starts with a digit, as q3_ui's favorites and Specify
+-- expect of an address ("first character must be numeric").
 function S.code(id: string): string
 	local h = fnv(id)
 	local out = table.create(S.CODE_LEN)
 	for i = 1, S.CODE_LEN do
-		local d = h % 32
+		local d = h % (if i == 1 then 8 else 32)
 		out[i] = string.sub(ALPHABET, d + 1, d + 1)
-		h = h // 32
+		h = h // (if i == 1 then 8 else 32)
 	end
 	return table.concat(out)
 end
@@ -54,7 +56,7 @@ function S.parseCode(s: any): string?
 		return nil
 	end
 	local c = string.upper(string.match(s, "^%s*([^:%s]*)") or "")
-	if #c ~= S.CODE_LEN or string.find(c, "[^2-9A-HJ-NP-Z]") then
+	if #c ~= S.CODE_LEN or string.find(c, "[^2-9A-HJ-NP-Z]") or not string.find(c, "^[2-9]") then
 		return nil
 	end
 	return c
@@ -107,9 +109,11 @@ export type Spec = {
 	bots: { Bot },
 }
 
+-- q3_ui's start server menu writes "Red" / "Blue"
 local function team(v: any): string?
-	if v == "red" or v == "blue" then
-		return v
+	local t = if type(v) == "string" then string.lower(v) else nil
+	if t == "red" or t == "blue" then
+		return t
 	end
 	return nil
 end
@@ -182,9 +186,8 @@ function S.startupText(spec: Spec): string
 	if spec.hostname ~= "" then
 		table.insert(lines, ('set sv_hostname "%s"'):format(spec.hostname))
 	end
-	if #spec.bots > 0 then
-		table.insert(lines, "set bot_enable 1")
-	end
+	-- bots on, as OA's default: the host may add some later (ADD BOTS)
+	table.insert(lines, "set bot_enable 1")
 	table.insert(lines, "map " .. spec.map)
 	for _, b in spec.bots do
 		table.insert(lines, if b.team then ("addbot %s %d %s"):format(b.name, b.skill, b.team) else ("addbot %s %d"):format(b.name, b.skill))
@@ -233,7 +236,7 @@ export type Entry = {
 	maxclients: number,
 	reserved: boolean,
 	public: boolean,
-	ping: number?, -- the viewer's own server only, ms
+	here: boolean?, -- the viewer's own server
 }
 function S.publicEntry(e: any): Entry
 	return {
@@ -279,7 +282,8 @@ function S.filter(entries: { Entry }, words: { string }): { Entry }
 	end
 	local out = {}
 	for _, e in entries do
-		if e.public and (gametype == nil or e.gametype == gametype) and (empty or e.clients > 0) and (full or e.clients < e.maxclients) then
+		-- the server you're on is always there, listed or not
+		if (e.public or e.here) and (gametype == nil or e.gametype == gametype) and (empty or e.clients > 0) and (full or e.clients < e.maxclients) then
 			table.insert(out, e)
 		end
 	end

@@ -93,14 +93,17 @@ for _, m in maps:GetChildren() do
 end
 table.sort(names)
 
+local function mapExists(name: string): boolean
+	return maps:FindFirstChild(string.lower(name)) ~= nil
+end
+local servers = Servers.new(Servers.fromGame(), Game, mapExists)
+
 local files = require(ReplicatedStorage.OA.client.sys.Files).files
 local botfiles = ServerStorage:FindFirstChild("OABotfiles")
 
 Game.Init({
 	loadMap = loadMap,
-	mapExists = function(name: string)
-		return maps:FindFirstChild(string.lower(name)) ~= nil
-	end,
+	mapExists = mapExists,
 	maps = names,
 	files = files,
 	botfiles = if botfiles then join(botfiles.Botfiles) else nil,
@@ -108,10 +111,6 @@ Game.Init({
 		return math.floor(os.clock() * 1000)
 	end,
 })
-local function mapExists(name: string): boolean
-	return maps:FindFirstChild(string.lower(name)) ~= nil
-end
-local servers = Servers.new(Servers.fromGame(), Game, mapExists)
 local startup = script:GetAttribute("Startup")
 Game.Command(servers:Boot({ maps = names, startup = if type(startup) == "string" then startup else nil }))
 Transport.Start(Game)

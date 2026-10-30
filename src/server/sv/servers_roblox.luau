@@ -67,12 +67,13 @@ function Servers.fromGame()
 			return Instance.new("TeleportOptions")
 		end
 		local TextService = game:GetService("TextService")
-		env.filter = function(text: string, userId: number): string
+		-- nil when it fails (the user must be in this server)
+		env.filter = function(text: string, userId: number): string?
 			local ok, out = pcall(function()
 				return TextService:FilterStringAsync(text, userId, Enum.TextFilterContext.PublicChat)
 					:GetNonChatStringForBroadcastAsync()
 			end)
-			return if ok then out else ""
+			return if ok then out else nil
 		end
 		env.bindToClose = function(fn)
 			game:BindToClose(fn)
@@ -87,7 +88,7 @@ function Servers.new(env: any, Game: any, mapExists: (string) -> boolean)
 		Game = Game,
 		mapExists = mapExists,
 		kind = "studio",
-		code = S.code(if env.jobId ~= "" then env.jobId else "studio"),
+		code = S.code(if env.privateServerId ~= "" then env.privateServerId elseif env.jobId ~= "" then env.jobId else "studio"),
 		public = false,
 		host = nil :: number?,
 		access = nil :: string?,
@@ -96,6 +97,9 @@ function Servers.new(env: any, Game: any, mapExists: (string) -> boolean)
 		favLast = {},
 		hostnameSource = nil :: string?,
 	}, Servers)
+	-- the join code, shown by the in-game SERVER INFO menu (registered
+	-- before Game.Init so it is among the 16 lines that menu shows)
+	Game.Cvar.Get("sv_code", self.code, bit32.bor(CVAR_SERVERINFO, CVAR_ROM))
 	if env.live then
 		self.registry = Registry.new(env.MemoryStoreService:GetSortedMap(Config.registry.map), env.ascending, env.now, Config.registry)
 		self.reservedMap = env.MemoryStoreService:GetSortedMap(Config.reserved.map)
@@ -146,12 +150,16 @@ end
 function Servers:arrival(): any?
 	local env = self.env
 	local ok, rec = pcall(function()
-		return self.reservedMap:GetAsync(env.privateServerId)
+		return self.reservedMap:GetAsync(self.code)
 	end)
 	if ok and type(rec) == "table" then
 		local spec = S.validateSpec(rec.spec, self.mapExists)
 		if spec then
-			return { spec = spec, host = tonumber(rec.host), access = if type(rec.access) == "string" then rec.access else nil }
+			-- every start keeps the code working for another `expiry`
+			pcall(function()
+				self.reservedMap:SetAsync(self.code, rec, Config.reserved.expiry)
+			end)
+			return { spec = spec, host = tonumber(rec.host), access = if type(rec.access) == "string" then rec.access else nil, trusted = true }
 		end
 	end
 	local deadline = env.now() + Config.reserved.arrivalWait
@@ -183,10 +191,12 @@ function Servers:Boot(opts: { maps: { string }, startup: string? }): string
 		self.kind = "studio"
 		text = startup or ("map " .. first)
 	elseif env.privateServerId ~= "" then
-		self.code = S.code(env.privateServerId)
 		local rec = self:arrival()
 		if rec then
 			self.kind, self.host, self.access, self.public = rec.spec.kind, rec.host, rec.access, rec.spec.public
+			if rec.trusted then
+				self.hostnameShown = rec.spec.hostname -- filtered when it was reserved
+			end
 			text = S.startupText(rec.spec)
 		else
 			self.kind = "private"
@@ -196,8 +206,6 @@ function Servers:Boot(opts: { maps: { string }, startup: string? }): string
 		self.kind, self.public = "public", true
 		text = startup or Servers.rotationText(Config.public, self.mapExists, first)
 	end
-	-- the join code, shown by the in-game SERVER INFO menu
-	self.Game.Cvar.Get("sv_code", self.code, bit32.bor(CVAR_SERVERINFO, CVAR_ROM))
 	return text
 end
 
@@ -241,6 +249,9 @@ function Servers:hostname(): string
 		return name
 	end
 	local shown = if self.env.filter then self.env.filter(name, self.host) else name
+	if shown == nil then
+		return "" -- not filtered yet (the host hasn't arrived): try again next time
+	end
 	self.hostnameShown = shown
 	if shown ~= name then
 		Cvar.Set("sv_hostname", shown)
@@ -340,7 +351,7 @@ function Servers:reserve(player: any, raw: any, arrival: any): (boolean, string?
 		return false, why
 	end
 	if spec.hostname ~= "" and env.filter then
-		spec.hostname = env.filter(spec.hostname, player.UserId)
+		spec.hostname = env.filter(spec.hostname, player.UserId) or ""
 	end
 	local ok, access, psid = pcall(function()
 		return env.TeleportService:ReserveServer(env.placeId)
@@ -349,7 +360,7 @@ function Servers:reserve(player: any, raw: any, arrival: any): (boolean, string?
 		return false, tostring(access)
 	end
 	pcall(function()
-		self.reservedMap:SetAsync(psid, { spec = spec, host = player.UserId, access = access }, Config.reserved.expiry)
+		self.reservedMap:SetAsync(S.code(psid), { spec = spec, host = player.UserId, access = access }, Config.reserved.expiry)
 	end)
 	local data = arrivalData(spec.kind, arrival)
 	data.spec, data.access = spec, access
@@ -371,6 +382,16 @@ function Servers:join(player: any, raw: any, arrival: any): (boolean, string?)
 		return false, "Only this server is available here"
 	end
 	local e = self.registry:lookup(code)
+	if type(e) ~= "table" then
+		-- a reserved server nobody is on: its access code starts it again,
+		-- with the settings it was made with
+		local ok, rec = pcall(function()
+			return self.reservedMap:GetAsync(code)
+		end)
+		if ok and type(rec) == "table" and type(rec.spec) == "table" and rec.spec.kind == "host" and type(rec.access) == "string" then
+			e = { reserved = true, access = rec.access, place = self.env.placeId }
+		end
+	end
 	if type(e) ~= "table" or e.kind == "sp" then
 		return false, "Server not found"
 	end
@@ -487,14 +508,14 @@ function Servers:handle(player: any, op: any, arg: any, arrival: any): any
 		if spec.kind == "host" then
 			self.public = spec.public
 		end
-		self.Game.Command(S.startupText(spec))
+		-- through the command buffer the frame loop runs, like ioq3's rcon
+		self.Game.Cmd.Cbuf_AddText(S.startupText(spec) .. "\n")
 		return { ok = true }
 	elseif op == "rcon" then
 		if not isHost or type(arg) ~= "string" or #arg > 1024 or not self:rconAllowed(arg) then
 			return { ok = false, err = if isHost then "Not allowed" else "Not the host" }
 		end
-		self.Game.Command(arg)
-		self:hostname()
+		self.Game.Cmd.Cbuf_AddText(arg .. "\n")
 		return { ok = true }
 	elseif op == "favorites" then
 		return { ok = true, codes = self:loadFavorites(player) }
