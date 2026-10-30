@@ -26,16 +26,16 @@ local WANT = {
 	tony = 260342963,
 	penguin = 105519417,
 	skelebot = 10138699399,
-	ghost = 1633902010,
-	beret = 374845493,
+	ghost = 2678188290,
+	beret = 3,
 	broadklin = 66246631,
-	morgan = 5746191400,
-	assassin = 1318896233,
+	morgan = 2,
+	assassin = 1,
 	["cyber-garg"] = 123757139,
 	andriy = 5290932442,
 	sergei = 58526171,
-	metalbot = 1116532733,
-	gargoyle = 10120477760,
+	metalbot = 156,
+	gargoyle = 11759238920,
 	sarge = 10595767136,
 	grism = 8950832609,
 	s_marine = 925308243,
@@ -66,7 +66,7 @@ local userService = {
 			local d = DISPLAY[id]
 			if d then
 				table.insert(out, { Id = id, Username = d[1], DisplayName = d[2] })
-			elseif id ~= 1633902010 then -- Ghost's account is "deleted"
+			elseif id ~= 2678188290 then -- Ghost's account is "deleted"
 				table.insert(out, { Id = id, Username = "user" .. id, DisplayName = "User" .. id })
 			end
 		end
