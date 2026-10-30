@@ -102,3 +102,39 @@ H.test("transport.drop kicks, leaving disconnects", function()
 	H.eq(#kicks, 1)
 	H.eq(s.playerOf[1], nil)
 end)
+
+-- client/sys/Net: a new gamestate (map change) starts the clock over, as
+-- CL_ClearState does, so the first usercmd of the new level can't carry the
+-- old level's later serverTime
+H.test("transport.gamestate resets the client clock", function()
+	local C = H.require("client/q/Consts")
+	local Net = H.require("client/sys/Net")
+	Net.state = C.CA_ACTIVE
+	Net.serverTime = 217400
+	Net.oldServerTime = 217400
+	Net.serverTimeDelta = -5000
+	Net.ReceiveGamestate({ [0] = "\\g_gametype\\0" }, 10, 1)
+	H.eq(Net.state, C.CA_PRIMED)
+	H.eq(Net.serverTime, 0)
+	H.eq(Net.oldServerTime, 0)
+	H.eq(Net.serverTimeDelta, 0)
+	H.eq(Net.ConfigString(C.CS_SERVERINFO), "\\g_gametype\\0")
+end)
+
+-- the cgame restarted by a map change carries on from the last server
+-- command the old one ran (CL_InitCGame's clc.lastExecutedServerCommand)
+H.test("transport.gamestate keeps the executed command count", function()
+	local Net = H.require("client/sys/Net")
+	Net.ReceiveGamestate({}, 10, 1)
+	for n = 1, 300 do
+		Net.ReceiveServerCommand(10 + n, "print \"x\"")
+		Net.GetServerCommand(10 + n)
+	end
+	H.eq(Net.lastExecutedServerCommand, 310)
+	-- a map change: the same connection, numbering goes on
+	Net.ReceiveGamestate({}, 320, 1)
+	H.eq(Net.lastExecutedServerCommand, 310)
+	-- a new connection numbers from its own start
+	Net.ReceiveGamestate({}, 4, 1)
+	H.eq(Net.lastExecutedServerCommand, 4)
+end)

@@ -65,6 +65,14 @@ never reconnect: `SV_SpawnServer` keeps every client and sends each the
 new gamestate, which the client takes as `CL_ParseGamestate` does. The
 client's `map` command (the menus) only calls a vote while in the game.
 
+On a new gamestate the client clears what `CL_ClearState` clears: the
+clock (`serverTime` 0 until the first snapshot) and the usercmds resent
+with each packet. Otherwise the first usercmd of the new level, which
+`SV_ClientEnterWorld` keeps as `lastUsercmd`, carries the old level's
+later time and the server skips every move after it. The new cgame starts
+from the last server command the old one ran
+(`clc.lastExecutedServerCommand`), not from 0.
+
 The server fills in two userinfo keys itself on every userinfo change.
 Clients cannot spoof either one:
 

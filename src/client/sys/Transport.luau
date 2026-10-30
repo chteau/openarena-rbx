@@ -105,6 +105,11 @@ local function parseGamestate(msg)
 	st.serverId = serverIdOf(cs[K.CS_SYSTEMINFO]) or 0
 	st.snapshots = {}
 	st.snap = nil
+	-- CL_ClearState: the usercmds resent with each packet belong to the old
+	-- level. Left in, the oldest one would be the first usercmd of the new
+	-- gamestate (SV_ClientEnterWorld's lastUsercmd) and its later
+	-- serverTime would hide every move after it.
+	st.cmds = {}
 	Net.ReceiveGamestate(cs, st.serverCommandSequence, clientNum)
 	if Transport.onGamestate then
 		Transport.onGamestate()

@@ -81,9 +81,17 @@ end)
 local function mapVote()
 	local map = Cmd.Argv(1)
 	if map ~= "" then
+		-- one vote per command: sv_floodProtect ignores a second client
+		-- command within a second, and a vote in progress refuses another.
+		-- A gametype change goes first; the map vote follows from a new
+		-- `map` once it passed.
 		local gt = Cvar.VariableIntegerValue("g_gametype")
-		Net.SendClientCommand(("callvote g_gametype %d"):format(gt))
-		Net.SendClientCommand("callvote map " .. map)
+		local current = tonumber(string.match(Net.ConfigString(C.CS_SERVERINFO), "\\g_gametype\\(%d+)"))
+		if Net.state >= C.CA_CONNECTED and current ~= nil and current ~= gt then
+			Net.SendClientCommand(("callvote g_gametype %d"):format(gt))
+		else
+			Net.SendClientCommand("callvote map " .. map)
+		end
 	end
 	-- in the game the vote is all: when it passes, the server changes map
 	-- and sends the new gamestate, which the client takes as Q3's does
@@ -152,6 +160,7 @@ end
 Client.connectRequested = false
 function Client.Connect()
 	Client.connectRequested = true
+	Net.lastExecutedServerCommand = 0
 	if Net.transport and Net.transport.connect then
 		Net.transport.connect(Cvar.InfoString(C.CVAR_USERINFO))
 	end
@@ -194,7 +203,9 @@ end
 -- CL_InitCGame
 local function initCGame()
 	local n = Net.GetCurrentSnapshotNumber()
-	G.CG_Init(n, 0, Net.clientNum)
+	-- the commands the old cgame already ran are not run again; from 0 the
+	-- new cgame would ask for ones long cycled out of the ring
+	G.CG_Init(n, Net.lastExecutedServerCommand, Net.clientNum)
 	Client.cgameActive = true
 	-- clear anything that got printed
 	Console.ClearNotify()
