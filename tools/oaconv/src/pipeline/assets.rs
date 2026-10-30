@@ -104,11 +104,14 @@ pub fn models(
         bundles.push(json!({ "file": rel(out, path), "meshes": infos }));
     }
 
+    // dropped skin textures give way to kept ones (tools/oaconv/roster.json)
+    let roster = oaconv::roster::Roster::get();
     let mut skins = BTreeMap::new();
     for path in vfs.list("models/", &[".skin"]) {
         let text = String::from_utf8_lossy(&vfs.read(&path).unwrap_or_default()).into_owned();
-        let pairs = md3::parse_skin(&text);
-        for (_, shader) in &pairs {
+        let mut pairs = md3::parse_skin(&text);
+        for (_, shader) in &mut pairs {
+            *shader = roster.retexture(shader);
             if let Some(img) = texture_of(shader) {
                 images.insert(img);
             }

@@ -34,7 +34,7 @@ for _, name in { "neko", "angelyss", "merman", "headcrash", "kyonshi", "major", 
 	check(string.find(text, "Bot '" .. name .. "' not defined", 1, true) ~= nil, "addbot " .. name .. " is unknown")
 end
 
-local DROPPED = { "neko", "angelyss", "major", "kyonshi", "sorceress", "merman", "arachna", "ayumi", "beret/headcrash" }
+local DROPPED = { "neko", "angelyss", "major", "kyonshi", "sorceress", "merman", "arachna", "ayumi", "beret/headcrash", "beret/macho", "sarge/classic", "sarge/classicred", "sarge/classicblue" }
 -- bot_minplayers adds one bot per check through G_AddRandomBot; pick the
 -- rest the same way rather than waiting for every check
 h.Game.Command("bot_minplayers 12")

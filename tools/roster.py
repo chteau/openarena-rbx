@@ -6,8 +6,11 @@ the lune test hosts.
 
 - every path of an excluded model or skin is left out, with the same rules as
   oaconv's src/roster.rs;
-- scripts/bots.txt loses the bots whose model is excluded, and botfiles/ the
-  character files only they use, so `addbot <name>` finds no such bot;
+- shipped .skin files name the kept texture (retexture) in place of a dropped
+  one;
+- scripts/bots.txt moves the bots in bot_models to their kept model and loses
+  the other bots whose model is excluded, and botfiles/ the character files
+  only they use, so `addbot <name>` finds no such bot;
 - scripts/arenas.txt and *.arena name the roster's substitute (arena_bots)
   for every dropped bot.
 
@@ -78,11 +81,28 @@ def model_excluded(model):
 
 
 def bot_excluded(info):
-    return any(model_excluded(info[k]) for k in ('model', 'headmodel') if info.get(k))
+    return info['name'].lower() not in config().get('bot_models', {}) and \
+        any(model_excluded(info[k]) for k in ('model', 'headmodel') if info.get(k))
+
+
+def move_bot(seg, info):
+    """A bot block with its model swapped for its bot_models entry, if any."""
+    model = config().get('bot_models', {}).get(info['name'].lower())
+    if model is None:
+        return seg
+    return re.sub(r'(?im)^(\s*model\s+)"?[^"\s]*"?', lambda m: m.group(1) + model, seg, count=1)
 
 
 def filter_bots(text):
-    return ''.join(seg for seg, info in bot_blocks(text) if info is None or not bot_excluded(info))
+    return ''.join(seg if info is None else move_bot(seg, info)
+                   for seg, info in bot_blocks(text) if info is None or not bot_excluded(info))
+
+
+def retexture(text):
+    """A .skin file with dropped texture prefixes swapped for kept ones (src/roster.rs)."""
+    for old, new in config().get('retexture', {}).items():
+        text = re.sub(r'(?im)(,\s*)' + re.escape(old), lambda m: m.group(1) + new, text)
+    return text
 
 
 def excluded_bots(bots_text):
@@ -153,6 +173,8 @@ class Shipped:
             return filter_bots(data.decode('latin-1')).encode('latin-1')
         if low == 'scripts/arenas.txt' or low.endswith('.arena'):
             return substitute_arena_bots(data.decode('latin-1'), self.dropped_bots).encode('latin-1')
+        if low.endswith('.skin'):
+            return retexture(data.decode('latin-1')).encode('latin-1')
         return data
 
     def text_files(self, prefixes=None):
@@ -184,6 +206,15 @@ def check():
                 and model_excluded(low.split('/')[2]) and low in s.owner:
             problems.append('%s ships' % low)
     kept_bots = {i['name'].lower() for _, i in bot_blocks(s.bots_txt) if i} - s.dropped_bots
+    for _, i in bot_blocks(s.read('scripts/bots.txt').decode('latin-1')):
+        if i and any(model_excluded(i[k]) for k in ('model', 'headmodel') if i.get(k)):
+            problems.append('bot %s wears dropped model %s' % (i['name'], i.get('model')))
+    for low in s.owner:
+        if low.endswith('.skin'):
+            for line in s.read(low).decode('latin-1').splitlines():
+                tex = line.split(',', 1)[1].strip() if ',' in line else ''
+                if tex and excludes(tex):
+                    problems.append('%s names dropped texture %s' % (low, tex))
     for bot, sub in cfg['arena_bots'].items():
         if sub.lower() not in kept_bots:
             problems.append('arena_bots %s -> %s: not a kept bot' % (bot, sub))
