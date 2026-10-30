@@ -242,6 +242,34 @@ bot, below Jiangshi. At skill 5 every bot is already at the caps, so the
 three tie there and Jiangshi's edge is its weapon and movement choices.
 `tools/roster.py check` fails if either falls below another bot anywhere.
 
+Live on 2026-10-30, in real Roblox (Sober through rbx-native's Play, Chee's
+play sandbox, logged in as Cheeteau): a 7.4 MB place from
+`place/assemble.py --maps oa_minia,czest1tourney --players sarge,beret`.
+The SP level menu shows Tier 1 with the OA bots' names and icons
+(`docs/parity/botroster/sp_menu_tier1.jpg`). On Roblox the menu's Fight
+turns into a `callvote map` with the client's `g_gametype` (0), so it
+starts oa_minia as a free-for-all without the arena's bots
+(`src/client/sys/Client.luau`, `mapVote`; not changed here); the arenas
+were started with `spmap oa_minia` and `spmap czest1tourney` in the Server
+data model over MCP instead. Pictures in `docs/parity/botroster/`:
+
+- `oa_minia_tony.jpg`, `oa_minia_penguin.jpg`: following `[BOT] Berzappy`
+  (Tony) and `[BOT] Viken` (Penguin), each drawn as its account's avatar;
+- `oa_minia_scores.jpg`: the scoreboard with both, their headshots and the
+  tag; the log had `Kill: 1 0 7: ^3[BOT]^7 Berzappy killed ^3[BOT]^7 Viken
+  by MOD_ROCKET_SPLASH`;
+- `czest1tourney_boss.jpg`: the Final arena's only bot, `[BOT] misaa`
+  (Jiangshi, userinfo `model beret/cooldude`), in misaa's avatar;
+- `czest1tourney_smarine_chee_here.jpg`: `addbot s_marine 4` while Chee's
+  account was the human in the server: the bot is plain `S_Marine`, no
+  avatar (its OA model isn't in this place, hence the "Failed to load model
+  file" line).
+
+`ReplicatedStorage.OAAvatars` held `c<n>` with each account's UserId
+(105519417, 260342963, 8313172606) and Chee's own for the human. Sending
+`connect` from the client after a server-side map change disconnects the
+player and ends the playtest; the client reconnects by itself.
+
 `tests/bots/botroster.luau` checks the id table, the lookup against a
 stubbed `UserService` (display name, username fallback, a deleted account,
 a failing service), and on a running server: oa_minia's arena bots (Tony,
