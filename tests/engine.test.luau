@@ -94,6 +94,18 @@ H.test("cvar.basics", function()
 	H.eq(Cvar.VariableValue("no_such_cvar"), 0)
 end)
 
+H.test("fs.maps_in_place", function()
+	local FS = H.require("client/sys/FS")
+	FS.Mount({ paths = { "maps/oa_dm1.bsp", "maps/oa_ctf2.bsp", "levelshots/oa_ctf2.jpg" } })
+	H.eq(FS.Exists("maps/oa_ctf2.bsp"), true)
+	FS.maps = { oa_dm1 = {} }
+	H.eq(FS.Exists("maps/OA_DM1.bsp"), true)
+	H.eq(FS.Exists("maps/oa_ctf2.bsp"), false)
+	H.eq((FS.FOpenFile("maps/oa_ctf2.bsp", 0)), -1)
+	H.eq(FS.Exists("levelshots/oa_ctf2.jpg"), true)
+	FS.maps = nil
+end)
+
 H.test("keys.names", function()
 	local Keys = H.require("client/sys/Keys")
 	local C = H.require("client/q/Consts")

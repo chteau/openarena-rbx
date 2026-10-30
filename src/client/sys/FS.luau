@@ -136,8 +136,17 @@ function FS.GetFileList(path: string, ext: string): (number, { [number]: string 
 	return n, out
 end
 
+-- The maps built into the place ({ [name] = ... }, Client.Boot sets it from
+-- the asset index; nil = no filter): maps/<name>.bsp exists only for them,
+-- so the engine's "can't find map" test is the place's.
+FS.maps = nil :: { [string]: any }?
+
 function FS.Exists(path: string): boolean
 	local p = string.lower(path)
+	local map = FS.maps and string.match(p, "^maps/([^/]+)%.bsp$")
+	if map then
+		return FS.maps[map] ~= nil
+	end
 	if files[p] or written[p] then
 		return true
 	end

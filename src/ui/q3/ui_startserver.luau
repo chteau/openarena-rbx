@@ -43,6 +43,17 @@ local GAMESERVER_ARROWS = "menu/" .. MENU_ART_DIR .. "/gs_arrows_0"
 local GAMESERVER_ARROWSL = "menu/" .. MENU_ART_DIR .. "/gs_arrows_l"
 local GAMESERVER_ARROWSR = "menu/" .. MENU_ART_DIR .. "/gs_arrows_r"
 
+-- Roblox: only the maps built into the place can be started (the engine
+-- has maps/<map>.bsp for them alone)
+local function mapInPlace(info: string): boolean
+	local len, f = trap.FS_FOpenFile(Q.va("maps/%s.bsp", Q.Info_ValueForKey(info, "map")), C.FS_READ)
+	if len < 0 then
+		return false
+	end
+	trap.FS_FCloseFile(f)
+	return true
+end
+
 local MAX_MAPROWS = 4
 local MAX_MAPCOLS = 2
 local MAX_MAPSPERPAGE = MAX_MAPROWS * MAX_MAPCOLS
@@ -371,7 +382,7 @@ function U.WriteMapList2File(gametype, filename)
 		local info = U.UI_GetArenaInfoByNumber(i)
 
 		local gamebits = U.GametypeBits(Q.Info_ValueForKey(info, "type"))
-		if bit32.band(gamebits, matchbits) == 0 then
+		if bit32.band(gamebits, matchbits) == 0 or not mapInPlace(info) then
 			continue
 		end
 		local mapname = Q.va("%s ", Q.Info_ValueForKey(info, "map"))
@@ -409,7 +420,7 @@ function U.StartServer_GametypeEvent(ptr, event)
 		local info = U.UI_GetArenaInfoByNumber(i)
 
 		local gamebits = U.GametypeBits(Q.Info_ValueForKey(info, "type"))
-		if bit32.band(gamebits, matchbits) == 0 then
+		if bit32.band(gamebits, matchbits) == 0 or not mapInPlace(info) then
 			continue
 		end
 
