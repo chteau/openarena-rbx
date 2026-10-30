@@ -385,6 +385,33 @@ statics; the Luau module stays, so the new map's clock (back near zero)
 held botlib's frames and AAS wasn't initialised when the bots reconnected.
 `BotAIShutdown` now resets them when the library shuts down.
 
+## Bot chat
+
+Players' chat goes through Roblox's text filter; bot chat doesn't. It is
+fixed text from `botfiles/` (the character `bots/*_t.c` files,
+`teamplay.h`, `rnd.c`, `rchat.c`, the weighted synonyms in `syn.c`) shown
+to every player as is, so it has to meet Roblox's Community Standards on
+its own. The 0.8.8 files don't: they carry slurs (as `rchat.c` reply
+triggers and `match.c` templates), profanity, sexual jokes, drug and
+alcohol lines, suicide jokes, and jokes about real politicians.
+
+The cleaned files are overrides in `assets/botfiles/` (`rnd.c`,
+`rchat.c`, `syn.c`, `match.c`, `teamplay.h` and every shipped character's
+chat file): each line rewritten into trash talk in the same voice, or
+dropped where it couldn't be. Every chat type keeps at least one line.
+`match.c` loses its "anti-bigot" templates (a slur in a teammate's chat
+ordered the bot to kill itself; Roblox hashes slurs before they reach the
+game anyway), and Kyonshi's `KILL_GAUNTLET2` (no such random string) is
+`KILL_GAUNTLET0`.
+
+`tools/check_botchat.py` (also run by `tools/roster.py check`) assembles
+every line a bot can say from the packed files, random strings expanded,
+and fails on any term in `tools/botchat_terms.txt` (ROT13, so the repo
+holds no plain slur list; its docstring says how to add one) or on an
+empty chat type or unknown random string. A list misses innuendo: read
+any new line too. `tests/bots/botchat.luau` loads every packed chat file
+through the port's botlib.
+
 ## What is deliberately not ported
 
 - **Reachability and cluster calculation** (`be_aas_reach.c` beyond its
@@ -447,6 +474,9 @@ maps --out build/conv` (each map's `map.json` and `Aas` blob),
 - `lune run tests/bots/ctf.luau [minutes] [bots] [min captures]`: 6 bots
   (3 red, 3 blue, skill 4) play CTF on oa_ctf2 for 20 game minutes and
   must capture at least one flag.
+- `lune run tests/bots/botchat.luau`: syn.c, rnd.c, match.c, rchat.c and
+  every packed `bots/*_t.c` chat load through botlib without an error or
+  warning.
 
 ### Results (lune, this machine, 50 ms frames)
 

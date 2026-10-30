@@ -1,0 +1,361 @@
+# Terms tools/check_botchat.py flags in bot chat. ROT13: add with
+# tools/check_botchat.py add <category> "<term>", see its docstring.
+drugs	npvq gevc*
+drugs	nypbuby*
+drugs	one graqre
+drugs	onegraq*
+drugs	orre*
+drugs	oyhag
+drugs	obbmr*
+drugs	oenaql
+drugs	pnaanovf*
+drugs	pvtne*
+drugs	pbpnvar*
+drugs	pbpxgnvy*
+drugs	pbxr
+drugs	penpx urnq*
+drugs	penpxurnq*
+drugs	qbcr*
+drugs	qevax
+drugs	qevaxvat
+drugs	qevaxf
+drugs	qeht*
+drugs	qehax*
+drugs	rpfgnfl
+drugs	tva
+drugs	unatbire*
+drugs	urebva*
+drugs	uvtu nf
+drugs	uhss*
+drugs	uhat bire
+drugs	wbvag
+drugs	yvdhbe*
+drugs	yfq
+drugs	znevwhnan*
+drugs	zrgu
+drugs	bireqbf*
+drugs	cvag*
+drugs	cho
+drugs	ehz
+drugs	fnxr
+drugs	fubgf bs
+drugs	fuebbz*
+drugs	fzbx*
+drugs	fgbarq
+drugs	fgbare*
+drugs	grdhvyn*
+drugs	gbonppb*
+drugs	ibqx*
+drugs	ibqxn*
+drugs	jrrq
+drugs	juvfx*
+drugs	jvar
+gore	ones*
+gore	orurnq*
+gore	oybbql
+gore	oybj lbhe oenvaf
+gore	objry*
+gore	oenva znggre
+gore	oenvaf bhg
+gore	pnaavony*
+gore	pnepnff*
+gore	qrpncvgng*
+gore	qvfrzobjry*
+gore	qvfzrzore*
+gore	rng lbh
+gore	rng lbhe
+gore	ragenvyf
+gore	rivfpreng*
+gore	rlronyy*
+gore	synl*
+gore	tber
+gore	tbel
+gore	thgf
+gore	vaaneqf
+gore	vagrfgva*
+gore	yvzo sebz yvzo
+gore	zhgvyng*
+gore	betnaf
+gore	chxr*
+gore	evc lbhe
+gore	fxva lbh
+gore	grne lbh
+gore	ibzvg*
+harm	nqqerff
+harm	obzo*
+harm	pnyy zr
+harm	pubxr*
+harm	phg lbhefrys
+harm	qb hf nyy n snibe
+harm	qbk*
+harm	r znvy
+harm	rznvy*
+harm	raq vg nyy
+harm	raq lbhe yvsr
+harm	snibe naq qvr
+harm	tb qvr
+harm	tha lbh qbja
+harm	unat lbhefrys
+harm	ubfgntr*
+harm	va erny yvsr
+harm	vc
+harm	vey
+harm	xvqanc*
+harm	xvyy hefrys
+harm	xvyy lbhefrys
+harm	xlf
+harm	zheqre*
+harm	cnffjbeq*
+harm	cubar ahzore
+harm	frys unez
+harm	fubbg hc
+harm	fyvg*
+harm	fgno*
+harm	fgenatyr*
+harm	fhvpvq*
+harm	gbegher*
+harm	jurer lbh yvir
+harm	jevfg*
+harm	lbhe ubzr
+harm	lbhe ubhfr
+hate	ovtbg*
+hate	tnl
+hate	tnlf
+hate	urngura*
+hate	uvyyovyy*
+hate	uvgyre
+hate	ubybpnhfg
+hate	vaoerq*
+hate	vasvqry*
+hate	vevfu cvt*
+hate	wrjf
+hate	yrfovna*
+hate	znfgre enpr
+hate	anmv*
+hate	erqarpx*
+hate	greebevfg*
+hate	juvgr cbjre
+profanity	nefr*
+profanity	nff
+profanity	nffrf
+profanity	nffubyr*
+profanity	onqnff*
+profanity	onfgneq*
+profanity	ovgpu*
+profanity	oybbql
+profanity	obyybpx*
+profanity	ohttre*
+profanity	ohyyfuvg*
+profanity	penc*
+profanity	qnzzvg
+profanity	qnza*
+profanity	qbhpur*
+profanity	qhzonff*
+profanity	spx*
+profanity	shpx*
+profanity	shx*
+profanity	tbqqnz*
+profanity	uryy
+profanity	uryyf
+profanity	wnpxnff*
+profanity	yzsnb
+profanity	bzst
+profanity	cuhpx*
+profanity	cvff*
+profanity	cevpx*
+profanity	fu*g
+profanity	fuvg*
+profanity	fznegnff*
+profanity	fgsh
+profanity	jgs
+sensitive	nanepu*
+sensitive	nagv puevfg
+sensitive	nagvpuevfg
+sensitive	ovoyr*
+sensitive	ovyy sevfg
+sensitive	ohfu
+sensitive	pncvgnyvfg
+sensitive	pnezra ryrxgen
+sensitive	puevfg
+sensitive	puhepu*
+sensitive	pbzzhavf*
+sensitive	pbaterff*
+sensitive	pbafreingvir
+sensitive	qrivy*
+sensitive	qvpx purarl
+sensitive	ryrpgrq
+sensitive	ryrpgvba*
+sensitive	snfpvfg
+sensitive	tbq
+sensitive	tbqf
+sensitive	tbireazrag*
+sensitive	vef
+sensitive	wnpx gubzcfba
+sensitive	wrfhf
+sensitive	yvoreny
+sensitive	znekvfg
+sensitive	avkba
+sensitive	abnz pubzfxl
+sensitive	afn
+sensitive	bccerff*
+sensitive	cnzryn naqrefba
+sensitive	cng eboregfba
+sensitive	cbyvgvp*
+sensitive	cenl*
+sensitive	cerfvqrag*
+sensitive	enycu anqre
+sensitive	eryvtvb*
+sensitive	eribyhgvba*
+sensitive	fnpevsvpr
+sensitive	fngna*
+sensitive	fva
+sensitive	fvaf
+sensitive	gebgfxl
+sensitive	jvergnc
+sensitive	jbefuvc*
+sexual	nobegvba
+sexual	onor
+sexual	onyyf
+sexual	onat lbhe
+sexual	oraq bire
+sexual	oybj zr
+sexual	oyhr onyyf
+sexual	obbo*
+sexual	obbgl
+sexual	oblsevraq*
+sexual	oen
+sexual	oernfg*
+sexual	pbpx
+sexual	pbpxf
+sexual	pbaqbz*
+sexual	phag*
+sexual	qngr ure
+sexual	qngr uvz
+sexual	qngr lbh
+sexual	qvpx
+sexual	qvpxf
+sexual	rerpg*
+sexual	srgvfu*
+sexual	travgny*
+sexual	tveysevraq*
+sexual	uvi
+sexual	ubbxre*
+sexual	ubeal
+sexual	ubggvr*
+sexual	uci
+sexual	vzcynagf
+sexual	wnpx bss
+sexual	wrex bss
+sexual	xvaxl
+sexual	xvff*
+sexual	ynfg avtug
+sexual	yvpx*
+sexual	yvatrevr
+sexual	ybire*
+sexual	zneel
+sexual	znfgheo*
+sexual	zvfbtla*
+sexual	zbyrfg*
+sexual	anxrq
+sexual	arpebcuvy*
+sexual	avccyr*
+sexual	ahqr*
+sexual	ahqvr*
+sexual	betnfz*
+sexual	betl
+sexual	cnagvrf
+sexual	crqb*
+sexual	cravf*
+sexual	cvzc*
+sexual	cbea*
+sexual	ce0a
+sexual	cebfgvghg*
+sexual	chffl*
+sexual	encr*
+sexual	encvat
+sexual	encvfg*
+sexual	erfgenvavat beqre
+sexual	fperj lbh
+sexual	fperjrq
+sexual	frqhp*
+sexual	frk
+sexual	frkhny*
+sexual	frkl
+sexual	fyhg*
+sexual	fbqbz*
+sexual	fcnax*
+sexual	fgq
+sexual	fgevc*
+sexual	fghq
+sexual	fhpphohf
+sexual	fhpx zl
+sexual	fhphohf
+sexual	flcuvy*
+sexual	grfgvp*
+sexual	gur pync
+sexual	gubat*
+sexual	gvgf
+sexual	gvggvrf
+sexual	gjng*
+sexual	haqrejrne
+sexual	intvan*
+sexual	ivetva*
+sexual	jnax*
+sexual	juber*
+sexual	lb znzn
+sexual	lbhe zbz
+slur	orna cvpxre*
+slur	ornacvpxre*
+slur	pnzry wbpx*
+slur	puvax*
+slur	pzy*
+slur	pbba
+slur	pbbaf
+slur	pevccyr*
+slur	qvncre urnq*
+slur	qvxr
+slur	qlx
+slur	qlxr*
+slur	robavpf
+slur	snt
+slur	sntt*
+slur	snttbg*
+slur	sntf
+slur	tbbx*
+slur	ternfr onyy
+slur	ternfronyy
+slur	tlc
+slur	tlccrq
+slur	tlcfl
+slur	ubzb
+slur	ubzbf
+slur	wnc
+slur	wncf
+slur	xvxr*
+slur	xlx
+slur	xlxr*
+slur	znpnpn
+slur	zbatbybvq*
+slur	arteb*
+slur	ate
+slur	avtt*
+slur	avte*
+slur	cnxv
+slur	cnxvf
+slur	dhrre*
+slur	enturnq*
+slur	erq fxva*
+slur	erqfxva*
+slur	ergneq*
+slur	fnaqavt*
+slur	fcnfgvp*
+slur	fcnm*
+slur	fcvp
+slur	fcvpf
+slur	gbjryurnq*
+slur	genvyre genfu
+slur	genaal*
+slur	jrgonpx*
+slur	juvgr genfu
+slur	jbc
+slur	jbcf
