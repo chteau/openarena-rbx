@@ -7,6 +7,7 @@
 local Assets = require(script.Parent.Assets)
 local Units = require(script.Parent.Units)
 local Cvar = require(script.Parent.Cvar)
+local Cmd = require(script.Parent.Cmd)
 local C = require(script.Parent.Parent.q.Consts)
 
 local Snd = {}
@@ -126,6 +127,21 @@ end
 function Snd.StartLocalSound(sfx: number, channel: number)
 	Snd.StartSound(nil, Snd.listenerEntity, channel, sfx)
 end
+
+-- S_Play_f: each file named plays as a local sound
+function Snd.Play(name: string)
+	Snd.StartLocalSound(Snd.RegisterSound(name), C.CHAN_LOCAL_SOUND)
+end
+Cmd.AddCommand("play", function()
+	local c = Cmd.Argc()
+	if c < 2 then
+		Cmd.print("Usage: play <sound filename> [sound filename] [sound filename] ...")
+		return
+	end
+	for i = 1, c - 1 do
+		Snd.Play(Cmd.Argv(i))
+	end
+end)
 
 function Snd.UpdateEntityPosition(entnum: number, origin)
 	local p = Units.toVector3(origin)

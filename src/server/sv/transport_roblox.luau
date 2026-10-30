@@ -137,6 +137,13 @@ function Transport.Start(Game: Game)
 	local playerOf: { [number]: Player } = sessions.playerOf
 	Chat.Start(Game, clientOf)
 
+	SV.play = function(name: string)
+		for player in clientOf do
+			if player.Parent == Players then
+				reliable:FireClient(player, "play", name)
+			end
+		end
+	end
 	SV.send = function(clientNum: number, data: buffer)
 		local player = playerOf[clientNum]
 		if not player or player.Parent ~= Players then
