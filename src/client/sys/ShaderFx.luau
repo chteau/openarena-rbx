@@ -182,6 +182,9 @@ function ShaderFx.drawStages(shader): { any }
 	local def = shader and shader.def
 	if def == nil then
 		if shader and shader.image then
+			if shader.model then
+				return { { map = shader.key, rgbGen = { type = "lightingdiffuse" } } }
+			end
 			return { { map = shader.key, implicit = true, blendFunc = { "gl_src_alpha", "gl_one_minus_src_alpha" } } }
 		end
 		return {}

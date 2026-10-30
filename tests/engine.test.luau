@@ -55,6 +55,23 @@ H.test("assets.blend_stand_in", function()
 	H.eq(select(4, Fx.foldBrightness(0, 0, 0, 1)), 0)
 end)
 
+H.test("assets.model_implicit_shader", function()
+	local A = H.require("client/sys/Assets")
+	local Fx = H.require("client/sys/ShaderFx")
+	A.RegisterImage("models/players/test/skin", "rbxassetid://3", 256, 256)
+	-- a skin's image without a shader script: lit and opaque, alpha 1
+	-- whatever the entity's alpha (R_FindShader, LIGHTMAP_NONE)
+	local st = Fx.drawStages(A.Shader(A.RegisterShader("models/players/test/skin.tga", true, true)))[1]
+	H.eq(Fx.blendMode(st), "opaque")
+	local r, _, _, a = Fx.stageColor(st, 0, { 0.5, 0.5, 0.5, 0 })
+	H.near(r, 0.5)
+	H.near(a, 1)
+	-- the same image as a 2D shader stays vertex-coloured and blended
+	st = Fx.drawStages(A.Shader(A.RegisterShader("models/players/test/skin.tga", true)))[1]
+	H.eq(Fx.blendMode(st), "alpha")
+	H.near(select(4, Fx.stageColor(st, 0, { 1, 1, 1, 0 })), 0)
+end)
+
 H.test("cmd.tokenize", function()
 	local Cmd = H.require("client/sys/Cmd")
 	Cmd.TokenizeString('bind w "+forward" // trailing comment')

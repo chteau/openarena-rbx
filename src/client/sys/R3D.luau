@@ -159,6 +159,52 @@ local function applyBlend(part: BasePart, mode: string, a: number)
 	end
 end
 
+-- The client's EditableMesh budget is small and charges every growable mesh
+-- heavily: an empty CreateEditableMesh starts failing ("memory budget") after
+-- a few dozen. Each md3 surface is built growable once, copied into a
+-- fixed-size template (charged by its size), and every instance draws a
+-- fixed-size copy of that; copies keep the vertex and colour ids.
+local templates: { [string]: { em: EditableMesh, ids: { number }, colors: { number } } } = {}
+local function surfaceTemplate(model, s)
+	local key = model.name .. "#" .. s.name
+	local tpl = templates[key]
+	if tpl then
+		return tpl
+	end
+	local em = AssetService:CreateEditableMesh({})
+	if em == nil then
+		error("EditableMesh memory budget reached")
+	end
+	local ids, colors = table.create(s.numVerts), table.create(s.numVerts)
+	for v = 0, s.numVerts - 1 do
+		local x, y, z = Md3.Vertex(s, 0, v)
+		ids[v + 1] = em:AddVertex(Vector3.new(-y / 8, z / 8, -x / 8))
+	end
+	local uvs = table.create(s.numVerts)
+	for v = 0, s.numVerts - 1 do
+		local u, t = Md3.TexCoord(s, v)
+		uvs[v + 1] = em:AddUV(Vector2.new(u, t))
+		colors[v + 1] = em:AddColor(Color3.new(1, 1, 1), 1)
+	end
+	for t = 0, s.numTriangles - 1 do
+		local a, b, c = Md3.Triangle(s, t)
+		-- Q3 front faces wind clockwise, Roblox's counter-clockwise
+		local f = em:AddTriangle(ids[a + 1], ids[c + 1], ids[b + 1])
+		em:SetFaceUVs(f, { uvs[a + 1], uvs[c + 1], uvs[b + 1] })
+		em:SetFaceColors(f, { colors[a + 1], colors[c + 1], colors[b + 1] })
+	end
+	local ok, fixed = pcall(function()
+		return AssetService:CreateEditableMeshAsync(Content.fromObject(em), { FixedSize = true })
+	end)
+	em:Destroy()
+	if not ok then
+		error(fixed, 0)
+	end
+	tpl = { em = fixed, ids = ids, colors = colors }
+	templates[key] = tpl
+	return tpl
+end
+
 -- RT_MODEL ---------------------------------------------------------------------
 -- One pooled instance per (model, nth use this frame): a Model with a part per
 -- surface; vertex-animated surfaces own an EditableMesh.
@@ -196,25 +242,9 @@ local function buildSurface(model, s, parent: Instance)
 		return nil
 	end
 	local ok, err = pcall(function()
-		local em = AssetService:CreateEditableMesh({})
-		local ids, colors = table.create(s.numVerts), table.create(s.numVerts)
-		for v = 0, s.numVerts - 1 do
-			local x, y, z = Md3.Vertex(s, 0, v)
-			ids[v + 1] = em:AddVertex(Vector3.new(-y / 8, z / 8, -x / 8))
-		end
-		local uvs = table.create(s.numVerts)
-		for v = 0, s.numVerts - 1 do
-			local u, t = Md3.TexCoord(s, v)
-			uvs[v + 1] = em:AddUV(Vector2.new(u, t))
-			colors[v + 1] = em:AddColor(Color3.new(1, 1, 1), 1)
-		end
-		for t = 0, s.numTriangles - 1 do
-			local a, b, c = Md3.Triangle(s, t)
-			-- Q3 front faces wind clockwise, Roblox's counter-clockwise
-			local f = em:AddTriangle(ids[a + 1], ids[c + 1], ids[b + 1])
-			em:SetFaceUVs(f, { uvs[a + 1], uvs[c + 1], uvs[b + 1] })
-			em:SetFaceColors(f, { colors[a + 1], colors[c + 1], colors[b + 1] })
-		end
+		local tpl = surfaceTemplate(model, s)
+		local em = AssetService:CreateEditableMeshAsync(Content.fromObject(tpl.em), { FixedSize = true })
+		local ids, colors = tpl.ids, tpl.colors
 		local mp = AssetService:CreateMeshPartAsync(Content.fromObject(em))
 		mp.Anchored, mp.CanCollide, mp.CanQuery, mp.CanTouch = true, false, false, false
 		mp.CastShadow = false
@@ -273,7 +303,7 @@ local function surfaceShader(e, s): number
 			return skin[s.name]
 		end
 	end
-	return if s.shaders[1] then Assets.RegisterShader(s.shaders[1], true) else 0
+	return if s.shaders[1] then Assets.RegisterShader(s.shaders[1], true, true) else 0
 end
 
 local function drawModel(t, e, timeSec: number, firstPerson: boolean)
