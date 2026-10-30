@@ -32,6 +32,7 @@ R3D.noEditableMesh = false
 R3D.mapName = ""
 
 local AssetService = game:GetService("AssetService")
+local ContentProvider = game:GetService("ContentProvider")
 
 -- scene being built since the last ClearScene/RenderScene ----------------
 local entities: { any } = {}
@@ -143,6 +144,28 @@ local function shaderLook(h: number, rgba, timeSec: number, light: { number }?)
 		r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
 	end
 	return img and img.id, ShaderFx.blendMode(st), r, g, b, a, standIn
+end
+
+-- A MeshPart draws untextured, a plain white shape, until its TextureID has
+-- downloaded: the first use of an effect (a bullet impact) flashed white.
+-- Its surfaces stay hidden until the image is in.
+local textures: { [string]: boolean } = {}
+local function textureReady(id: string): boolean
+	local state = textures[id]
+	if state then
+		return true
+	end
+	local ok, status = pcall(ContentProvider.GetAssetFetchStatus, ContentProvider, id)
+	if not ok or (status ~= Enum.AssetFetchStatus.None and status ~= Enum.AssetFetchStatus.Loading) then
+		-- loaded, failed for good, or no way to tell: draw as it is
+		textures[id] = true
+		return true
+	end
+	if state == nil then
+		textures[id] = false
+		task.spawn(pcall, ContentProvider.PreloadAsync, ContentProvider, { id })
+	end
+	return false
 end
 
 local function applyBlend(part: BasePart, mode: string, a: number)
@@ -280,9 +303,10 @@ local function modelInstance(t, hModel: number)
 		if model == nil then
 			return nil
 		end
+		-- parented by hideUnused once drawn: building yields, and its parts
+		-- would show untextured at the origin meanwhile
 		local folder = Instance.new("Model")
 		folder.Name = model.name:match("[^/]+$") or "md3"
-		folder.Parent = t.root
 		inst = { model = model, folder = folder, surfaces = {} }
 		for i, s in model.surfaces do
 			inst.surfaces[i] = buildSurface(model, s, folder)
@@ -347,6 +371,9 @@ local function drawModel(t, e, timeSec: number, firstPerson: boolean)
 			part.TextureID = img
 		end
 		applyBlend(part, if standIn then "alpha" else mode, a)
+		if img and not textureReady(img) then
+			part.Transparency = 1
+		end
 		-- RF_DEPTHHACK (view weapon) and first-person-only parts can't skip the
 		-- depth test on Roblox; they're drawn normally
 		part.LocalTransparencyModifier = 0
