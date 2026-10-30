@@ -250,8 +250,12 @@ local sound; music uses `index.music`, `s_volume` and `s_musicvolume`.
 
 `default.cfg` from the pack sets OA's binds. Roblox `KeyCode`s map to Q3
 keynums; mouse look comes from `InputChanged` deltas through `cl_input`'s
-`m_pitch/m_yaw/sensitivity`. Roblox keeps Escape for its own menu, so
-`F10` is also bound to `togglemenu` when free. Gamepad and touch are not
+`m_pitch/m_yaw/sensitivity`. Roblox keeps Escape for its own menu (it can't be taken
+over), so **P** is OA's Escape: it opens and closes the menu and backs out
+of submenus, and the spectator hint says "press P". P still types a `p` in
+the chat prompt, the console and menu text fields. Escape only reaches OA to
+cancel the chat prompt or close the console. `F10` is also bound to
+`togglemenu` when free. Gamepad and touch are not
 mapped yet: they need `UserInputType.Gamepad1`/touch events turned into
 `K_JOY*`/`K_AUX*` keys and analog `usercmd` moves (later work).
 

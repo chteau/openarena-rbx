@@ -247,7 +247,8 @@ function G.CG_DrawSpectator()
 	if cgs.gametype == C.GT_TOURNAMENT then
 		G.CG_DrawBigString(320 - 15 * 8, 460, "waiting to play", 1.0)
 	elseif cgs.gametype >= C.GT_TEAM and cgs.ffa_gt ~= 1 then
-		G.CG_DrawBigString(320 - 39 * 8, 460, "press ESC and use the JOIN menu to play", 1.0)
+		-- Roblox keeps Escape: OA's menu key is P here
+		G.CG_DrawBigString(320 - 37 * 8, 460, "press P and use the JOIN menu to play", 1.0)
 	end
 end
 

@@ -351,11 +351,43 @@ local function charFor(k: number): string?
 	return nil
 end
 
+-- Roblox keeps Escape for its own menu, so P stands in for OA's Escape
+-- (open/close the menu, back out of a submenu) unless the player is typing.
+local function typing(): boolean
+	local catcher = Keys.GetCatcher()
+	if bit32.band(catcher, bit32.bor(C.KEYCATCH_MESSAGE, C.KEYCATCH_CONSOLE)) ~= 0 then
+		return true
+	end
+	if bit32.band(catcher, C.KEYCATCH_UI) ~= 0 and U and U.uis.activemenu then
+		local item = U.Menu_ItemAtCursor(U.uis.activemenu)
+		return item ~= nil and item.generic.type == C.MTYPE_FIELD
+	end
+	return false
+end
+
+local menuKeyDown, escapeDown = false, false
 local function onInput(io: InputObject, isDown: boolean)
 	local t = io.UserInputType
 	local k
 	if t == Enum.UserInputType.Keyboard then
 		k = KEYMAP[io.KeyCode]
+		if io.KeyCode == Enum.KeyCode.Escape then
+			-- only to cancel the chat prompt or close the console
+			if isDown then
+				escapeDown = typing()
+			end
+			if not escapeDown then
+				return
+			end
+		elseif io.KeyCode == Enum.KeyCode.P then
+			if isDown then
+				menuKeyDown = not typing()
+			end
+			if menuKeyDown then
+				Keys.Event(C.K_ESCAPE, isDown, Clock.Milliseconds())
+				return
+			end
+		end
 	elseif t == Enum.UserInputType.MouseButton1 then
 		k = C.K_MOUSE1
 	elseif t == Enum.UserInputType.MouseButton2 then
@@ -490,7 +522,7 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?
 
 	Cmd.ExecuteText(C.EXEC_NOW, "exec default.cfg")
 	Cmd.Execute()
-	-- Roblox keeps Escape for its own menu: F10 also toggles OA's
+	-- Roblox keeps Escape for its own menu: P (onInput) and F10 toggle OA's
 	if Keys.GetBinding(C.K_F10) == "" then
 		Keys.SetBinding(C.K_F10, "togglemenu")
 	end
