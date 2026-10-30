@@ -598,7 +598,9 @@ function U.ArenaServers_UpdateMenu()
 		end
 
 		local pingColor
-		if servernodeptr.pingtime < servernodeptr.minPing then
+		if servernodeptr.maxclients == 0 then
+			pingColor = C.S_COLOR_RED -- no answer
+		elseif servernodeptr.pingtime < servernodeptr.minPing then
 			pingColor = C.S_COLOR_BLUE
 		elseif servernodeptr.maxPing ~= 0 and servernodeptr.pingtime > servernodeptr.maxPing then
 			pingColor = C.S_COLOR_BLUE
@@ -879,6 +881,8 @@ function U.ArenaServers_LoadFavorites()
 			-- add new server
 			U.g_favoriteserverlist[U.g_numfavoriteservers.value].adrstr = adrstr
 			U.g_favoriteserverlist[U.g_numfavoriteservers.value].pingtime = U.ArenaServers_MaxPing()
+			-- Roblox: listed by its code until a refresh answers, not blank
+			U.g_favoriteserverlist[U.g_numfavoriteservers.value].hostname = string.upper(adrstr)
 		end
 
 		U.g_numfavoriteservers.value += 1

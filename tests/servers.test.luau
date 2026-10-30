@@ -203,6 +203,12 @@ H.test("servers.dead_favorite", function()
 	H.eq(n.hostname, "2DEAD2")
 	H.eq(n.mapname, "NO RESPONSE")
 	H.eq(n.maxclients, 0)
+	-- a favorite not pinged yet shows its code too
+	local Cvar = H.require("client/sys/Cvar")
+	Cvar.Set("server1", "2NEW22")
+	U.ArenaServers_LoadFavorites()
+	H.eq(U.g_favoriteserverlist[0].hostname, "2NEW22")
+	Cvar.Set("server1", "")
 	g.numservers, g.maxservers, g.serverlist, U.g_servertype = keep[1], keep[2], keep[3], keep[4]
 end)
 
