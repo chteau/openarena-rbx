@@ -277,6 +277,23 @@ do
 	cs[3]:addReliableCommand("vote yes")
 	w:run(5)
 	check(w.Game.Cvar.VariableIntegerValue("timelimit") == 15, "vote: timelimit 15 passed (got " .. w.Game.Cvar.VariableString("timelimit") .. ")")
+
+	-- a map vote carrying a gametype changes both in one vote; single
+	-- player and a gametype g_voteGametypes leaves out are refused
+	w:command("set g_voteGametypes /0/1/3/4/")
+	for _, bad in { "2", "5" } do
+		cs[1]:addReliableCommand("callvote map oa_ctf2 " .. bad)
+		w:run(1.5)
+		check(w.G.level.voteTime == 0, "vote: map with gametype " .. bad .. " refused")
+	end
+	cs[1]:addReliableCommand("callvote map oa_ctf2 4")
+	w:run(1.5)
+	check(string.find(w.G.level.voteDisplayString, "Capture the Flag", 1, true) ~= nil, "vote: map + gametype display (" .. w.G.level.voteDisplayString .. ")")
+	cs[2]:addReliableCommand("vote yes")
+	cs[3]:addReliableCommand("vote yes")
+	w:run(8)
+	check(w.Game.Cvar.VariableIntegerValue("g_gametype") == 4, "vote: map + gametype set g_gametype 4 (got " .. w.Game.Cvar.VariableString("g_gametype") .. ")")
+	check(w.Game.Cvar.VariableString("mapname") == "oa_ctf2", "vote: map + gametype changed the map (got " .. w.Game.Cvar.VariableString("mapname") .. ")")
 end
 
 -- 4b: tourney queue

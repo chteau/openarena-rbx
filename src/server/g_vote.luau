@@ -43,17 +43,17 @@ G.custom_vote_info = ""
 function G.allowedVote(commandStr)
 	local voteNames = G.trap_Cvar_VariableStringBuffer("g_voteNames")
 	if QS.Q_stricmp(voteNames, "*") == 0 then
-		return true
+		return 1
 	end
 	local length = #commandStr
 	if length > MAX_VOTENAME_LENGTH - 3 then
-		return false
+		return 0
 	end
 	local tempStr = "/" .. commandStr .. "/"
 	if QS.Q_stristr(voteNames, tempStr) ~= nil then
-		return true
+		return 1
 	else
-		return false
+		return 0
 	end
 end
 
@@ -110,19 +110,19 @@ end
 function G.allowedMap(mapname)
 	local _, file = G.trap_FS_FOpenFile(QS.va("maps/%s.bsp", mapname), C.FS_READ)
 	if file == 0 then
-		return false
+		return 0
 	end
 	G.trap_FS_FCloseFile(file)
 
 	_, file = G.trap_FS_FOpenFile(G.g_votemaps.string, C.FS_READ)
 
 	if file == 0 then
-		return true
+		return 1
 	end
 	local length = #mapname
 	if length > C.MAX_MAPNAME_LENGTH - 3 then
 		G.trap_FS_FCloseFile(file)
-		return false
+		return 0
 	end
 
 	local buffer = G.trap_FS_Read(C.MAX_MAPS_TEXT, file)
@@ -137,23 +137,23 @@ function G.allowedMap(mapname)
 	end
 
 	G.trap_FS_FCloseFile(file)
-	return found
+	return if found then 1 else 0
 end
 
 function G.allowedGametype(gametypeStr)
 	local voteGametypes = G.trap_Cvar_VariableStringBuffer("g_voteGametypes")
 	if QS.Q_stricmp(voteGametypes, "*") == 0 then
-		return true
+		return 1
 	end
 	local length = #gametypeStr
 	if length > MAX_GAMETYPENAME_LENGTH - 3 then
-		return false
+		return 0
 	end
 	local tempStr = "/" .. gametypeStr .. "/"
 	if QS.Q_stristr(voteGametypes, tempStr) ~= nil then
-		return true
+		return 1
 	else
-		return false
+		return 0
 	end
 end
 
@@ -161,30 +161,30 @@ function G.allowedTimelimit(limit)
 	local min = G.g_voteMinTimelimit.integer
 	local max = G.g_voteMaxTimelimit.integer
 	if limit < min and limit ~= 0 then
-		return false
+		return 0
 	end
 	if max ~= 0 and limit > max then
-		return false
+		return 0
 	end
 	if limit == 0 and max > 0 then
-		return false
+		return 0
 	end
-	return true
+	return 1
 end
 
 function G.allowedFraglimit(limit)
 	local min = G.g_voteMinFraglimit.integer
 	local max = G.g_voteMaxFraglimit.integer
 	if limit < min and limit ~= 0 then
-		return false
+		return 0
 	end
 	if max ~= 0 and limit > max then
-		return false
+		return 0
 	end
 	if limit == 0 and max > 0 then
-		return false
+		return 0
 	end
-	return true
+	return 1
 end
 
 -- Reads votecustom.cfg and collects the commands usable with "/callvote custom COMMAND".

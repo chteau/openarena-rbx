@@ -235,13 +235,38 @@ function G.Cmd_CallVote_f(ent)
 			return
 		end
 
+		-- not in OA: `callvote map <map> <gametype>` changes both in one vote
+		-- (the client's `map` sends it when its g_gametype differs from ours)
+		local gametype = ""
+		local arg3 = G.trap_Argv(3)
+		if arg3 ~= "" then
+			i = QS.atoi(arg3)
+			if
+				i == C.GT_SINGLE_PLAYER
+				or i < C.GT_FFA
+				or i >= C.GT_MAX_GAME_TYPE
+				or G.allowedVote("g_gametype") == 0
+				or G.allowedGametype(arg3) == 0
+			then
+				G.trap_SendServerCommand(ent.index, "print \"Gametype is not available.\n\"")
+				return
+			end
+			if i ~= G.g_gametype.integer then
+				gametype = QS.va("g_gametype %d; ", i)
+			end
+		end
+
 		local s = G.trap_Cvar_VariableStringBuffer("nextmap")
 		if s ~= "" then
-			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s %s; set nextmap \"%s\"", arg1, arg2, s)
+			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s%s %s; set nextmap \"%s\"", gametype, arg1, arg2, s)
 		else
-			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s %s", arg1, arg2)
+			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "%s%s %s", gametype, arg1, arg2)
 		end
-		level.voteDisplayString = QS.Com_sprintf(C.MAX_STRING_CHARS, "Change map to: %s?", arg2)
+		if gametype ~= "" then
+			level.voteDisplayString = QS.Com_sprintf(C.MAX_STRING_CHARS, "Change map to: %s (%s)?", arg2, SF.gameNames[i])
+		else
+			level.voteDisplayString = QS.Com_sprintf(C.MAX_STRING_CHARS, "Change map to: %s?", arg2)
+		end
 	elseif QS.Q_strequal(arg1, "nextmap") then
 		if G.g_autonextmap.integer ~= 0 then
 			level.voteString = QS.Com_sprintf(C.MAX_STRING_CHARS, "endgamenow")
