@@ -37,7 +37,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'place', 'asset-ids.json')
-DEFAULT_LOCK = os.path.join(os.path.dirname(ROOT), 'conv', 'build', 'assets.lock.json')
+DEFAULT_LOCK = os.path.join(ROOT, 'build', 'assets.lock.json')
 LUNE = os.environ.get('LUNE', os.path.expanduser('~/.local/bin/lune'))
 
 MESHES_LUAU = '''

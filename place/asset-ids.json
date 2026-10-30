@@ -1,5 +1,16 @@
 {
- "audio": {},
+ "audio": {
+  "music/oa01.ogg": 139613930487364,
+  "music/oa02.ogg": 110436773467210,
+  "music/oa06.ogg": 118793375433868,
+  "music/oa07.ogg": 121896556457252,
+  "music/oa08.ogg": 113003204865041,
+  "music/oa13.ogg": 136643049580204,
+  "music/oa14.ogg": 132145519814911,
+  "sound/sfx_00.ogg": 77674245447029,
+  "sound/sfx_01.ogg": 126601219039929,
+  "sound/sfx_02.ogg": 116015028835235
+ },
  "images": {
   "images/env/anoice1/anoice1_bk.png": {
    "decal": 118143991588290,
@@ -2081,6 +2092,566 @@
    "decal": 83198654515822,
    "image": 122020030117180
   },
+  "images/models/players/assassin/icon_blue.png": {
+   "decal": 122577281840630,
+   "image": 128979805404464
+  },
+  "images/models/players/assassin/icon_default.png": {
+   "decal": 78591824149505,
+   "image": 110894938434730
+  },
+  "images/models/players/assassin/icon_ghost.png": {
+   "decal": 112639640530086,
+   "image": 77889977157953
+  },
+  "images/models/players/assassin/icon_red.png": {
+   "decal": 109338157923422,
+   "image": 108643603236644
+  },
+  "images/models/players/assassin/lower-blue.png": {
+   "decal": 133455671012117,
+   "image": 79473201110002
+  },
+  "images/models/players/assassin/lower-red.png": {
+   "decal": 128932091843994,
+   "image": 105514308314192
+  },
+  "images/models/players/assassin/lower.png": {
+   "decal": 111575347886351,
+   "image": 103510680198854
+  },
+  "images/models/players/assassin/lower_ghost.png": {
+   "decal": 136529900152381,
+   "image": 106157168541551
+  },
+  "images/models/players/assassin/pm_lower.png": {
+   "decal": 85032422867416,
+   "image": 74652033648173
+  },
+  "images/models/players/assassin/pm_upper.png": {
+   "decal": 72397995290707,
+   "image": 117203432257942
+  },
+  "images/models/players/assassin/upper-blue.png": {
+   "decal": 83743321970938,
+   "image": 106707847574183
+  },
+  "images/models/players/assassin/upper-red.png": {
+   "decal": 107400700438863,
+   "image": 89692527448319
+  },
+  "images/models/players/assassin/upper.png": {
+   "decal": 91869905418878,
+   "image": 121764292746104
+  },
+  "images/models/players/assassin/upper_ghost.png": {
+   "decal": 128505608835572,
+   "image": 125082328019711
+  },
+  "images/models/players/beret/cooldude.png": {
+   "decal": 115418135813292,
+   "image": 102866890000840
+  },
+  "images/models/players/beret/icon_blue.png": {
+   "decal": 100053534542690,
+   "image": 91019864722996
+  },
+  "images/models/players/beret/icon_default.png": {
+   "decal": 97349782248092,
+   "image": 104988939552961
+  },
+  "images/models/players/beret/icon_macho.png": {
+   "decal": 105662997875577,
+   "image": 119592925249122
+  },
+  "images/models/players/beret/icon_red.png": {
+   "decal": 103947450768017,
+   "image": 119523185150076
+  },
+  "images/models/players/beret/iconh_cooldude.png": {
+   "decal": 85958125879176,
+   "image": 86276947210168
+  },
+  "images/models/players/beret/skin1.png": {
+   "decal": 80250103636037,
+   "image": 89559901135842
+  },
+  "images/models/players/beret/skin1blue.png": {
+   "decal": 119437701326472,
+   "image": 113318268633182
+  },
+  "images/models/players/beret/skin1red.png": {
+   "decal": 89616896227062,
+   "image": 93366202577885
+  },
+  "images/models/players/beret/skin2.png": {
+   "decal": 91916152241733,
+   "image": 114856724895228
+  },
+  "images/models/players/beret/skin2blue.png": {
+   "decal": 124960253084789,
+   "image": 75990015591063
+  },
+  "images/models/players/beret/skin2red.png": {
+   "decal": 80209001027469,
+   "image": 74123900123389
+  },
+  "images/models/players/gargoyle/bared.png": {
+   "decal": 121324931801505,
+   "image": 84579677787910
+  },
+  "images/models/players/gargoyle/blue.png": {
+   "decal": 77999366921415,
+   "image": 106558922806030
+  },
+  "images/models/players/gargoyle/icon_blue.png": {
+   "decal": 99844568084671,
+   "image": 118955038429605
+  },
+  "images/models/players/gargoyle/icon_default.png": {
+   "decal": 70724840318338,
+   "image": 103693878682184
+  },
+  "images/models/players/gargoyle/icon_red.png": {
+   "decal": 109364637584722,
+   "image": 89193407587127
+  },
+  "images/models/players/gargoyle/icon_stone.png": {
+   "decal": 109783908249833,
+   "image": 105586006284824
+  },
+  "images/models/players/gargoyle/icon_tech.png": {
+   "decal": 81610632379697,
+   "image": 112553767445975
+  },
+  "images/models/players/gargoyle/iconh_obs.png": {
+   "decal": 96065079719874,
+   "image": 111531722367289
+  },
+  "images/models/players/gargoyle/morphedgarg.png": {
+   "decal": 125568804201517,
+   "image": 96366183085484
+  },
+  "images/models/players/gargoyle/morphedgarg_red.png": {
+   "decal": 132793426554861,
+   "image": 137739614507026
+  },
+  "images/models/players/gargoyle/morphedshader.png": {
+   "decal": 138237194161543,
+   "image": 72637941633462
+  },
+  "images/models/players/gargoyle/morphedshader_red.png": {
+   "decal": 90386117405754,
+   "image": 119701901105951
+  },
+  "images/models/players/gargoyle/morphedwings.png": {
+   "decal": 118194417293308,
+   "image": 126496938312841
+  },
+  "images/models/players/gargoyle/morphedwings_red.png": {
+   "decal": 103867532639773,
+   "image": 101879622176531
+  },
+  "images/models/players/gargoyle/pm.png": {
+   "decal": 117893933159406,
+   "image": 114528917242156
+  },
+  "images/models/players/gargoyle/pm_wings.png": {
+   "decal": 102462897229947,
+   "image": 81759601003401
+  },
+  "images/models/players/gargoyle/red.png": {
+   "decal": 123354284694806,
+   "image": 79049780614814
+  },
+  "images/models/players/gargoyle/specwing.png": {
+   "decal": 131835392271392,
+   "image": 99209380205074
+  },
+  "images/models/players/gargoyle/stone.png": {
+   "decal": 133482308323117,
+   "image": 77363616555036
+  },
+  "images/models/players/gargoyle/wings-blue.png": {
+   "decal": 136564662821895,
+   "image": 130177220210373
+  },
+  "images/models/players/gargoyle/wings-stone.png": {
+   "decal": 103615281328318,
+   "image": 76547724666511
+  },
+  "images/models/players/gargoyle/wings-yellow.png": {
+   "decal": 90150651236538,
+   "image": 127082883207477
+  },
+  "images/models/players/gargoyle/wings.png": {
+   "decal": 87610531233868,
+   "image": 75327609160726
+  },
+  "images/models/players/grism/blueskin.png": {
+   "decal": 102833471539742,
+   "image": 140138002797737
+  },
+  "images/models/players/grism/enkiskin.png": {
+   "decal": 102496139884330,
+   "image": 94417103170116
+  },
+  "images/models/players/grism/indigo.png": {
+   "decal": 96764775158539,
+   "image": 130426730920608
+  },
+  "images/models/players/grism/redskin.png": {
+   "decal": 136093499521503,
+   "image": 100519604179990
+  },
+  "images/models/players/heads/sergei/icon_blue.png": {
+   "decal": 127038426418916,
+   "image": 101146572024576
+  },
+  "images/models/players/heads/sergei/icon_default.png": {
+   "decal": 96698176428296,
+   "image": 81358902174145
+  },
+  "images/models/players/heads/sergei/icon_red.png": {
+   "decal": 81401091473767,
+   "image": 121791839847104
+  },
+  "images/models/players/liz/h_head.png": {
+   "decal": 74371826677953,
+   "image": 81992481218091
+  },
+  "images/models/players/liz/h_head_blue.png": {
+   "decal": 94790729237116,
+   "image": 78076137582469
+  },
+  "images/models/players/liz/h_head_red.png": {
+   "decal": 132764157586381,
+   "image": 72572985137915
+  },
+  "images/models/players/liz/icon_blue.png": {
+   "decal": 108152030523096,
+   "image": 118720959511862
+  },
+  "images/models/players/liz/icon_default.png": {
+   "decal": 125156875122969,
+   "image": 80263636252376
+  },
+  "images/models/players/liz/icon_red.png": {
+   "decal": 103063032132661,
+   "image": 127389069557503
+  },
+  "images/models/players/liz/l_legs.png": {
+   "decal": 76624234828794,
+   "image": 104527537938408
+  },
+  "images/models/players/liz/l_legs_blue.png": {
+   "decal": 85638604557859,
+   "image": 99431161262574
+  },
+  "images/models/players/liz/l_legs_red.png": {
+   "decal": 76817579659828,
+   "image": 130600335889176
+  },
+  "images/models/players/liz/pm_head.png": {
+   "decal": 116042887856652,
+   "image": 112139514376897
+  },
+  "images/models/players/liz/pm_l_legs.png": {
+   "decal": 128901545185988,
+   "image": 82117301650328
+  },
+  "images/models/players/liz/pm_u_torso.png": {
+   "decal": 132732783458406,
+   "image": 129011258879741
+  },
+  "images/models/players/liz/u_torso.png": {
+   "decal": 126753642087202,
+   "image": 99691159004359
+  },
+  "images/models/players/liz/u_torso_blue.png": {
+   "decal": 87974778332511,
+   "image": 110797761077572
+  },
+  "images/models/players/liz/u_torso_red.png": {
+   "decal": 74283048713068,
+   "image": 87760963809096
+  },
+  "images/models/players/penguin/icon_blue.png": {
+   "decal": 96040956910991,
+   "image": 131961106111260
+  },
+  "images/models/players/penguin/icon_default.png": {
+   "decal": 86538213279294,
+   "image": 99894268427662
+  },
+  "images/models/players/penguin/icon_red.png": {
+   "decal": 140587428226627,
+   "image": 121491747528690
+  },
+  "images/models/players/penguin/skin.png": {
+   "decal": 109362954641768,
+   "image": 137900455794842
+  },
+  "images/models/players/penguin/skinblue.png": {
+   "decal": 92008621695495,
+   "image": 131754168622107
+  },
+  "images/models/players/penguin/skinred.png": {
+   "decal": 132687681064969,
+   "image": 78692608487840
+  },
+  "images/models/players/sarge/icon_blue.png": {
+   "decal": 101606221190871,
+   "image": 101524078025553
+  },
+  "images/models/players/sarge/icon_default.png": {
+   "decal": 73644840003509,
+   "image": 122649002982164
+  },
+  "images/models/players/sarge/icon_indigo.png": {
+   "decal": 95110506776485,
+   "image": 134471989548644
+  },
+  "images/models/players/sarge/icon_red.png": {
+   "decal": 92009325356114,
+   "image": 105924565600128
+  },
+  "images/models/players/sergei/face.png": {
+   "decal": 105445291455475,
+   "image": 77875234759672
+  },
+  "images/models/players/sergei/faceblue.png": {
+   "decal": 121782773263375,
+   "image": 84988533811625
+  },
+  "images/models/players/sergei/facered.png": {
+   "decal": 92984258888133,
+   "image": 99598698628648
+  },
+  "images/models/players/sergei/hairs.png": {
+   "decal": 108589590968227,
+   "image": 125490371435586
+  },
+  "images/models/players/sergei/hairsblue.png": {
+   "decal": 105770959224151,
+   "image": 122177847717776
+  },
+  "images/models/players/sergei/hairsred.png": {
+   "decal": 139433721893411,
+   "image": 113418845085290
+  },
+  "images/models/players/sergei/icon_blue.png": {
+   "decal": 106039628663457,
+   "image": 75348344360040
+  },
+  "images/models/players/sergei/icon_default.png": {
+   "decal": 91311960716828,
+   "image": 86317296528315
+  },
+  "images/models/players/sergei/icon_red.png": {
+   "decal": 124424284308512,
+   "image": 99550899497531
+  },
+  "images/models/players/sergei/pm_face.png": {
+   "decal": 90143513043950,
+   "image": 94967329757756
+  },
+  "images/models/players/sergei/pm_hairs.png": {
+   "decal": 83774579735697,
+   "image": 104826627939693
+  },
+  "images/models/players/sergei/pm_skin.png": {
+   "decal": 117230786471954,
+   "image": 76586359906340
+  },
+  "images/models/players/sergei/skin.png": {
+   "decal": 106296737714128,
+   "image": 84183006217680
+  },
+  "images/models/players/sergei/skinblue.png": {
+   "decal": 120097205023060,
+   "image": 112661443973168
+  },
+  "images/models/players/sergei/skinred.png": {
+   "decal": 121809120615911,
+   "image": 111377165121792
+  },
+  "images/models/players/skelebot/icon_blue.png": {
+   "decal": 129755234401799,
+   "image": 137037861773204
+  },
+  "images/models/players/skelebot/icon_default.png": {
+   "decal": 77002670388995,
+   "image": 124566672624441
+  },
+  "images/models/players/skelebot/icon_metal.png": {
+   "decal": 112092053831069,
+   "image": 99074447578424
+  },
+  "images/models/players/skelebot/icon_red.png": {
+   "decal": 126994999754338,
+   "image": 71415674267836
+  },
+  "images/models/players/skelebot/pm_skin1.png": {
+   "decal": 129468367190533,
+   "image": 75357723814754
+  },
+  "images/models/players/skelebot/pm_skin2.png": {
+   "decal": 106314721337037,
+   "image": 84446631143871
+  },
+  "images/models/players/skelebot/skin1.png": {
+   "decal": 103620039712722,
+   "image": 138617035683601
+  },
+  "images/models/players/skelebot/skin1blue.png": {
+   "decal": 131208761800374,
+   "image": 120535604662910
+  },
+  "images/models/players/skelebot/skin1metal.png": {
+   "decal": 130287248635406,
+   "image": 112888092848402
+  },
+  "images/models/players/skelebot/skin1red.png": {
+   "decal": 114709480183679,
+   "image": 133708918295248
+  },
+  "images/models/players/skelebot/skin2.png": {
+   "decal": 137113633304483,
+   "image": 138517230131176
+  },
+  "images/models/players/skelebot/skin2blue.png": {
+   "decal": 71224637965887,
+   "image": 81468843610653
+  },
+  "images/models/players/skelebot/skin2metal.png": {
+   "decal": 117621728752320,
+   "image": 116512592711860
+  },
+  "images/models/players/skelebot/skin2red.png": {
+   "decal": 133617684132345,
+   "image": 123048179006663
+  },
+  "images/models/players/smarine/2h_head.png": {
+   "decal": 118861612024376,
+   "image": 136716018844716
+  },
+  "images/models/players/smarine/2l_legs.png": {
+   "decal": 117330489269271,
+   "image": 79954613851774
+  },
+  "images/models/players/smarine/2u_torso.png": {
+   "decal": 102193395120694,
+   "image": 106539964171693
+  },
+  "images/models/players/smarine/h_headb.png": {
+   "decal": 83081734976156,
+   "image": 129715089620653
+  },
+  "images/models/players/smarine/h_heado.png": {
+   "decal": 122174779588864,
+   "image": 96460952482253
+  },
+  "images/models/players/smarine/h_headr.png": {
+   "decal": 122318008970153,
+   "image": 78341626668111
+  },
+  "images/models/players/smarine/icon_blue.png": {
+   "decal": 90342094315554,
+   "image": 123285637594099
+  },
+  "images/models/players/smarine/icon_default.png": {
+   "decal": 75102252684276,
+   "image": 72965299917799
+  },
+  "images/models/players/smarine/icon_orange.png": {
+   "decal": 71914482308734,
+   "image": 122608689638486
+  },
+  "images/models/players/smarine/icon_red.png": {
+   "decal": 91240984226330,
+   "image": 88351370434073
+  },
+  "images/models/players/smarine/l_legsb.png": {
+   "decal": 133438943130783,
+   "image": 100590629922381
+  },
+  "images/models/players/smarine/l_legso.png": {
+   "decal": 101600105998550,
+   "image": 83034889290172
+  },
+  "images/models/players/smarine/l_legsr.png": {
+   "decal": 136570437588117,
+   "image": 101885796124027
+  },
+  "images/models/players/smarine/pm_h_headb.png": {
+   "decal": 91048180048479,
+   "image": 125871575296584
+  },
+  "images/models/players/smarine/pm_l_legsb.png": {
+   "decal": 135840200692316,
+   "image": 130437950096901
+  },
+  "images/models/players/smarine/pm_u_torsob.png": {
+   "decal": 115050565167190,
+   "image": 106521616710405
+  },
+  "images/models/players/smarine/u_torsob.png": {
+   "decal": 103390259026892,
+   "image": 135074743346464
+  },
+  "images/models/players/smarine/u_torsoo.png": {
+   "decal": 119985635754673,
+   "image": 83848620808896
+  },
+  "images/models/players/smarine/u_torsor.png": {
+   "decal": 130434207545794,
+   "image": 74665375401956
+  },
+  "images/models/players/tony/bluesuit.png": {
+   "decal": 98769287261002,
+   "image": 117154520145358
+  },
+  "images/models/players/tony/head.png": {
+   "decal": 73998766504384,
+   "image": 109909031071048
+  },
+  "images/models/players/tony/headblue.png": {
+   "decal": 109489892367167,
+   "image": 123402907196613
+  },
+  "images/models/players/tony/headred.png": {
+   "decal": 106097788817037,
+   "image": 124563709596973
+  },
+  "images/models/players/tony/icon_blue.png": {
+   "decal": 90181291892252,
+   "image": 72601788611483
+  },
+  "images/models/players/tony/icon_default.png": {
+   "decal": 101581000155417,
+   "image": 111909815738315
+  },
+  "images/models/players/tony/icon_red.png": {
+   "decal": 71618982462811,
+   "image": 76245198792587
+  },
+  "images/models/players/tony/pm_head.png": {
+   "decal": 131892359346704,
+   "image": 83952325457487
+  },
+  "images/models/players/tony/pm_suit.png": {
+   "decal": 99041714980426,
+   "image": 71622746812472
+  },
+  "images/models/players/tony/redsuit.png": {
+   "decal": 118883785587062,
+   "image": 90936719369834
+  },
+  "images/models/players/tony/suit.png": {
+   "decal": 104677086905782,
+   "image": 95940856701009
+  },
   "images/models/powerups/ammo/ammobox.png": {
    "decal": 115600386092139,
    "image": 118552490461745
@@ -3682,8 +4253,8 @@
    "image": 133961866458591
   },
   "images/textures/cosmo_sfx/decal2.png": {
-   "decal": 128896553682924,
-   "image": 130270634518388
+   "decal": 120178541372813,
+   "image": 132834277703365
   },
   "images/textures/cosmo_sfx/decal3.png": {
    "decal": 111810057590275,
@@ -8504,6 +9075,1130 @@
   "maps/oa_minia/atlas_12.png": {
    "decal": 140210751955753,
    "image": 108102870308270
+  },
+  "maps/oa_minia/atlas_2.png": {
+   "decal": 117761336215111,
+   "image": 123651351580032
+  },
+  "maps/oa_minia/atlas_3.png": {
+   "decal": 113245382473200,
+   "image": 131613102502713
+  },
+  "maps/oa_minia/atlas_4.png": {
+   "decal": 79126687179903,
+   "image": 104328600561090
+  },
+  "maps/oa_minia/atlas_5.png": {
+   "decal": 92987163461398,
+   "image": 121836217592763
+  },
+  "maps/oa_minia/atlas_6.png": {
+   "decal": 90800329700804,
+   "image": 102268627648185
+  },
+  "maps/oa_minia/atlas_7.png": {
+   "decal": 96176093946317,
+   "image": 114531960621679
+  },
+  "maps/oa_minia/atlas_8.png": {
+   "decal": 85947151988106,
+   "image": 98454385290483
+  },
+  "maps/oa_minia/atlas_9.png": {
+   "decal": 76009372093606,
+   "image": 126808160051273
+  },
+  "maps/oa_pvomit/atlas_0.png": {
+   "decal": 72537275975735,
+   "image": 134000920732242
+  },
+  "maps/oa_pvomit/atlas_1.png": {
+   "decal": 96112735017297,
+   "image": 94070087264023
+  },
+  "maps/oa_pvomit/atlas_10.png": {
+   "decal": 137003569150931,
+   "image": 139311791259653
+  },
+  "maps/oa_pvomit/atlas_11.png": {
+   "decal": 102839788425026,
+   "image": 91461994939726
+  },
+  "maps/oa_pvomit/atlas_12.png": {
+   "decal": 104461786505292,
+   "image": 102553042559067
+  },
+  "maps/oa_pvomit/atlas_13.png": {
+   "decal": 118135261683089,
+   "image": 94724211807660
+  },
+  "maps/oa_pvomit/atlas_2.png": {
+   "decal": 114792945439127,
+   "image": 126841442821390
+  },
+  "maps/oa_pvomit/atlas_3.png": {
+   "decal": 135928139764196,
+   "image": 105595092443391
+  },
+  "maps/oa_pvomit/atlas_4.png": {
+   "decal": 75524065451050,
+   "image": 97163852708931
+  },
+  "maps/oa_pvomit/atlas_5.png": {
+   "decal": 118638221783215,
+   "image": 74604548732008
+  },
+  "maps/oa_pvomit/atlas_6.png": {
+   "decal": 96090407296929,
+   "image": 85157401271598
+  },
+  "maps/oa_pvomit/atlas_7.png": {
+   "decal": 92210311533547,
+   "image": 76870494015074
+  },
+  "maps/oa_pvomit/atlas_8.png": {
+   "decal": 89212403774039,
+   "image": 93059524135419
+  },
+  "maps/oa_pvomit/atlas_9.png": {
+   "decal": 78788455864070,
+   "image": 130328452435466
+  },
+  "maps/oa_reptctf11/atlas_0.png": {
+   "decal": 93220169703118,
+   "image": 124070430565651
+  },
+  "maps/oa_reptctf11/atlas_1.png": {
+   "decal": 135504186926157,
+   "image": 116864129190465
+  },
+  "maps/oa_reptctf11/atlas_10.png": {
+   "decal": 118110634544832,
+   "image": 80508221094939
+  },
+  "maps/oa_reptctf11/atlas_11.png": {
+   "decal": 138575063321642,
+   "image": 139039488764868
+  },
+  "maps/oa_reptctf11/atlas_12.png": {
+   "decal": 85592295188080,
+   "image": 113239249017027
+  },
+  "maps/oa_reptctf11/atlas_2.png": {
+   "decal": 118918432814541,
+   "image": 131446237703609
+  },
+  "maps/oa_reptctf11/atlas_3.png": {
+   "decal": 132832161019058,
+   "image": 139146306969231
+  },
+  "maps/oa_reptctf11/atlas_4.png": {
+   "decal": 110801103292663,
+   "image": 73993939195947
+  },
+  "maps/oa_reptctf11/atlas_5.png": {
+   "decal": 134286482137012,
+   "image": 136656448551128
+  },
+  "maps/oa_reptctf11/atlas_6.png": {
+   "decal": 135076120294297,
+   "image": 138797569219881
+  },
+  "maps/oa_reptctf11/atlas_7.png": {
+   "decal": 95645225631582,
+   "image": 125438315593931
+  },
+  "maps/oa_reptctf11/atlas_8.png": {
+   "decal": 91217593365037,
+   "image": 119553609944955
+  },
+  "maps/oa_reptctf11/atlas_9.png": {
+   "decal": 123460981461193,
+   "image": 121028237764146
+  },
+  "maps/oa_rpg3dm2/atlas_0.png": {
+   "decal": 87501267192156,
+   "image": 74408872103421
+  },
+  "maps/oa_rpg3dm2/atlas_1.png": {
+   "decal": 93170969878011,
+   "image": 137240822315591
+  },
+  "maps/oa_rpg3dm2/atlas_10.png": {
+   "decal": 98941140295475,
+   "image": 85717153843124
+  },
+  "maps/oa_rpg3dm2/atlas_11.png": {
+   "decal": 86918581796325,
+   "image": 71161266167794
+  },
+  "maps/oa_rpg3dm2/atlas_12.png": {
+   "decal": 98996716247451,
+   "image": 136942187407987
+  },
+  "maps/oa_rpg3dm2/atlas_13.png": {
+   "decal": 128009416608753,
+   "image": 116881875577259
+  },
+  "maps/oa_rpg3dm2/atlas_2.png": {
+   "decal": 96635377311088,
+   "image": 88259856932662
+  },
+  "maps/oa_rpg3dm2/atlas_3.png": {
+   "decal": 90547830369907,
+   "image": 114364840682991
+  },
+  "maps/oa_rpg3dm2/atlas_4.png": {
+   "decal": 121905224254113,
+   "image": 122281854329644
+  },
+  "maps/oa_rpg3dm2/atlas_5.png": {
+   "decal": 97596316140110,
+   "image": 78776752527505
+  },
+  "maps/oa_rpg3dm2/atlas_6.png": {
+   "decal": 128119973923700,
+   "image": 107560296798410
+  },
+  "maps/oa_rpg3dm2/atlas_7.png": {
+   "decal": 90167611150185,
+   "image": 78454153912581
+  },
+  "maps/oa_rpg3dm2/atlas_8.png": {
+   "decal": 91405864472830,
+   "image": 74862387931424
+  },
+  "maps/oa_rpg3dm2/atlas_9.png": {
+   "decal": 94138502869529,
+   "image": 96077884297219
+  },
+  "maps/oa_shine/atlas_0.png": {
+   "decal": 77997874180256,
+   "image": 136905789710568
+  },
+  "maps/oa_shine/atlas_1.png": {
+   "decal": 139717716893638,
+   "image": 119345307930481
+  },
+  "maps/oa_shine/atlas_10.png": {
+   "decal": 96035279094388,
+   "image": 119697851655208
+  },
+  "maps/oa_shine/atlas_11.png": {
+   "decal": 105325253459693,
+   "image": 135367426127146
+  },
+  "maps/oa_shine/atlas_12.png": {
+   "decal": 98908438286404,
+   "image": 119041340275473
+  },
+  "maps/oa_shine/atlas_13.png": {
+   "decal": 131741546053095,
+   "image": 89193750391143
+  },
+  "maps/oa_shine/atlas_2.png": {
+   "decal": 118876838862865,
+   "image": 102674387019230
+  },
+  "maps/oa_shine/atlas_3.png": {
+   "decal": 102510406015112,
+   "image": 116437724326374
+  },
+  "maps/oa_shine/atlas_4.png": {
+   "decal": 104453657862270,
+   "image": 92146933561320
+  },
+  "maps/oa_shine/atlas_5.png": {
+   "decal": 70907598310734,
+   "image": 78257950682563
+  },
+  "maps/oa_shine/atlas_6.png": {
+   "decal": 88756632625130,
+   "image": 87509341198843
+  },
+  "maps/oa_shine/atlas_7.png": {
+   "decal": 72449583855341,
+   "image": 78391845508310
+  },
+  "maps/oa_shine/atlas_8.png": {
+   "decal": 77539967043877,
+   "image": 96759013167718
+  },
+  "maps/oa_shine/atlas_9.png": {
+   "decal": 99371236776956,
+   "image": 85579747512693
+  },
+  "maps/oa_shouse/atlas_0.png": {
+   "decal": 115161520083054,
+   "image": 109022309250554
+  },
+  "maps/oa_shouse/atlas_1.png": {
+   "decal": 134905471295213,
+   "image": 72121769562439
+  },
+  "maps/oa_shouse/atlas_10.png": {
+   "decal": 73698186876410,
+   "image": 136173058110912
+  },
+  "maps/oa_shouse/atlas_11.png": {
+   "decal": 117172028068612,
+   "image": 81487336681654
+  },
+  "maps/oa_shouse/atlas_12.png": {
+   "decal": 73112094627491,
+   "image": 132220462264202
+  },
+  "maps/oa_shouse/atlas_2.png": {
+   "decal": 98989241139212,
+   "image": 109389161342970
+  },
+  "maps/oa_shouse/atlas_3.png": {
+   "decal": 94368001518762,
+   "image": 127281088779647
+  },
+  "maps/oa_shouse/atlas_4.png": {
+   "decal": 84843277875385,
+   "image": 91257466430954
+  },
+  "maps/oa_shouse/atlas_5.png": {
+   "decal": 112662071987799,
+   "image": 95700274002960
+  },
+  "maps/oa_shouse/atlas_6.png": {
+   "decal": 108172947276015,
+   "image": 76062415435764
+  },
+  "maps/oa_shouse/atlas_7.png": {
+   "decal": 97224000389936,
+   "image": 96992170836316
+  },
+  "maps/oa_shouse/atlas_8.png": {
+   "decal": 109868179948753,
+   "image": 111708949611703
+  },
+  "maps/oa_shouse/atlas_9.png": {
+   "decal": 115546643646034,
+   "image": 86516627663379
+  },
+  "maps/oa_spirit3/atlas_0.png": {
+   "decal": 73374751374629,
+   "image": 82616178628449
+  },
+  "maps/oa_spirit3/atlas_1.png": {
+   "decal": 72972098693696,
+   "image": 107041531073239
+  },
+  "maps/oa_spirit3/atlas_10.png": {
+   "decal": 118134926682412,
+   "image": 103588280186403
+  },
+  "maps/oa_spirit3/atlas_11.png": {
+   "decal": 125848843461341,
+   "image": 102093455566050
+  },
+  "maps/oa_spirit3/atlas_12.png": {
+   "decal": 103567384296208,
+   "image": 125344449301002
+  },
+  "maps/oa_spirit3/atlas_2.png": {
+   "decal": 137800606236465,
+   "image": 93052045458406
+  },
+  "maps/oa_spirit3/atlas_3.png": {
+   "decal": 81060974557588,
+   "image": 111242793927951
+  },
+  "maps/oa_spirit3/atlas_4.png": {
+   "decal": 97102894352518,
+   "image": 136680576002682
+  },
+  "maps/oa_spirit3/atlas_5.png": {
+   "decal": 125569616156550,
+   "image": 81647338874530
+  },
+  "maps/oa_spirit3/atlas_6.png": {
+   "decal": 136944270901554,
+   "image": 136341900040566
+  },
+  "maps/oa_spirit3/atlas_7.png": {
+   "decal": 101014806463129,
+   "image": 76165584230240
+  },
+  "maps/oa_spirit3/atlas_8.png": {
+   "decal": 74409128486886,
+   "image": 118921067108590
+  },
+  "maps/oa_spirit3/atlas_9.png": {
+   "decal": 127319509575926,
+   "image": 120177753919896
+  },
+  "maps/oa_thor/atlas_0.png": {
+   "decal": 74374315052610,
+   "image": 115495132307159
+  },
+  "maps/oa_thor/atlas_1.png": {
+   "decal": 86441452641508,
+   "image": 80986380720802
+  },
+  "maps/oa_thor/atlas_10.png": {
+   "decal": 103500279938514,
+   "image": 118381797194430
+  },
+  "maps/oa_thor/atlas_11.png": {
+   "decal": 129446571887642,
+   "image": 115714691001482
+  },
+  "maps/oa_thor/atlas_12.png": {
+   "decal": 118885369143047,
+   "image": 72870492508104
+  },
+  "maps/oa_thor/atlas_13.png": {
+   "decal": 109980628702476,
+   "image": 78858636951490
+  },
+  "maps/oa_thor/atlas_14.png": {
+   "decal": 108554311854899,
+   "image": 135756207733326
+  },
+  "maps/oa_thor/atlas_15.png": {
+   "decal": 115502301471655,
+   "image": 97646027191629
+  },
+  "maps/oa_thor/atlas_2.png": {
+   "decal": 124827387992451,
+   "image": 80886106587552
+  },
+  "maps/oa_thor/atlas_3.png": {
+   "decal": 89744124137022,
+   "image": 79138844731282
+  },
+  "maps/oa_thor/atlas_4.png": {
+   "decal": 85439756132415,
+   "image": 71793948660922
+  },
+  "maps/oa_thor/atlas_5.png": {
+   "decal": 82648097933248,
+   "image": 117722426241997
+  },
+  "maps/oa_thor/atlas_6.png": {
+   "decal": 82515489189135,
+   "image": 96004697300277
+  },
+  "maps/oa_thor/atlas_7.png": {
+   "decal": 95477238394072,
+   "image": 86408647776977
+  },
+  "maps/oa_thor/atlas_8.png": {
+   "decal": 95962165452239,
+   "image": 134490058398619
+  },
+  "maps/oa_thor/atlas_9.png": {
+   "decal": 102635307309383,
+   "image": 104280566793606
+  },
+  "maps/oasago1/atlas_0.png": {
+   "decal": 78458714264677,
+   "image": 133288792222907
+  },
+  "maps/oasago1/atlas_1.png": {
+   "decal": 101381121972863,
+   "image": 95654508111366
+  },
+  "maps/oasago1/atlas_10.png": {
+   "decal": 111229468096472,
+   "image": 82521602322775
+  },
+  "maps/oasago1/atlas_11.png": {
+   "decal": 137681707439478,
+   "image": 90051149211628
+  },
+  "maps/oasago1/atlas_12.png": {
+   "decal": 96538457988215,
+   "image": 129383994333447
+  },
+  "maps/oasago1/atlas_13.png": {
+   "decal": 98100264030198,
+   "image": 81355603682036
+  },
+  "maps/oasago1/atlas_14.png": {
+   "decal": 102216474730731,
+   "image": 107259433340345
+  },
+  "maps/oasago1/atlas_2.png": {
+   "decal": 110881698729456,
+   "image": 99247368310229
+  },
+  "maps/oasago1/atlas_3.png": {
+   "decal": 114500120427320,
+   "image": 119113632288936
+  },
+  "maps/oasago1/atlas_4.png": {
+   "decal": 92120171783830,
+   "image": 105892983083609
+  },
+  "maps/oasago1/atlas_5.png": {
+   "decal": 122214549905082,
+   "image": 99383074311913
+  },
+  "maps/oasago1/atlas_6.png": {
+   "decal": 117725906640388,
+   "image": 122680138478659
+  },
+  "maps/oasago1/atlas_7.png": {
+   "decal": 88247219968750,
+   "image": 98746214373917
+  },
+  "maps/oasago1/atlas_8.png": {
+   "decal": 100899246355966,
+   "image": 93842030683375
+  },
+  "maps/oasago1/atlas_9.png": {
+   "decal": 107860148279654,
+   "image": 89242806628503
+  },
+  "maps/oasago2/atlas_0.png": {
+   "decal": 109537265107559,
+   "image": 130858168659517
+  },
+  "maps/oasago2/atlas_1.png": {
+   "decal": 77656551426473,
+   "image": 71308476194852
+  },
+  "maps/oasago2/atlas_10.png": {
+   "decal": 107340565174415,
+   "image": 117738354115941
+  },
+  "maps/oasago2/atlas_11.png": {
+   "decal": 102020899319005,
+   "image": 75172639657308
+  },
+  "maps/oasago2/atlas_12.png": {
+   "decal": 119108929680958,
+   "image": 127801708380466
+  },
+  "maps/oasago2/atlas_2.png": {
+   "decal": 93824824578107,
+   "image": 122233750284883
+  },
+  "maps/oasago2/atlas_3.png": {
+   "decal": 110842728063823,
+   "image": 83072434437487
+  },
+  "maps/oasago2/atlas_4.png": {
+   "decal": 124485106343051,
+   "image": 134518811065169
+  },
+  "maps/oasago2/atlas_5.png": {
+   "decal": 100985606804423,
+   "image": 74584624220888
+  },
+  "maps/oasago2/atlas_6.png": {
+   "decal": 91725557679645,
+   "image": 108075471836300
+  },
+  "maps/oasago2/atlas_7.png": {
+   "decal": 137210436956235,
+   "image": 127442097451712
+  },
+  "maps/oasago2/atlas_8.png": {
+   "decal": 94418045862751,
+   "image": 72848320447217
+  },
+  "maps/oasago2/atlas_9.png": {
+   "decal": 121153829771397,
+   "image": 98765485092805
+  },
+  "maps/ps37ctf/atlas_0.png": {
+   "decal": 138443403503808,
+   "image": 96231925504838
+  },
+  "maps/ps37ctf/atlas_1.png": {
+   "decal": 138859394800107,
+   "image": 75213562242740
+  },
+  "maps/ps37ctf/atlas_10.png": {
+   "decal": 76591569735971,
+   "image": 75103872733443
+  },
+  "maps/ps37ctf/atlas_11.png": {
+   "decal": 139579044444722,
+   "image": 90739000812433
+  },
+  "maps/ps37ctf/atlas_12.png": {
+   "decal": 102762374184881,
+   "image": 112344195255441
+  },
+  "maps/ps37ctf/atlas_2.png": {
+   "decal": 95253248602413,
+   "image": 89711923352867
+  },
+  "maps/ps37ctf/atlas_3.png": {
+   "decal": 87696293126544,
+   "image": 136482406464884
+  },
+  "maps/ps37ctf/atlas_4.png": {
+   "decal": 128084335836565,
+   "image": 113576028547968
+  },
+  "maps/ps37ctf/atlas_5.png": {
+   "decal": 128234093213163,
+   "image": 85336981221316
+  },
+  "maps/ps37ctf/atlas_6.png": {
+   "decal": 115461843542078,
+   "image": 113455748286728
+  },
+  "maps/ps37ctf/atlas_7.png": {
+   "decal": 94002064480410,
+   "image": 124188770086206
+  },
+  "maps/ps37ctf/atlas_8.png": {
+   "decal": 121264002987588,
+   "image": 123090758594512
+  },
+  "maps/ps37ctf/atlas_9.png": {
+   "decal": 133347715543990,
+   "image": 97847806051426
+  },
+  "maps/ps37ctf2/atlas_0.png": {
+   "decal": 100178774735789,
+   "image": 95304014476546
+  },
+  "maps/ps37ctf2/atlas_1.png": {
+   "decal": 120509904157416,
+   "image": 86328635482146
+  },
+  "maps/ps37ctf2/atlas_10.png": {
+   "decal": 101859601901129,
+   "image": 100182945481298
+  },
+  "maps/ps37ctf2/atlas_11.png": {
+   "decal": 100160730448515,
+   "image": 100036192676171
+  },
+  "maps/ps37ctf2/atlas_12.png": {
+   "decal": 135364815700467,
+   "image": 86785539486022
+  },
+  "maps/ps37ctf2/atlas_13.png": {
+   "decal": 103139236822430,
+   "image": 102712592107648
+  },
+  "maps/ps37ctf2/atlas_2.png": {
+   "decal": 112294951703219,
+   "image": 114208619440562
+  },
+  "maps/ps37ctf2/atlas_3.png": {
+   "decal": 111557107017950,
+   "image": 116521219606678
+  },
+  "maps/ps37ctf2/atlas_4.png": {
+   "decal": 81484121480904,
+   "image": 99068701464025
+  },
+  "maps/ps37ctf2/atlas_5.png": {
+   "decal": 75500084207150,
+   "image": 72463921064358
+  },
+  "maps/ps37ctf2/atlas_6.png": {
+   "decal": 75881357315682,
+   "image": 140268289834790
+  },
+  "maps/ps37ctf2/atlas_7.png": {
+   "decal": 74729460408483,
+   "image": 135550047485902
+  },
+  "maps/ps37ctf2/atlas_8.png": {
+   "decal": 105324601418021,
+   "image": 73577708051129
+  },
+  "maps/ps37ctf2/atlas_9.png": {
+   "decal": 76952277960688,
+   "image": 111773972907529
+  },
+  "maps/ps9ctf/atlas_0.png": {
+   "decal": 123674011729589,
+   "image": 128443188596879
+  },
+  "maps/ps9ctf/atlas_1.png": {
+   "decal": 123672761851429,
+   "image": 85530154255363
+  },
+  "maps/ps9ctf/atlas_10.png": {
+   "decal": 109849199664004,
+   "image": 85068724561738
+  },
+  "maps/ps9ctf/atlas_11.png": {
+   "decal": 74752772779378,
+   "image": 133457103301557
+  },
+  "maps/ps9ctf/atlas_12.png": {
+   "decal": 107677783777842,
+   "image": 106011896841893
+  },
+  "maps/ps9ctf/atlas_2.png": {
+   "decal": 105829652371023,
+   "image": 82897097523355
+  },
+  "maps/ps9ctf/atlas_3.png": {
+   "decal": 108353912072587,
+   "image": 77962141655782
+  },
+  "maps/ps9ctf/atlas_4.png": {
+   "decal": 105249921174498,
+   "image": 117857450331192
+  },
+  "maps/ps9ctf/atlas_5.png": {
+   "decal": 90371999510628,
+   "image": 92326304384283
+  },
+  "maps/ps9ctf/atlas_6.png": {
+   "decal": 70956064440120,
+   "image": 113319004812594
+  },
+  "maps/ps9ctf/atlas_7.png": {
+   "decal": 117393741485058,
+   "image": 90998645219242
+  },
+  "maps/ps9ctf/atlas_8.png": {
+   "decal": 88185520783534,
+   "image": 136748376849454
+  },
+  "maps/ps9ctf/atlas_9.png": {
+   "decal": 119218930337605,
+   "image": 86597386028893
+  },
+  "maps/pul1ctf/atlas_0.png": {
+   "decal": 110841252696422,
+   "image": 100266404522490
+  },
+  "maps/pul1ctf/atlas_1.png": {
+   "decal": 126964151460172,
+   "image": 92921346603760
+  },
+  "maps/pul1ctf/atlas_10.png": {
+   "decal": 118272466281919,
+   "image": 113063809728039
+  },
+  "maps/pul1ctf/atlas_11.png": {
+   "decal": 111403365260442,
+   "image": 74411570071265
+  },
+  "maps/pul1ctf/atlas_12.png": {
+   "decal": 124603220237785,
+   "image": 93429025551458
+  },
+  "maps/pul1ctf/atlas_13.png": {
+   "decal": 127983024689189,
+   "image": 133933351484417
+  },
+  "maps/pul1ctf/atlas_2.png": {
+   "decal": 119501123093634,
+   "image": 91934434687851
+  },
+  "maps/pul1ctf/atlas_3.png": {
+   "decal": 94746344777788,
+   "image": 115675609763582
+  },
+  "maps/pul1ctf/atlas_4.png": {
+   "decal": 132369204666975,
+   "image": 134894306712590
+  },
+  "maps/pul1ctf/atlas_5.png": {
+   "decal": 131106476078199,
+   "image": 132040790193711
+  },
+  "maps/pul1ctf/atlas_6.png": {
+   "decal": 98233633200221,
+   "image": 82898242335593
+  },
+  "maps/pul1ctf/atlas_7.png": {
+   "decal": 81701134101099,
+   "image": 101010511488939
+  },
+  "maps/pul1ctf/atlas_8.png": {
+   "decal": 110979673638560,
+   "image": 79489897332107
+  },
+  "maps/pul1ctf/atlas_9.png": {
+   "decal": 91378889730543,
+   "image": 100049218450538
+  },
+  "maps/pul1duel-oa/atlas_0.png": {
+   "decal": 105238499429306,
+   "image": 93301128595430
+  },
+  "maps/pul1duel-oa/atlas_1.png": {
+   "decal": 137345640114125,
+   "image": 71937731840664
+  },
+  "maps/pul1duel-oa/atlas_10.png": {
+   "decal": 131077336456104,
+   "image": 102150386193424
+  },
+  "maps/pul1duel-oa/atlas_11.png": {
+   "decal": 122069109796230,
+   "image": 99383809405657
+  },
+  "maps/pul1duel-oa/atlas_12.png": {
+   "decal": 81955819679420,
+   "image": 115476975465658
+  },
+  "maps/pul1duel-oa/atlas_2.png": {
+   "decal": 130056078860439,
+   "image": 90183195380828
+  },
+  "maps/pul1duel-oa/atlas_3.png": {
+   "decal": 139463143505493,
+   "image": 118067966203649
+  },
+  "maps/pul1duel-oa/atlas_4.png": {
+   "decal": 80159845273872,
+   "image": 102985893461523
+  },
+  "maps/pul1duel-oa/atlas_5.png": {
+   "decal": 132385299907977,
+   "image": 121445382183711
+  },
+  "maps/pul1duel-oa/atlas_6.png": {
+   "decal": 78142205847640,
+   "image": 118676108508418
+  },
+  "maps/pul1duel-oa/atlas_7.png": {
+   "decal": 81647240058982,
+   "image": 119218225572301
+  },
+  "maps/pul1duel-oa/atlas_8.png": {
+   "decal": 124163746617377,
+   "image": 101649448818116
+  },
+  "maps/pul1duel-oa/atlas_9.png": {
+   "decal": 128769214480840,
+   "image": 130586548392899
+  },
+  "maps/pxlfan/atlas_0.png": {
+   "decal": 80159853404073,
+   "image": 132918504958207
+  },
+  "maps/pxlfan/atlas_1.png": {
+   "decal": 105572649973256,
+   "image": 112093792575259
+  },
+  "maps/pxlfan/atlas_10.png": {
+   "decal": 136451571079147,
+   "image": 124174620923534
+  },
+  "maps/pxlfan/atlas_11.png": {
+   "decal": 73672487626194,
+   "image": 77394752581835
+  },
+  "maps/pxlfan/atlas_12.png": {
+   "decal": 127821540856374,
+   "image": 91781008191872
+  },
+  "maps/pxlfan/atlas_13.png": {
+   "decal": 117714553291507,
+   "image": 122490451561250
+  },
+  "maps/pxlfan/atlas_2.png": {
+   "decal": 101737690164520,
+   "image": 116491791543687
+  },
+  "maps/pxlfan/atlas_3.png": {
+   "decal": 131185931662287,
+   "image": 92206012642487
+  },
+  "maps/pxlfan/atlas_4.png": {
+   "decal": 106989488037178,
+   "image": 124947284236103
+  },
+  "maps/pxlfan/atlas_5.png": {
+   "decal": 123261055704830,
+   "image": 85278161954095
+  },
+  "maps/pxlfan/atlas_6.png": {
+   "decal": 92537793990854,
+   "image": 132723828774132
+  },
+  "maps/pxlfan/atlas_7.png": {
+   "decal": 136544562471949,
+   "image": 130194893389690
+  },
+  "maps/pxlfan/atlas_8.png": {
+   "decal": 112153153900091,
+   "image": 120518332711352
+  },
+  "maps/pxlfan/atlas_9.png": {
+   "decal": 132941378519855,
+   "image": 127633948331519
+  },
+  "maps/q3dm6ish/atlas_0.png": {
+   "decal": 89276478436131,
+   "image": 121459327152367
+  },
+  "maps/q3dm6ish/atlas_1.png": {
+   "decal": 109599588069155,
+   "image": 111168121448359
+  },
+  "maps/q3dm6ish/atlas_10.png": {
+   "decal": 116190020346508,
+   "image": 103856965993130
+  },
+  "maps/q3dm6ish/atlas_11.png": {
+   "decal": 89106610583793,
+   "image": 105525553848982
+  },
+  "maps/q3dm6ish/atlas_12.png": {
+   "decal": 99892704807619,
+   "image": 99862886730161
+  },
+  "maps/q3dm6ish/atlas_2.png": {
+   "decal": 78641308026429,
+   "image": 107416195896823
+  },
+  "maps/q3dm6ish/atlas_3.png": {
+   "decal": 128574720360498,
+   "image": 122660354050308
+  },
+  "maps/q3dm6ish/atlas_4.png": {
+   "decal": 115113836684996,
+   "image": 76046466344358
+  },
+  "maps/q3dm6ish/atlas_5.png": {
+   "decal": 94877779234617,
+   "image": 134913148856623
+  },
+  "maps/q3dm6ish/atlas_6.png": {
+   "decal": 130513064713463,
+   "image": 74162381606661
+  },
+  "maps/q3dm6ish/atlas_7.png": {
+   "decal": 107721422795206,
+   "image": 135886252151172
+  },
+  "maps/q3dm6ish/atlas_8.png": {
+   "decal": 130745515420061,
+   "image": 72227819030608
+  },
+  "maps/q3dm6ish/atlas_9.png": {
+   "decal": 129974969377878,
+   "image": 126745965944192
+  },
+  "maps/sleekgrinder/atlas_0.png": {
+   "decal": 117886948811406,
+   "image": 97609019943268
+  },
+  "maps/sleekgrinder/atlas_1.png": {
+   "decal": 103770624392314,
+   "image": 72457880678521
+  },
+  "maps/sleekgrinder/atlas_10.png": {
+   "decal": 86870825268072,
+   "image": 76760505421303
+  },
+  "maps/sleekgrinder/atlas_11.png": {
+   "decal": 72930971643106,
+   "image": 134072935362433
+  },
+  "maps/sleekgrinder/atlas_12.png": {
+   "decal": 81142849232335,
+   "image": 114173863509608
+  },
+  "maps/sleekgrinder/atlas_13.png": {
+   "decal": 111700661207475,
+   "image": 123570663663452
+  },
+  "maps/sleekgrinder/atlas_2.png": {
+   "decal": 92671441942414,
+   "image": 125308667391334
+  },
+  "maps/sleekgrinder/atlas_3.png": {
+   "decal": 92314878154387,
+   "image": 89526016246275
+  },
+  "maps/sleekgrinder/atlas_4.png": {
+   "decal": 124443310890867,
+   "image": 88322461069292
+  },
+  "maps/sleekgrinder/atlas_5.png": {
+   "decal": 82325334614299,
+   "image": 115784162099036
+  },
+  "maps/sleekgrinder/atlas_6.png": {
+   "decal": 120827674859768,
+   "image": 117702075250212
+  },
+  "maps/sleekgrinder/atlas_7.png": {
+   "decal": 82694290101187,
+   "image": 100265429099892
+  },
+  "maps/sleekgrinder/atlas_8.png": {
+   "decal": 119749209348209,
+   "image": 75981032509051
+  },
+  "maps/sleekgrinder/atlas_9.png": {
+   "decal": 84189145024062,
+   "image": 139656319271719
+  },
+  "maps/slimefac/atlas_0.png": {
+   "decal": 121669827642287,
+   "image": 83452621590675
+  },
+  "maps/slimefac/atlas_1.png": {
+   "decal": 96962496191350,
+   "image": 78894932187730
+  },
+  "maps/slimefac/atlas_10.png": {
+   "decal": 116760306776613,
+   "image": 93862093711670
+  },
+  "maps/slimefac/atlas_11.png": {
+   "decal": 91548323211216,
+   "image": 103265311196412
+  },
+  "maps/slimefac/atlas_12.png": {
+   "decal": 93705940890966,
+   "image": 92782647926072
+  },
+  "maps/slimefac/atlas_2.png": {
+   "decal": 109385485757726,
+   "image": 72885075006031
+  },
+  "maps/slimefac/atlas_3.png": {
+   "decal": 116002457180930,
+   "image": 83049474331889
+  },
+  "maps/slimefac/atlas_4.png": {
+   "decal": 84178731270391,
+   "image": 125563299384640
+  },
+  "maps/slimefac/atlas_5.png": {
+   "decal": 110742508191611,
+   "image": 116052675251073
+  },
+  "maps/slimefac/atlas_6.png": {
+   "decal": 83441547732094,
+   "image": 103340905480605
+  },
+  "maps/slimefac/atlas_7.png": {
+   "decal": 89383534564394,
+   "image": 137136931961857
+  },
+  "maps/slimefac/atlas_8.png": {
+   "decal": 73636819058590,
+   "image": 86096069977531
+  },
+  "maps/slimefac/atlas_9.png": {
+   "decal": 73953532230436,
+   "image": 97020074965412
+  },
+  "maps/suspended/atlas_0.png": {
+   "decal": 96674393530245,
+   "image": 136142264238708
+  },
+  "maps/suspended/atlas_1.png": {
+   "decal": 115238187771609,
+   "image": 124316390970837
+  },
+  "maps/suspended/atlas_10.png": {
+   "decal": 128158671971572,
+   "image": 122079106373705
+  },
+  "maps/suspended/atlas_11.png": {
+   "decal": 103823787518467,
+   "image": 84565439716121
+  },
+  "maps/suspended/atlas_12.png": {
+   "decal": 104376213715329,
+   "image": 119390558791852
+  },
+  "maps/suspended/atlas_13.png": {
+   "decal": 120865284856873,
+   "image": 88192854039835
+  },
+  "maps/suspended/atlas_2.png": {
+   "decal": 102243824644606,
+   "image": 127323766462627
+  },
+  "maps/suspended/atlas_3.png": {
+   "decal": 115249669409819,
+   "image": 100330864200445
+  },
+  "maps/suspended/atlas_4.png": {
+   "decal": 93864237897863,
+   "image": 111608397826208
+  },
+  "maps/suspended/atlas_5.png": {
+   "decal": 131393422500603,
+   "image": 76894583447789
+  },
+  "maps/suspended/atlas_6.png": {
+   "decal": 83137173091837,
+   "image": 105597163441454
+  },
+  "maps/suspended/atlas_7.png": {
+   "decal": 74003469508804,
+   "image": 105861511648550
+  },
+  "maps/suspended/atlas_8.png": {
+   "decal": 99840060659305,
+   "image": 114394157885125
+  },
+  "maps/suspended/atlas_9.png": {
+   "decal": 111312982280942,
+   "image": 77553846699842
+  },
+  "maps/wrackdm17/atlas_0.png": {
+   "decal": 100975435305068,
+   "image": 87360726909292
+  },
+  "maps/wrackdm17/atlas_1.png": {
+   "decal": 127576297835129,
+   "image": 82869202427735
+  },
+  "maps/wrackdm17/atlas_10.png": {
+   "decal": 111564071739976,
+   "image": 79245287591314
+  },
+  "maps/wrackdm17/atlas_11.png": {
+   "decal": 109053563219262,
+   "image": 108442155727224
+  },
+  "maps/wrackdm17/atlas_12.png": {
+   "decal": 93773840638096,
+   "image": 117139986814941
+  },
+  "maps/wrackdm17/atlas_2.png": {
+   "decal": 113892652745421,
+   "image": 98858473915956
+  },
+  "maps/wrackdm17/atlas_3.png": {
+   "decal": 107220085211604,
+   "image": 132214314754189
+  },
+  "maps/wrackdm17/atlas_4.png": {
+   "decal": 77350805655148,
+   "image": 98943883800560
+  },
+  "maps/wrackdm17/atlas_5.png": {
+   "decal": 125315716612090,
+   "image": 83344467942842
+  },
+  "maps/wrackdm17/atlas_6.png": {
+   "decal": 108178300565016,
+   "image": 132549108736736
+  },
+  "maps/wrackdm17/atlas_7.png": {
+   "decal": 131940317591353,
+   "image": 93894925668592
+  },
+  "maps/wrackdm17/atlas_8.png": {
+   "decal": 89513178304675,
+   "image": 98102108429899
+  },
+  "maps/wrackdm17/atlas_9.png": {
+   "decal": 89975721339551,
+   "image": 129770406056716
   }
  },
  "models": {
@@ -39275,7 +40970,7 @@
    }
   },
   "md3/static_bundle_0.glb": {
-   "asset": 99369802352239,
+   "asset": 116901341920928,
    "meshes": {
     "models_ammo_grenade1_plane_plane.001": {
      "mesh": "rbxassetid://122810350731801",
@@ -40809,357 +42504,6 @@
       0.884766,
       1.12891,
       2.59766
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_1_h_eyes": {
-     "mesh": "rbxassetid://115900827846089",
-     "pos": [
-      -0.432617,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.0957032,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_1_h_face": {
-     "mesh": "rbxassetid://121651821086308",
-     "pos": [
-      -0.128906,
-      0.273438,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03906,
-      0.863281,
-      0.863281
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_1_h_hair": {
-     "mesh": "rbxassetid://128396920704136",
-     "pos": [
-      -0.12207,
-      0.145508,
-      0
-     ],
-     "size": [
-      1.12305,
-      1.15039,
-      1.10938
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_1_h_hat": {
-     "mesh": "rbxassetid://94474104434688",
-     "pos": [
-      0.078125,
-      0.75293,
-      0
-     ],
-     "size": [
-      1.27734,
-      0.880859,
-      1.17578
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_2_h_eyes": {
-     "mesh": "rbxassetid://102794549604278",
-     "pos": [
-      -0.431641,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.09375,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_2_h_face": {
-     "mesh": "rbxassetid://83582357437470",
-     "pos": [
-      -0.125,
-      0.280273,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03125,
-      0.849609,
-      0.863281
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_2_h_hair": {
-     "mesh": "rbxassetid://86310350387698",
-     "pos": [
-      -0.128906,
-      0.160156,
-      0
-     ],
-     "size": [
-      1.10938,
-      1.12109,
-      1.07422
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_2_h_hat": {
-     "mesh": "rbxassetid://115894355589874",
-     "pos": [
-      0.0712891,
-      0.75293,
-      2.98023e-08
-     ],
-     "size": [
-      1.29102,
-      0.880859,
-      0.980469
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_h_eyes": {
-     "mesh": "rbxassetid://115900827846089",
-     "pos": [
-      -0.432617,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.0957032,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_h_face": {
-     "mesh": "rbxassetid://114937831313005",
-     "pos": [
-      -0.128906,
-      0.273438,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03906,
-      0.863281,
-      0.863281
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_h_hair": {
-     "mesh": "rbxassetid://113738978157304",
-     "pos": [
-      -0.115234,
-      0.145508,
-      0
-     ],
-     "size": [
-      1.13672,
-      1.15039,
-      1.16406
-     ]
-    },
-    "models_players_heads_kyonshi_kyonshi_h_hat": {
-     "mesh": "rbxassetid://124958085786186",
-     "pos": [
-      0.078125,
-      0.75293,
-      0
-     ],
-     "size": [
-      1.27734,
-      0.880859,
-      1.25391
-     ]
-    },
-    "models_players_kyonshi_head_1_h_eyes": {
-     "mesh": "rbxassetid://115900827846089",
-     "pos": [
-      -0.432617,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.0957032,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_kyonshi_head_1_h_face": {
-     "mesh": "rbxassetid://121651821086308",
-     "pos": [
-      -0.128906,
-      0.273438,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03906,
-      0.863281,
-      0.863281
-     ]
-    },
-    "models_players_kyonshi_head_1_h_hair": {
-     "mesh": "rbxassetid://128396920704136",
-     "pos": [
-      -0.12207,
-      0.145508,
-      0
-     ],
-     "size": [
-      1.12305,
-      1.15039,
-      1.10938
-     ]
-    },
-    "models_players_kyonshi_head_1_h_hat": {
-     "mesh": "rbxassetid://94474104434688",
-     "pos": [
-      0.078125,
-      0.75293,
-      0
-     ],
-     "size": [
-      1.27734,
-      0.880859,
-      1.17578
-     ]
-    },
-    "models_players_kyonshi_head_2_h_eyes": {
-     "mesh": "rbxassetid://102794549604278",
-     "pos": [
-      -0.431641,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.09375,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_kyonshi_head_2_h_face": {
-     "mesh": "rbxassetid://83582357437470",
-     "pos": [
-      -0.125,
-      0.280273,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03125,
-      0.849609,
-      0.863281
-     ]
-    },
-    "models_players_kyonshi_head_2_h_hair": {
-     "mesh": "rbxassetid://86310350387698",
-     "pos": [
-      -0.128906,
-      0.160156,
-      0
-     ],
-     "size": [
-      1.10938,
-      1.12109,
-      1.07422
-     ]
-    },
-    "models_players_kyonshi_head_2_h_hat": {
-     "mesh": "rbxassetid://115894355589874",
-     "pos": [
-      0.0712891,
-      0.75293,
-      2.98023e-08
-     ],
-     "size": [
-      1.29102,
-      0.880859,
-      0.980469
-     ]
-    },
-    "models_players_kyonshi_head_h_eyes": {
-     "mesh": "rbxassetid://115900827846089",
-     "pos": [
-      -0.432617,
-      0.384766,
-      2.98023e-08
-     ],
-     "size": [
-      0.0957032,
-      0.140625,
-      0.527344
-     ]
-    },
-    "models_players_kyonshi_head_h_face": {
-     "mesh": "rbxassetid://114937831313005",
-     "pos": [
-      -0.128906,
-      0.273438,
-      -2.98023e-08
-     ],
-     "size": [
-      1.03906,
-      0.863281,
-      0.863281
-     ]
-    },
-    "models_players_kyonshi_head_h_hair": {
-     "mesh": "rbxassetid://113738978157304",
-     "pos": [
-      -0.115234,
-      0.145508,
-      0
-     ],
-     "size": [
-      1.13672,
-      1.15039,
-      1.16406
-     ]
-    },
-    "models_players_kyonshi_head_h_hat": {
-     "mesh": "rbxassetid://124958085786186",
-     "pos": [
-      0.078125,
-      0.75293,
-      0
-     ],
-     "size": [
-      1.27734,
-      0.880859,
-      1.25391
-     ]
-    },
-    "models_players_major_head_h_head": {
-     "mesh": "rbxassetid://124868036379397",
-     "pos": [
-      0.0341797,
-      0.349609,
-      0.00292967
-     ],
-     "size": [
-      1.15039,
-      0.996094,
-      0.720703
-     ]
-    },
-    "models_players_neko_head_body": {
-     "mesh": "rbxassetid://88507854935184",
-     "pos": [
-      0.0175781,
-      0.0498047,
-      0
-     ],
-     "size": [
-      0.191406,
-      0.201172,
-      0.300781
-     ]
-    },
-    "models_players_neko_head_hair": {
-     "mesh": "rbxassetid://86601462519287",
-     "pos": [
-      0.00585938,
-      -0.00878906,
-      -7.45058e-09
-     ],
-     "size": [
-      0.214844,
-      0.349609,
-      0.195312
      ]
     },
     "models_players_sarge_head_1_h_head": {
