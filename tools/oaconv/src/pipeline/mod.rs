@@ -265,6 +265,13 @@ mod tests {
             .uploads
             .iter()
             .any(|u| u.path.contains("players/sarge/")));
+        // effect stages Roblox can't blend get alpha stand-ins
+        for p in [
+            "images/models/weaphits/rlboom/rlboom_1~1_sa.png",
+            "images/gfx/damage/bulletmult~dc_sc.png",
+        ] {
+            assert!(manifest.uploads.iter().any(|u| u.path == p), "{p}");
+        }
         // toned-only art: the converted image is the overlay's, never the pk3's
         let base = oaconv::vfs::Vfs::open(&oaconv::vfs::default_root(&repo)).unwrap();
         let png_sha = |bytes: Vec<u8>, p: &str| {

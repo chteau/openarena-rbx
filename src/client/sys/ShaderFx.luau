@@ -71,6 +71,17 @@ function ShaderFx.blendMode(st): string
 	return "alpha"
 end
 
+-- For an alpha-blended stand-in of an additive or filter stage (Assets.
+-- StageImage): OA fades those by darkening the colour, which over a stand-in
+-- means fading the opacity, so the colour's brightness moves into alpha.
+function ShaderFx.foldBrightness(r: number, g: number, b: number, a: number): (number, number, number, number)
+	local k = math.max(r, g, b)
+	if k <= 0 then
+		return 1, 1, 1, 0
+	end
+	return r / k, g / k, b / k, a * k
+end
+
 -- The image path a stage shows at `timeSec` (animMap picks a frame).
 function ShaderFx.stageImage(st, timeSec: number): string?
 	if st.animMap then

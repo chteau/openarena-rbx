@@ -124,7 +124,8 @@ local function color01(rgba): Color3
 	return Color3.new(rgba[1] / 255, rgba[2] / 255, rgba[3] / 255)
 end
 
--- shader -> (image id or nil, blend mode, colour/alpha from the first stage)
+-- shader -> (image id or nil, blend mode, colour/alpha from the first stage,
+-- whether the image is an alpha-blended stand-in for the blend mode)
 local function shaderLook(h: number, rgba, timeSec: number)
 	local sh = Assets.Shader(h)
 	if sh == nil then
@@ -137,8 +138,11 @@ local function shaderLook(h: number, rgba, timeSec: number)
 	end
 	local vert = { rgba[1] / 255, rgba[2] / 255, rgba[3] / 255, rgba[4] / 255 }
 	local r, g, b, a = ShaderFx.stageColor(st, timeSec, vert)
-	local img = Assets.Image(ShaderFx.stageImage(st, timeSec))
-	return img and img.id, ShaderFx.blendMode(st), r, g, b, a
+	local img, standIn = Assets.StageImage(st, ShaderFx.stageImage(st, timeSec))
+	if standIn then
+		r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
+	end
+	return img and img.id, ShaderFx.blendMode(st), r, g, b, a, standIn
 end
 
 local function applyBlend(part: BasePart, mode: string, a: number)
@@ -291,11 +295,11 @@ local function drawModel(t, e, timeSec: number, firstPerson: boolean)
 		part.CFrame = if surf.offset then cf * surf.offset else cf
 		part.Parent = inst.folder
 		local sh = surfaceShader(e, surf.s)
-		local img, mode, r, g, b, a = shaderLook(sh, e.shaderRGBA, timeSec - (e.shaderTime or 0))
+		local img, mode, r, g, b, a, standIn = shaderLook(sh, e.shaderRGBA, timeSec - (e.shaderTime or 0))
 		if img and part.TextureID ~= img then
 			part.TextureID = img
 		end
-		applyBlend(part, mode, a)
+		applyBlend(part, if standIn then "alpha" else mode, a)
 		-- RF_DEPTHHACK (view weapon) and first-person-only parts can't skip the
 		-- depth test on Roblox; they're drawn normally
 		part.LocalTransparencyModifier = 0

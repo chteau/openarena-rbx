@@ -221,6 +221,16 @@ the axis is converted, never the Euler angles.
   (`index.meshes["model#surface"]`) are used instead when present.
 - Sprites -> `BillboardGui`, rail/lightning beams -> `Beam`, marks/polys ->
   a thin part with a `Decal`, dlights -> `PointLight`.
+- Additive and filter stages of effects (sprites, marks, particles, beams,
+  model surfaces, 2D) draw conv's alpha-blended stand-in for their blendFunc
+  (`Assets.StageImage`: `<image>~<src>_<dst>`, see conv-notes "Blend
+  stand-ins") when it has an id, and fold the stage colour's brightness
+  into opacity (`ShaderFx.foldBrightness`: OA fades additive effects by
+  darkening them). Beams keep `LightEmission = 1` for add, which with the
+  stand-in is a true additive blend. Over black a stand-in matches OA; over
+  bright surfaces additive effects come out dimmer than OA's (alpha blending
+  can't brighten past the effect's colour) and coloured filters lose part of
+  their tint.
 - Map surfaces: conv bakes opaque static shaders into atlas meshes. A
   MeshPart that needs animation carries `OAShader` (+ optional `OAStage`)
   attributes, or is named after a `map.json` mesh whose `class` isn't

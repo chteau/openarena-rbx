@@ -145,10 +145,183 @@ pub fn encode_png(img: &RgbaImage) -> Vec<u8> {
     out
 }
 
+fn factor_code(f: &str) -> Option<&'static str> {
+    Some(match f {
+        "gl_one" => "1",
+        "gl_zero" => "0",
+        "gl_src_alpha" => "sa",
+        "gl_one_minus_src_alpha" => "isa",
+        "gl_src_color" => "sc",
+        "gl_one_minus_src_color" => "isc",
+        "gl_dst_color" => "dc",
+        "gl_one_minus_dst_color" => "idc",
+        "gl_dst_alpha" => "da",
+        "gl_one_minus_dst_alpha" => "ida",
+        _ => return None,
+    })
+}
+
+/// Output-name suffix of the alpha-blended stand-in for a stage drawn with
+/// `blendFunc src dst` (`~1_1` for `add`, `~dc_0` for `filter`), or None when
+/// Roblox draws the image as is (opaque, or plain `blend`). The client
+/// computes the same suffix (src/client/sys/Assets.luau, `StageImage`).
+pub fn blend_suffix(blend: &[String; 2]) -> Option<String> {
+    let (s, d) = (factor_code(&blend[0])?, factor_code(&blend[1])?);
+    match (s, d) {
+        ("1", "0") | ("sa", "isa") => None,
+        _ => Some(format!("~{s}_{d}")),
+    }
+}
+
+/// Re-expresses `out = src * F_src + dst * F_dst` as the closest image Roblox
+/// can draw (`out = C * A + dst * (1 - A)`), per pixel. The blend becomes a
+/// contribution `c` and a per-channel multiplier `d` on what's behind
+/// (framebuffer alpha counts as 1, as in OA):
+/// - additive (`d` = 1): `A = max(c)`, `C = c / A` (un-premultiplied), so it
+///   is exact over black and with a `LightEmission = 1` Beam;
+/// - multiplicative (`filter`, `gl_zero gl_one_minus_src_color`): `A = 1 -
+///   luminance(d)`, `C` black plus the tint that matches over mid-grey;
+/// - `d` above 1 (`gl_dst_color gl_src_color` brightening) turns into a white
+///   contribution that matches over mid-grey.
+pub fn blend_to_alpha(img: &RgbaImage, blend: &[String; 2]) -> RgbaImage {
+    let lum = |v: [f32; 3]| 0.299 * v[0] + 0.587 * v[1] + 0.114 * v[2];
+    let mut out = img.clone();
+    for p in out.pixels_mut() {
+        let s = [p[0], p[1], p[2]].map(|x| x as f32 / 255.0);
+        let a = p[3] as f32 / 255.0;
+        let (mut c, mut d) = ([0f32; 3], [0f32; 3]);
+        for i in 0..3 {
+            match blend[0].as_str() {
+                "gl_one" | "gl_dst_alpha" => c[i] += s[i],
+                "gl_src_alpha" => c[i] += s[i] * a,
+                "gl_one_minus_src_alpha" => c[i] += s[i] * (1.0 - a),
+                "gl_src_color" => c[i] += s[i] * s[i],
+                "gl_one_minus_src_color" => c[i] += s[i] * (1.0 - s[i]),
+                "gl_dst_color" => d[i] += s[i],
+                "gl_one_minus_dst_color" => {
+                    c[i] += s[i];
+                    d[i] -= s[i];
+                }
+                _ => {}
+            }
+            d[i] += match blend[1].as_str() {
+                "gl_one" | "gl_dst_alpha" => 1.0,
+                "gl_src_alpha" => a,
+                "gl_one_minus_src_alpha" => 1.0 - a,
+                "gl_src_color" => s[i],
+                "gl_one_minus_src_color" => 1.0 - s[i],
+                // dst * dst: taken at mid-grey
+                "gl_dst_color" | "gl_one_minus_dst_color" => 0.5,
+                _ => 0.0,
+            };
+            c[i] += (d[i] - 1.0).max(0.0);
+            d[i] = d[i].min(1.0);
+        }
+        let ld = lum(d);
+        let alpha = (1.0 - ld).max(c[0].max(c[1]).max(c[2])).clamp(0.0, 1.0);
+        if alpha * 255.0 < 0.5 {
+            p.0 = [0; 4];
+            continue;
+        }
+        let ch = |i: usize| {
+            let v = (c[i] + 0.5 * (d[i] - ld)) / alpha;
+            (v.clamp(0.0, 1.0) * 255.0).round() as u8
+        };
+        p.0 = [ch(0), ch(1), ch(2), (alpha * 255.0).round() as u8];
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use image::Rgba;
+
+    fn bf(s: &str, d: &str) -> [String; 2] {
+        [s.to_string(), d.to_string()]
+    }
+
+    fn px(rgba: [u8; 4], blend: &[String; 2]) -> [u8; 4] {
+        let img = RgbaImage::from_pixel(1, 1, Rgba(rgba));
+        blend_to_alpha(&img, blend).get_pixel(0, 0).0
+    }
+
+    #[test]
+    fn suffixes() {
+        assert_eq!(
+            blend_suffix(&bf("gl_one", "gl_one")).as_deref(),
+            Some("~1_1")
+        );
+        assert_eq!(
+            blend_suffix(&bf("gl_dst_color", "gl_zero")).as_deref(),
+            Some("~dc_0")
+        );
+        assert_eq!(
+            blend_suffix(&bf("gl_zero", "gl_one_minus_src_color")).as_deref(),
+            Some("~0_isc")
+        );
+        assert_eq!(blend_suffix(&bf("gl_one", "gl_zero")), None);
+        assert_eq!(
+            blend_suffix(&bf("gl_src_alpha", "gl_one_minus_src_alpha")),
+            None
+        );
+        assert_eq!(blend_suffix(&bf("gl_bogus", "gl_one")), None);
+    }
+
+    #[test]
+    fn additive_unpremultiplies() {
+        let add = bf("gl_one", "gl_one");
+        assert_eq!(px([0, 0, 0, 255], &add), [0, 0, 0, 0]);
+        assert_eq!(px([255, 255, 255, 255], &add), [255, 255, 255, 255]);
+        assert_eq!(px([128, 64, 0, 255], &add), [255, 128, 0, 128]);
+        // gl_src_alpha gl_one: the texture's alpha scales the contribution
+        assert_eq!(
+            px([255, 0, 0, 128], &bf("gl_src_alpha", "gl_one")),
+            [255, 0, 0, 128]
+        );
+        assert_eq!(
+            px([255, 0, 0, 0], &bf("gl_src_alpha", "gl_one")),
+            [0, 0, 0, 0]
+        );
+    }
+
+    #[test]
+    fn filters_darken() {
+        let filter = bf("gl_dst_color", "gl_zero");
+        assert_eq!(px([255, 255, 255, 255], &filter), [0, 0, 0, 0]);
+        assert_eq!(px([0, 0, 0, 255], &filter), [0, 0, 0, 255]);
+        assert_eq!(px([191, 191, 191, 255], &filter), [0, 0, 0, 64]);
+        let inv = bf("gl_zero", "gl_one_minus_src_color");
+        assert_eq!(px([0, 0, 0, 255], &inv), [0, 0, 0, 0]);
+        assert_eq!(px([255, 255, 255, 255], &inv), [0, 0, 0, 255]);
+        // a tinted filter keeps its tint over mid-grey
+        let [r, g, b, _] = px([255, 128, 128, 255], &filter);
+        assert!(r > g && g == b, "{r} {g} {b}");
+    }
+
+    #[test]
+    fn modulate_2x_lightens_and_darkens() {
+        let m2 = bf("gl_dst_color", "gl_src_color");
+        assert!(px([128, 128, 128, 255], &m2)[3] <= 1);
+        assert_eq!(px([255, 255, 255, 255], &m2), [255, 255, 255, 255]);
+        assert_eq!(px([0, 0, 0, 255], &m2), [0, 0, 0, 255]);
+    }
+
+    #[test]
+    fn real_effects_get_alpha() {
+        let Some(vfs) = crate::testdata::vfs() else {
+            return;
+        };
+        let img = |p: &str| decode(&vfs.read(p).expect(p), p).unwrap();
+        let add = bf("gl_one", "gl_one");
+        // the rocket explosion's black surround and the bullet mark's square
+        let boom = blend_to_alpha(&img("models/weaphits/rlboom/rlboom_1.jpg"), &add);
+        assert!(boom.get_pixel(0, 0)[3] < 8);
+        assert!(boom.pixels().any(|p| p[3] > 200));
+        let mark = img(&vfs.find_image("gfx/damage/bulletmult").unwrap());
+        let mark = blend_to_alpha(&mark, &bf("gl_dst_color", "gl_src_color"));
+        assert!(mark.get_pixel(0, 0)[3] < 8);
+    }
 
     #[test]
     fn all_vfs_images_decode() {

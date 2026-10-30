@@ -5,6 +5,8 @@ images/models/weaphits/blood
 images/gfx/damage/blood
 images/gfx/newbg/blood
 images/gfx/2d/bloodspew
+# blend stand-in of an already uploaded blood sprite: not needed, kept off
+images/sprites/le/blood3~
 # Player skins were reviewed 2026-10-29 and released. Models off the roster
 # (tools/oaconv/roster.json) produce no uploads at all.
 # Map textures with blood, flesh or occult symbols (pentagrams).
