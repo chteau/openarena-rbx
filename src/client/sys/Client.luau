@@ -85,7 +85,13 @@ local function mapVote()
 		Net.SendClientCommand(("callvote g_gametype %d"):format(gt))
 		Net.SendClientCommand("callvote map " .. map)
 	end
-	Client.Connect()
+	-- in the game the vote is all: when it passes, the server changes map
+	-- and sends the new gamestate, which the client takes as Q3's does
+	-- (CL_ParseGamestate), with no new connection. From the main menu the
+	-- player still has to join.
+	if Net.state == C.CA_DISCONNECTED then
+		Client.Connect()
+	end
 end
 Cmd.AddCommand("map", mapVote)
 Cmd.AddCommand("devmap", mapVote)

@@ -27,8 +27,8 @@ maps it finds 0 mismatches in 17k entity states.
 | --- | --- | --- |
 | `Unreliable` (UnreliableRemoteEvent) | client → server | a client packet (`buffer`) |
 | `Unreliable` | server → client | a server message of 800 bytes or less |
-| `Reliable` (RemoteEvent) | client → server | `("connect", userinfo)` or `("p", buffer)` |
-| `Reliable` | server → client | `("connected", clientNum)`, `("refused", reason)` or `("p", buffer)` |
+| `Reliable` (RemoteEvent) | client → server | `("connect", userinfo, firstSequence)` or `("p", buffer)` |
+| `Reliable` | server → client | `("connected", clientNum, firstSequence)`, `("refused", reason)` or `("p", buffer)` |
 
 The 800-byte cut-off keeps unreliable payloads under Roblox's limit of
 about 900 serialized bytes. Larger messages go over the reliable remote. That covers every
@@ -43,10 +43,27 @@ what it acknowledged, as in Q3.
 
 ### Connecting
 
-1. The client sends `Reliable:FireServer("connect", userinfo)`.
-2. The server answers `"connected", clientNum` or `"refused", reason`.
-   The reason is the `ClientConnect` string, for example `"Server is full."`
-   or a ban message.
+1. The client sends `Reliable:FireServer("connect", userinfo, firstSequence)`,
+   where `firstSequence` is the number of the next packet it will send.
+2. The server answers `"connected", clientNum, firstSequence` (the number
+   of the next packet it will send) or `"refused", reason`. The reason is
+   the `ClientConnect` string, for example `"Server is full."` or a ban
+   message.
+
+Both ends drop packets numbered below the other's `firstSequence`, and
+the client ignores packets between sending `connect` and the answer.
+Packet numbers keep counting across a reconnect on both ends, so a late
+packet of the old connection (the two remotes can reorder) can never
+block the new one.
+
+A `connect` from a player who already has a slot is a reconnect (the
+`connect` and `reconnect` commands). As in ioq3's `SV_DirectConnect`, the
+same address reuses its slot with no drop: no `disconnected` line, no
+`disconnect` command and no kick, and `ClientConnect` runs again with
+`firstTime`. A map change (`map`, the vote, rotation) and `map_restart`
+never reconnect: `SV_SpawnServer` keeps every client and sends each the
+new gamestate, which the client takes as `CL_ParseGamestate` does. The
+client's `map` command (the menus) only calls a vote while in the game.
 
 The server fills in two userinfo keys itself on every userinfo change.
 Clients cannot spoof either one:
