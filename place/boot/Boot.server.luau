@@ -9,7 +9,9 @@
 -- On every map load the current map's client half (collision, entities,
 -- light grid and meshes) is copied to ReplicatedStorage.OAMap.<map> and
 -- Workspace.Map, where the client's boot script finds it.
--- The console text in this script's `Startup` attribute runs once at start.
+-- The console text in this script's `Startup` attribute runs once at start
+-- on a public or Studio server; a reserved server (Start Server, single
+-- player) starts with its creator's settings instead (sv/servers_roblox.luau).
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -19,6 +21,7 @@ local root = script.Parent
 local Game = require(root.server.Game)
 local Transport = require(root.server.sv.transport_roblox)
 local Blob = require(root.shared.cm.blob)
+local Servers = require(root.server.sv.servers_roblox)
 
 Players.CharacterAutoLoads = false
 
@@ -105,6 +108,11 @@ Game.Init({
 		return math.floor(os.clock() * 1000)
 	end,
 })
+local function mapExists(name: string): boolean
+	return maps:FindFirstChild(string.lower(name)) ~= nil
+end
+local servers = Servers.new(Servers.fromGame(), Game, mapExists)
 local startup = script:GetAttribute("Startup")
-Game.Command(if type(startup) == "string" and startup ~= "" then startup else "map " .. (names[1] or "oa_dm1"))
+Game.Command(servers:Boot({ maps = names, startup = if type(startup) == "string" then startup else nil }))
 Transport.Start(Game)
+servers:Start(ReplicatedStorage:WaitForChild("OANet"))

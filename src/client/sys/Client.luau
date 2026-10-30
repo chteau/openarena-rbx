@@ -16,6 +16,7 @@ local Assets = require(script.Parent.Assets)
 local R3D = require(script.Parent.R3D)
 local Snd = require(script.Parent.Snd)
 local FS = require(script.Parent.FS)
+local LAN = require(script.Parent.LAN)
 local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 
 local Client = {}
@@ -76,10 +77,14 @@ end)
 Cmd.AddCommand("cmd", function()
 	Net.SendClientCommand(Cmd.Args())
 end)
--- Map/mode changes the menus issue become server votes on Roblox: one place
--- hosts the match, players don't start their own servers.
+-- Map/mode changes the menus issue: on a live Roblox server they start a
+-- reserved server (sys/LAN.luau); where teleports don't exist (Studio,
+-- rbx-native's runtime) they become votes on the one server there is.
 local function mapVote()
 	local map = Cmd.Argv(1)
+	if LAN.Map(Cmd.Argv(0), map) then
+		return
+	end
 	if map ~= "" then
 		local gt = Cvar.VariableIntegerValue("g_gametype")
 		Net.SendClientCommand(("callvote g_gametype %d"):format(gt))
@@ -91,7 +96,11 @@ Cmd.AddCommand("map", mapVote)
 Cmd.AddCommand("devmap", mapVote)
 Cmd.AddCommand("spmap", mapVote)
 Cmd.AddCommand("connect", function()
-	Client.Connect()
+	if Cmd.Argv(1) ~= "" then
+		LAN.Join(Cmd.Argv(1))
+	else
+		Client.Connect()
+	end
 end)
 Cmd.AddCommand("reconnect", function()
 	Client.Connect()
@@ -119,6 +128,25 @@ Cmd.fallback = function(name: string): boolean
 	end
 	return false
 end
+
+LAN.connect = function()
+	Client.Connect()
+end
+LAN.forward = function(text: string)
+	if Net.state == C.CA_ACTIVE or Net.state == C.CA_PRIMED then
+		Net.SendClientCommand(text)
+	end
+end
+-- a join or start that didn't happen: the main menu's error box, as a
+-- failed connect shows it
+LAN.fail = function(msg: string)
+	Cvar.Set("com_errorMessage", msg)
+	print(msg .. "\n")
+	if U and not Client.cgameActive then
+		U.UI_SetActiveMenu(C.UIMENU_MAIN)
+	end
+end
+LAN.Register()
 
 -- console / chat ---------------------------------------------------------------------
 function Client.ToggleConsole()
@@ -435,7 +463,7 @@ local function screenChanged()
 		Screen.cgSetup(G.cgs)
 	end
 end
-function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?)
+function Client.Boot(opts: { root: Instance?, width: number?, height: number?, teleportData: any? }?)
 	opts = opts or {}
 	local Players = game:GetService("Players")
 	local root = opts.root
@@ -510,10 +538,23 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number? }?
 	U.UI_Init()
 	Client.uiActive = true
 	U.UI_SetActiveMenu(C.UIMENU_MAIN)
+	LAN.Start(opts.teleportData)
 end
 
 function Client.Start(opts: { root: Instance?, width: number?, height: number? }?)
-	Client.Boot(opts)
+	local o: any = table.clone(opts or {})
+	pcall(function()
+		o.teleportData = game:GetService("TeleportService"):GetLocalPlayerTeleportData()
+	end)
+	Client.Boot(o)
+	local note = LAN.note()
+	if note then
+		note.OnClientEvent:Connect(function(kind, msg)
+			if kind == "teleportfailed" then
+				LAN.fail("Teleport failed: " .. tostring(msg))
+			end
+		end)
+	end
 	Chat.Start()
 	local UIS = game:GetService("UserInputService")
 	UIS.MouseIconEnabled = false

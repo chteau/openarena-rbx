@@ -9,20 +9,11 @@ Software Foundation; either version 2 of the License, or (at your option)
 any later version. See COPYING.
 ]]
 -- Not a port: the q3_ui menus whose job doesn't exist on Roblox. A Roblox
--- place *is* the server, players don't browse, record demos, switch mods,
+-- place *is* the server, players don't record demos, switch mods,
 -- play cinematics or enter CD keys. q3_ui still calls these names, so they
 -- land here (docs/client-notes.md, "Walls"):
---   ui_servers2.c / ui_specifyserver.c  MULTIPLAYER joins this place's match
 --   ui_demo2.c / ui_mods.c / ui_cinematics.c / ui_cdkey.c  a message box
 local U = require(script.Parent.U)
-local C = require(script.Parent.Parent.Parent.client.q.Consts)
-local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
-
--- MULTIPLAYER: join the match this server is running (the engine's
--- `connect` asks the server for a gamestate, see sys/Client.luau)
-function U.UI_ArenaServersMenu()
-	trap.Cmd_ExecuteText(C.EXEC_APPEND, "connect\n")
-end
 
 local function unavailable(what: string)
 	U.UI_Message({ [0] = what, [1] = "aren't available on Roblox" })
@@ -44,8 +35,6 @@ function U.UI_CDKeyMenu_f()
 	unavailable("CD keys")
 end
 
-function U.ArenaServers_Cache() end
-function U.SpecifyServer_Cache() end
 function U.Demos_Cache() end
 function U.UI_ModsMenu_Cache() end
 function U.UI_CinematicsMenu_Cache() end
