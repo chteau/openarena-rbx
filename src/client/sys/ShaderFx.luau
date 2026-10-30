@@ -94,7 +94,8 @@ end
 
 -- Colour and alpha of a stage. `vertex` is the incoming vertex/entity colour
 -- {r, g, b, a} in 0..1 (R_SetColor in 2D, shaderRGBA for entities).
-function ShaderFx.stageColor(st, timeSec: number, vertex: { number }): (number, number, number, number)
+-- `light`: the entity's lighting (lightingDiffuse) where the caller has one
+function ShaderFx.stageColor(st, timeSec: number, vertex: { number }, light: { number }?): (number, number, number, number)
 	local r, g, b = 1, 1, 1
 	local rg = st.rgbGen
 	local ty = rg and rg.type or nil
@@ -104,6 +105,8 @@ function ShaderFx.stageColor(st, timeSec: number, vertex: { number }): (number, 
 		if st.implicit then
 			r, g, b = vertex[1], vertex[2], vertex[3]
 		end
+	elseif ty == "lightingdiffuse" and light then
+		r, g, b = light[1], light[2], light[3]
 	elseif ty == "vertex" or ty == "exactvertex" or ty == "entity" or ty == "lightingdiffuse" then
 		r, g, b = vertex[1], vertex[2], vertex[3]
 	elseif ty == "oneminusvertex" or ty == "oneminusentity" then
