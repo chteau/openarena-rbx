@@ -369,6 +369,259 @@ Shots from rbx-native's editor (`scripts/parity.py --size WxH`):
 the screen, so no window resize is needed). They show 2D only: edit mode has
 no EditableMesh, so no 3D models.
 
+## Roblox avatars
+
+Players are drawn as their own Roblox avatar by default; bots, and players
+whose avatar can't be built, keep their OA model. The avatar is visual
+only: OA's player box (30x30x56 u standing, 40 u crouched) and pmove stay
+authoritative, and nothing about gameplay reads the avatar.
+
+| piece | where |
+|---|---|
+| build, replicate, `g_robloxAvatars` | `src/server/sv/avatars_roblox.luau` (called by `transport_roblox`) |
+| local copies, scaling, placement, tracks, Highlight, headshot | `src/client/sys/Avatar.luau` |
+| the maths (timing, track mapping, sampling, fit, feet, look) | `src/client/avatar/AvatarAnim.luau` |
+| the R15 animation set (generated) | `src/client/avatar/anims/{Legs,Torso}.luau`, `tools/gen_avatar_anims.py` |
+| cgame side (`CG_AvatarPlayer`, lerp frames, weapon, head icon) | `src/client/cg/cg_avatars.luau`; hooks in `CG_Player`, `CG_ResetPlayerEntity`, `CG_AddPlayerWeapon`, `CG_DrawHead` |
+| trap calls | `trap.R_AvatarReady`, `R_AddAvatarToScene`, `R_AvatarTag`, `R_AvatarHeadShader`, `R_AvatarAnimations` |
+| tests | `tests/avatar.test.luau` |
+
+### Build
+
+On connect the server asks for the player's `HumanoidDescription`
+(`Players:GetHumanoidDescriptionFromUserId`) and builds an R15 model from
+it (`Players:CreateHumanoidModelFromDescription(desc, Enum.HumanoidRigType.R15)`),
+so an R6 user gets an R15 body with their accessories, clothing, body
+colours, face and bundle parts. Scripts are stripped. The model goes to
+`ReplicatedStorage.OAAvatars` as `c<clientNum>` with a `UserId` attribute;
+it is kept per UserId so a map change (the client reconnects) only clones
+it again. A failure (a test player with a negative id, the avatar service
+down) leaves the player on their OA model. `Players.CharacterAutoLoads`
+stays false: these are never characters.
+
+`g_robloxAvatars` (serverinfo, archived, default 1) is polled once a
+second; 0 empties the folder and everyone is drawn with OA models again.
+
+### Local copies and scale
+
+Each client prepares one copy per player (`Avatar.luau`, `prepare`): scripts
+and force fields removed, and the joints made Motor6Ds. Today
+`CreateHumanoidModelFromDescription` builds the physics-ready rig, where
+every joint is an `AnimationConstraint` between two rig attachments plus a
+`BallSocketConstraint` limit and there is no Motor6D at all (seen live: 15
+AnimationConstraints, 14 ball sockets, 0 Motor6Ds). The local copy gets a
+Motor6D per AnimationConstraint, same name, in `Part1`, with `C0`/`C1` the
+two attachments' frames (Attachment1 = Attachment0 * Transform, as Part1 =
+Part0 * C0 * Transform * C1^-1), and the constraints are removed, so both
+rigs end up the same. A copy whose Humanoid, root or joints haven't
+replicated yet is tried again a second later. Then `AutomaticScalingEnabled`
+off, and it is measured at
+rest by forward kinematics over its own Motor6Ds (no reliance on where the
+parts happen to sit): sole (lowest foot bottom) to crown (top of `Head`),
+leg length (hip joints to sole) and the hips' middle relative to the
+`HumanoidRootPart`. It is scaled uniformly (`Model:ScaleTo`) so the crown
+is at OA's standing model height: **53.24 u (6.66 studs)**, sarge's idle
+legs + standing torso + head measured from the md3s (`gen_avatar_anims.py`
+prints it), against the 56 u box. Accessories don't count towards the
+height, so a tall hat stays a tall hat. Odd bodies: the scale is clamped to
+0.2..5 so a degenerate measurement can't make a speck or a giant, and
+since every pose is in leg-length units (below), short-legged, rthro and
+tiny avatars all get the same angles and plant their feet with their own
+leg length.
+
+Every player entity drawn with an avatar (the player and each of their
+corpses in the body queue) gets a clone of that copy in the world folder,
+with every part `CanCollide/CanQuery/CanTouch = false`, `Massless`, the
+root anchored and invisible; the Humanoid has no state machine
+(`EvaluateStateMachine = false`), no name or health display, and keeps its
+`Animator` only to play our tracks. An entity not drawn this frame is
+unparented; one whose player left is destroyed.
+
+### Placement
+
+`CG_AvatarPlayer` runs `CG_PlayerAngles` unchanged and hands the engine
+the interpolated/predicted `lerpOrigin`, the legs axis (yaw swing, lean)
+and the torso and head axes relative to their parents. The engine puts the
+hips' middle at the legs pose's position (in leg lengths over the box
+floor, MINS z = -24 under the origin), turned by the pelvis rotation, and
+the root part under it. The torso axis (yaw swing, 3/4 of the pitch, pain
+twitch) is added to the Waist's C0 after the legs' own tag_torso turn; the
+head axis to the Neck's C0. Transforms stay the animations'.
+
+Feet: in a frame where sarge stands, the lower sole is snapped to the
+floor (or kept as far above it as sarge's foot is, for a jump's tuck), and
+nothing is allowed under the floor. The snap is what keeps the feet planted
+when an avatar's thigh to shin ratio differs from sarge's. Dying and dead
+(`BOTH_*`), the lowest part of the body, arms left out, is put on the floor,
+up or down: the first live run showed a corpse held a stud in the air by a
+hand the IK had put under the floor.
+
+### The animation set
+
+All 25 of 0.8.8's animation.cfg entries, plus the ones OA derives at load
+(`LEGS_BACKCR`, `LEGS_BACKWALK`: the crouch walk and walk reversed;
+`TORSO_GETFLAG`..`TORSO_NEGATIVE`: the gesture, five of them flip-flopping),
+exactly as `CG_ParseAnimationFile` builds them: same frame counts, frame
+rates and loops (`tests/avatar.test.luau` compares the two tables). A
+`BOTH_*` animation has a legs clip and a torso clip. Sarge's numbers are
+used whatever OA model the player picked, since the poses come from his.
+
+`tools/gen_avatar_anims.py` makes them from sarge's md3s (re-run it after
+changing it; `--check` fails when the committed data is stale):
+
+- legs (`lower.md3`): hip, knee and foot vertex clusters picked on the idle
+  frame and followed by vertex index through every frame, toe and heel
+  thirds of each foot, and `tag_torso`. The pelvis rotation is the turn of
+  the spine (hips' middle to tag_torso) from idle plus the hip line;
+  each leg is two-bone IK to the foot cluster in leg-length units with the
+  knee towards where sarge's knee is when that is within 60 degrees of
+  where his toes point, else towards the toes (a near-straight md3 leg's
+  knee wanders: followed blindly it twisted the idle right thigh 109
+  degrees, which a blocky R15 leg shows plainly), the foot pitched along
+  toe - heel;
+  the hips' height and offset are ratios of sarge's leg length (23.2 u);
+- the Waist's legs part is tag_torso relative to the pelvis;
+- torso (`upper.md3`): the chest turns with the neck (`tag_head` origin's
+  direction from standing) and twists with the shoulder clusters; the head
+  is `tag_head`'s rotation; the right arm is IK to `tag_weapon` in arm
+  lengths (sarge's arm, 17.6 u, is the longest shoulder to tag_weapon reach
+  of any frame), the right hand takes `tag_weapon`'s rotation, so the gun's
+  barrel is the hand's -Z; the left arm hangs relaxed at the hip in the
+  gun animations, guards in front of the chest with the gauntlet
+  (`TORSO_STAND2`, `TORSO_ATTACK2`) and mirrors the right arm across the
+  legs' middle plane in the deaths.
+
+Stride: in OA the planted foot slides against the ground. Measured in the
+md3 (the foot's speed relative to the hips over frames where it is down),
+sarge's run moves it at 262 u/s against pmove's 320; the back run at 124
+for 320, the walk at 78 for 160 (half stick), the crouch walk at 53 for
+80 (`pm_duckScale`). The generator stretches each cycle's foot travel by
+speed / measured, at most 1.5: the run is matched (x1.22, no skating at
+320 u/s), the others are stretched x1.5 and still slip some, since more
+would straighten the legs past what the hips' height allows at OA's own
+cadence (frame counts and rates are kept).
+
+Contact sheets of the IK skeleton for every animation were checked during
+development (a throwaway renderer, not committed): the run, walk and back
+cycles alternate their feet, the crouches keep both feet down, the jump
+tucks, the deaths fall and lie flat.
+
+### Playback
+
+Clips are KeyframeSequences built at run time from the data, one keyframe
+per md3 frame (and the last one again one frame later, so a one-frame
+stance still has a length), Linear poses, legs at `Movement` and torso at
+`Action` priority, each touching only its own joints (the root and lower
+torso poses are weight-0 placeholders). They are registered with
+`AnimationClipProvider:RegisterActiveAnimationClip`; no asset is uploaded.
+**In a live game this fails**: the playtest (real Roblox through
+rbx-native's Play) raised "Usage error: RegisterActiveKeyframeSequence can
+only be used in Solo mode." on the first registration, matching the API
+page's "cannot be used outside of Studio". So on Roblox the avatars run in
+the motors mode below; the Animator path stays for Studio's own playtests
+and in case Roblox lifts the limit. Shipping Animator tracks would need the
+clips uploaded as Animation assets, which this port doesn't do.
+
+They are not played on Roblox's clock: OA's own lerp frames
+(`CG_RunLerpFrame` on the avatar animation table, a lerp state per half
+per entity in `cent.avatar`, including haste's 1.5x and the idle turn
+shuffle) say which md3 frames to show, and each track is held there (speed
+0, `TimePosition` set every frame). Neighbouring frames are one track at
+an in-between time; a loop wrapping round or a change of animation is two
+tracks (the same clip twice when it wraps), weighted backlerp and
+1 - backlerp, which is OA's vertex lerp across the change. Legs and torso
+blend independently because they are separate tracks on separate joints.
+
+Fallback ("motors" mode): if the registration raises, or the first track
+doesn't get a length within 5 s, the same poses (`AvatarAnim.sample`) are
+written to the Motor6Ds' `Transform` every frame and the Animator is
+removed. A rig whose joints are turned at rest (a C0 rotation over 2
+degrees) always takes this path, since the clips are in the character's
+axes. The client prints which path it took. This is the path live games
+take (above); OA's lerp frames, the two-clip blend and the yaw/pitch split
+are the same either way, since the motors get `AvatarAnim.sample`'s mix.
+
+### Weapons, effects, teams
+
+- The third-person weapon hangs from the right hand: the hand's frame
+  (from the hand pose above) plus a grip offset (`GRIPS` in `Avatar.luau`,
+  in hand units scaled with the avatar), handed to `CG_AddPlayerWeapon` as
+  its parent with `avatarGrip` set, so the barrel, its spin, the muzzle
+  flash, the rail/lightning origin and the weapon sounds work as before.
+  The first-person view model is unchanged.
+- Powerups: quad = a blue shell (red for the red team, as OA's
+  `redQuadShader`) pulsing once a second, battlesuit = gold, regen = OA's
+  red flash on the 100 ms tick, invisibility = 85% see-through, or not
+  drawn at all with `DF_INVIS`. One `Highlight` per avatar.
+- Teams (TDM, CTF and the other team modes): a red or blue outline and a
+  15% tint, so the avatar stays recognisable. A shell takes the fill and
+  keeps the team outline.
+- Flags, persistent powerups, breath, dust, splash, shadows and the talk /
+  disconnect sprites attach to stand-ins at the avatar's chest and head.
+- Gibs and death: `com_blood` / `cg_gibs` rules are unchanged. A gibbed
+  body becomes invisible in the game, so its avatar isn't drawn and the
+  gibs fly as before; a corpse keeps its avatar lying in the death pose.
+- Footsteps: OA's own (`EV_FOOTSTEP*` events from pmove), unchanged.
+
+### Settings
+
+- Server: `g_robloxAvatars 0/1` (default 1).
+- Client: `cg_robloxAvatars 0/1` (archived, default 1), the player setup
+  menu's "Show players as: Roblox avatars / OA models" line. With OA
+  models, `cg_forceModel` behaves as in OA.
+- Bots never have an avatar; they wear their OA model from the kept roster
+  (`tools/oaconv/roster.json`). The player's own `model` still matters for
+  the OA-model view and for anyone with `cg_robloxAvatars 0`, and a
+  dropped model is still refused by the server as before.
+
+### Head icon
+
+The status bar face and the scoreboard heads of an avatar player are their
+`Players:GetUserThumbnailAsync(id, HeadShot, 150x150)` image (an implicit
+2D shader, `Assets.RegisterImage`), drawn once Roblox returns it; until
+then, and for everyone else, OA's 3D head or icon.
+
+### Live run
+
+On 2026-10-30, in real Roblox (Sober through rbx-native's Play, built from
+rbx-native dev 56b8d364): a 4.5 MB place from `place/assemble.py --maps
+oa_dm1 --players sarge,grism` with `bot_enable 1; g_gametype 0; devmap
+oa_dm1; addbot sarge 1; addbot grism 1`. The client was driven over MCP
+(`execute_luau` in the Client data model to run console commands:
+`connect`, `cg_thirdPerson 1`, `setviewpos`, `+forward`, `+moveleft`,
+`+moveup`, `+movedown`, `+attack`; `screen_capture`; `get_console_output`)
+and killed from the Server data model with `G_Damage` (a plain `kill` is
+-999, a gib). Pictures in `docs/parity/avatars/`:
+
+- the server built Chee's avatar (`c2`, his UserId) and the client drew it
+  in third person with its accessories (cap, butterflies, the party
+  unicorn ring) and its Headless head: `idle.png`, `run.png`,
+  `strafe.png`, `jump.png`, `crouch.png`, `shoot.png` (muzzle flash on the
+  machinegun in the right hand);
+- death: the BOTH_DEATH fall and the corpse on the floor
+  (`death_falling.png`, `dead.png`, the scoreboard on top as in OA);
+- head icon: the status bar and scoreboard show the avatar headshot
+  (`back_hud_headshot.png`, bottom; `dead.png`, scoreboard);
+- the setting line in the player menu (`menu.png`);
+- `cg_robloxAvatars 0` unparented the avatar and `1` brought it back;
+  `g_robloxAvatars 0` emptied `OAAvatars` within a second and `1` rebuilt
+  it;
+- bots: Sarge and Grism fought and fragged each other and the player, but
+  OA models are **invisible in this sandbox** (EditableMesh is refused, see
+  `docs/assembly-notes.md`), so a bot shows only as its gun, shadow and
+  name (`bot_alongside.png`, `shoot.png` on the right); that is the
+  experience setting, not the avatars.
+
+Found and fixed during the run: the AnimationConstraint rig (no Motor6Ds,
+the copy was refused and the client drew OA models), a template cached as
+missing before its parts had replicated, the RegisterActiveAnimationClip
+limit (the fallback took over by itself), the twisted right thigh, and the
+floating corpse.
+
+Not seen live: team outlines, powerup shells and the grip of every weapon
+(only the machinegun was carried); they are covered by `avatar.look` in the
+tests and use the same paths as the shots above.
+
 ## Parity (docs/parity)
 
 Reference shots come from OA 0.8.8's own QVMs and data (see "Walls" for the

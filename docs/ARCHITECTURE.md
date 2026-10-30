@@ -101,6 +101,12 @@ Domination, Domination, and the `g_instagib`/`g_rockets` modifiers.
 
 ## Player roster
 
+Players are drawn as their own Roblox avatar by default (R15, scaled to
+OA's model height, OA's animations recreated; visual only, the box and
+pmove stay OA's): `docs/client-notes.md`, "Roblox avatars". The OA models
+below remain for bots, for players without an avatar and for anyone who
+picks "OA models" in the player setup menu.
+
 Only the player models in `tools/oaconv/roster.json` ship. It lists every
 kept model with the reason it passed review, and every dropped one with the
 reason it was dropped:

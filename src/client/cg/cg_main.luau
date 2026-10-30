@@ -134,6 +134,8 @@ local cvarDefs = {
 	{ "cg_teamChatTime", "cg_teamChatTime", "3000", C.CVAR_ARCHIVE },
 	{ "cg_teamChatHeight", "cg_teamChatHeight", "0", C.CVAR_ARCHIVE },
 	{ "cg_forceModel", "cg_forceModel", "0", C.CVAR_ARCHIVE },
+	-- not in OA: draw players who have one as their Roblox avatar (cg_avatars.luau)
+	{ "cg_robloxAvatars", "cg_robloxAvatars", "1", C.CVAR_ARCHIVE },
 	{ "cg_predictItems", "cg_predictItems", "1", C.CVAR_ARCHIVE },
 	{ "cg_deferPlayers", "cg_deferPlayers", "1", C.CVAR_ARCHIVE },
 	{ "cg_drawTeamOverlay", "cg_drawTeamOverlay", "0", C.CVAR_ARCHIVE },

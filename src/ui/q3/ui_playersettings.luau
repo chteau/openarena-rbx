@@ -48,6 +48,7 @@ local ID_EFFECTS = 12
 local ID_EFFECTS2 = 13
 local ID_BACK = 14
 local ID_MODEL = 15
+local ID_AVATARS = 16 -- not in OA: cg_robloxAvatars (docs/client-notes.md, "Roblox avatars")
 
 local MAX_NAMELENGTH = 20
 
@@ -175,6 +176,22 @@ local function PlayerSettings_DrawEffects2(self)
 	U.UI_DrawHandlePic(item.generic.x + 64 + item.curvalue * 16 + 8, item.generic.y + 6, 16, 12, s_playersettings.fxPic[item.curvalue])
 end
 
+local avatar_items = { [0] = "Roblox avatars", "OA models" }
+
+local function PlayerSettings_DrawAvatars(self)
+	local item = self
+	local focus = (item.generic.parent.cursor == item.generic.menuPosition)
+
+	local style = bit32.bor(C.UI_LEFT, C.UI_SMALLFONT)
+	local color = U.text_color_normal
+	if focus then
+		style = bit32.bor(style, C.UI_PULSE)
+		color = U.text_color_highlight
+	end
+
+	U.UI_DrawString(item.generic.x, item.generic.y, "Show players as: " .. avatar_items[item.curvalue], style, color)
+end
+
 local function PlayerSettings_DrawPlayer(self)
 	local buf = trap.Cvar_VariableStringBuffer("model")
 	if buf ~= s_playersettings.playerModel then
@@ -227,6 +244,8 @@ local function PlayerSettings_SetMenuItems()
 
 	local h = Q.int(Q.Com_Clamp(5, 100, trap.Cvar_VariableValue("handicap")))
 	s_playersettings.handicap.curvalue = 20 - Q.idiv(h, 5)
+
+	s_playersettings.avatars.curvalue = if trap.Cvar_VariableValue("cg_robloxAvatars") ~= 0 then 0 else 1
 end
 
 local function PlayerSettings_MenuEvent(ptr, event)
@@ -237,6 +256,8 @@ local function PlayerSettings_MenuEvent(ptr, event)
 	local id = ptr.generic.id
 	if id == ID_HANDICAP then
 		trap.Cvar_Set("handicap", Q.va("%i", 100 - 25 * s_playersettings.handicap.curvalue))
+	elseif id == ID_AVATARS then
+		trap.Cvar_SetValue("cg_robloxAvatars", if s_playersettings.avatars.curvalue == 0 then 1 else 0)
 	elseif id == ID_MODEL then
 		PlayerSettings_SaveChanges()
 		U.UI_PlayerModelMenu()
@@ -278,6 +299,7 @@ local function PlayerSettings_MenuInit()
 	s.player = T.menubitmap_s()
 	s.name = T.menufield_s()
 	s.handicap = T.menulist_s()
+	s.avatars = T.menulist_s()
 	s.effects = T.menulist_s()
 	s.effects2 = T.menulist_s()
 	s.back = T.menubitmap_s()
@@ -369,6 +391,22 @@ local function PlayerSettings_MenuInit()
 	s.effects2.generic.bottom = y + 2 * C.PROP_HEIGHT
 	s.effects2.numitems = 7
 
+	-- one line in the small fixed font, between the effects and the name
+	-- drawn under the model
+	y += 2 * C.PROP_HEIGHT + 4
+	s.avatars.generic.type = C.MTYPE_SPINCONTROL
+	s.avatars.generic.flags = C.QMF_NODEFAULTINIT
+	s.avatars.generic.id = ID_AVATARS
+	s.avatars.generic.callback = PlayerSettings_MenuEvent
+	s.avatars.generic.ownerdraw = PlayerSettings_DrawAvatars
+	s.avatars.generic.x = 192
+	s.avatars.generic.y = y
+	s.avatars.generic.left = 192 - 8
+	s.avatars.generic.top = y - 4
+	s.avatars.generic.right = 192 + 31 * C.SMALLCHAR_WIDTH
+	s.avatars.generic.bottom = y + C.SMALLCHAR_HEIGHT
+	s.avatars.numitems = 2
+
 	s.model.generic.type = C.MTYPE_BITMAP
 	s.model.generic.name = ART_MODEL0
 	s.model.generic.flags = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_PULSEIFFOCUS)
@@ -414,6 +452,7 @@ local function PlayerSettings_MenuInit()
 	U.Menu_AddItem(s.menu, s.handicap)
 	U.Menu_AddItem(s.menu, s.effects)
 	U.Menu_AddItem(s.menu, s.effects2)
+	U.Menu_AddItem(s.menu, s.avatars)
 	U.Menu_AddItem(s.menu, s.model)
 	U.Menu_AddItem(s.menu, s.back)
 

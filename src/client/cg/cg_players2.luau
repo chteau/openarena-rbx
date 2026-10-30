@@ -816,6 +816,11 @@ function G.CG_Player(cent)
 		end
 	end
 
+	-- not in OA: a player with a Roblox avatar is drawn as that (cg_avatars.luau)
+	if G.CG_AvatarActive(clientNum) and G.CG_AvatarPlayer(cent, ci, renderfx) then
+		return
+	end
+
 	local legs = T.refEntity_t()
 	local torso = T.refEntity_t()
 	local head = T.refEntity_t()
@@ -1067,6 +1072,7 @@ function G.CG_ResetPlayerEntity(cent)
 	local cg = G.cg
 	cent.errorTime = -99999 -- guarantee no error decay added
 	cent.extrapolated = false
+	cent.avatar = nil -- not in OA: the Roblox avatar's lerp frames (cg_avatars.luau)
 
 	G.CG_ClearLerpFrame(G.cgs.clientinfo[cent.currentState.clientNum], cent.pe.legs, cent.currentState.legsAnim)
 	G.CG_ClearLerpFrame(G.cgs.clientinfo[cent.currentState.clientNum], cent.pe.torso, cent.currentState.torsoAnim)

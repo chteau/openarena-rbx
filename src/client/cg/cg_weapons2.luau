@@ -329,7 +329,12 @@ function G.CG_AddPlayerWeapon(parent, ps, cent, team)
 		end
 	end
 
-	trap.R_LerpTag(lerped, parent.hModel, parent.oldframe, parent.frame, 1.0 - parent.backlerp, "tag_weapon")
+	if parent.avatarGrip then
+		-- not in OA: a Roblox avatar's hand already sits on the grip (cg_avatars.luau)
+		Q.AxisCopy(Q.axisDefault, lerped.axis)
+	else
+		trap.R_LerpTag(lerped, parent.hModel, parent.oldframe, parent.frame, 1.0 - parent.backlerp, "tag_weapon")
+	end
 	Q.VectorCopy(parent.origin, gun.origin)
 
 	Q.VectorMA(gun.origin, lerped.origin[0], parent.axis[0], gun.origin)

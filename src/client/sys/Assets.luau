@@ -116,6 +116,13 @@ function Assets.RegisterShader(name: string, mip: boolean?): number
 	return h
 end
 
+-- An image the engine got at run time (an avatar headshot) as an implicit
+-- 2D shader.
+function Assets.RegisterImage(key: string, id: string, w: number, h: number): number
+	index.images[key] = { id = id, w = w, h = h }
+	return Assets.RegisterShader(key, false)
+end
+
 function Assets.Shader(h: number)
 	local s = shaders[h]
 	if s and s.remap then

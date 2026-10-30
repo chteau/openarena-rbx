@@ -19,6 +19,8 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
+local Avatars = require("./avatars_roblox")
+
 local Transport = {}
 
 -- an UnreliableRemoteEvent payload must stay under Roblox's ~1000 byte
@@ -62,6 +64,7 @@ end
 function Transport.Start(Game: Game)
 	local SV = Game.SV
 	local reliable, unreliable = remotes()
+	Avatars.Start(Game)
 
 	local clientOf: { [Player]: number } = {}
 	local playerOf: { [number]: Player } = {}
@@ -83,6 +86,7 @@ function Transport.Start(Game: Game)
 	SV.onDrop = function(clientNum: number, reason: string)
 		local player = playerOf[clientNum]
 		playerOf[clientNum] = nil
+		Avatars.Clear(clientNum)
 		if player then
 			clientOf[player] = nil
 			task.delay(1, function()
@@ -118,6 +122,7 @@ function Transport.Start(Game: Game)
 			if old ~= nil then
 				-- a reconnect (new map load on the client, cgame restart)
 				SV.SV_Disconnect(old)
+				Avatars.Clear(old)
 				playerOf[old] = nil
 				clientOf[player] = nil
 			end
@@ -129,6 +134,7 @@ function Transport.Start(Game: Game)
 			end
 			clientOf[player] = n
 			playerOf[n] = player
+			Avatars.Set(n, player)
 			reliable:FireClient(player, "connected", n)
 		end
 	end)
@@ -138,6 +144,7 @@ function Transport.Start(Game: Game)
 		if n ~= nil then
 			clientOf[player] = nil
 			playerOf[n] = nil
+			Avatars.Clear(n)
 			SV.SV_Disconnect(n)
 		end
 	end)
