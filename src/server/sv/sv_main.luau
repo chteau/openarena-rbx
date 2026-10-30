@@ -46,6 +46,7 @@ local G = require("../g_local")
 require("./sv_game")
 local FriendBots = require("./friendbots")
 local MSG = require("../../shared/net/msg")
+local Servers = require("../../shared/net/servers")
 local Collision = require("../../shared/Collision")
 local QS = require("../../shared/q_shared")
 local S = require("../../shared/structs")
@@ -415,18 +416,13 @@ function SV.SV_DropClient(drop, reason: string)
 	SV.SV_SetUserinfo(drop.index, "")
 end
 
--- Roblox: a player is named by their Roblox display name (moderated by
--- Roblox; the username when it has characters OA's font lacks), never by
--- the free text of the name cvar.
+-- Roblox: a player is named by their Roblox name (Servers.playerName),
+-- never by the free text of the name cvar.
 function SV.RobloxName(player: any, userinfo: string): string
 	if typeof(player) ~= "Instance" or not player:IsA("Player") then
 		return userinfo
 	end
-	local name = player.DisplayName
-	if name == "" or string.find(name, '[^%w_ ]') then
-		name = player.Name
-	end
-	return QS.Info_SetValueForKey(userinfo, "name", name)
+	return QS.Info_SetValueForKey(userinfo, "name", Servers.playerName(player.DisplayName, player.Name))
 end
 
 -- Pull specific info from a newly changed userinfo string into a more C
