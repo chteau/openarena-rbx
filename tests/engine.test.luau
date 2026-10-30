@@ -84,6 +84,22 @@ H.test("cmd.tokenize", function()
 	H.eq(Cmd.Argv(5), "")
 end)
 
+H.test("snd.play_command", function()
+	local Snd = H.require("client/sys/Snd")
+	local Cmd = H.require("client/sys/Cmd")
+	local C = H.require("client/q/Consts")
+	local played = {}
+	local start = Snd.StartLocalSound
+	Snd.StartLocalSound = function(sfx, channel)
+		table.insert(played, { sfx, channel })
+	end
+	Cmd.ExecuteString("play sound/misc/menu1.wav sound/misc/menu1 sound/misc/menu2.wav")
+	Snd.StartLocalSound = start
+	H.eq(#played, 3)
+	H.eq(played[1][1], played[2][1]) -- the extension doesn't matter
+	H.eq(played[3][2], C.CHAN_LOCAL_SOUND)
+end)
+
 H.test("cvar.basics", function()
 	local Cvar = H.require("client/sys/Cvar")
 	local v = Cvar.Get("test_cvar", "12.5", 0)

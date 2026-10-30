@@ -11,6 +11,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = require(script.Parent.Net)
+local Snd = require(script.Parent.Snd)
 local shared = script.Parent.Parent.Parent.shared
 local MSG = require(shared.net.msg) :: any
 local S = require(shared.structs) :: any
@@ -336,6 +337,8 @@ function Transport.Start()
 			end
 			-- a fresh connection: the server's first gamestate follows
 			send(writePacket({}))
+		elseif kind == "play" and type(data) == "string" then
+			Snd.Play(data)
 		elseif kind == "refused" then
 			warn("OpenArena: connection refused: " .. tostring(data))
 			Net.messageString = tostring(data)

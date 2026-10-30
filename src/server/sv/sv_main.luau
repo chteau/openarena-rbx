@@ -62,6 +62,8 @@ local MAX_RELIABLE_COMMANDS = SV.MAX_RELIABLE_COMMANDS
 -- transport hook: (clientNum, buffer) -> ()
 SV.send = function(clientNum: number, data: buffer) end
 -- map loader hook: (mapname) -> lumps for Collision.LoadMap (maps/<name>.bsp)
+-- the transport plays a sound on every client (the `play` command)
+SV.play = function(_name: string) end
 SV.loadMap = nil :: ((string) -> any)?
 -- the bots (bot/Bots.luau), set by Game.luau
 SV.Bots = nil :: any
@@ -2198,6 +2200,13 @@ function SV.SV_Init()
 	Cmd.Cmd_AddCommand("systeminfo", SV_Systeminfo_f)
 	Cmd.Cmd_AddCommand("dumpuser", SV_DumpUser_f)
 	Cmd.Cmd_AddCommand("killserver", SV_KillServer_f)
+	-- play (g_bot's bot announcements): a listen server's host hears it in
+	-- Q3, here every connected client does
+	Cmd.Cmd_AddCommand("play", function()
+		for i = 1, Cmd.Cmd_Argc() - 1 do
+			SV.play(Cmd.Cmd_Argv(i))
+		end
+	end)
 	Cmd.Cmd_AddCommand("sectorlist", function()
 		W.SV_SectorList_f(Cmd.print)
 	end)
