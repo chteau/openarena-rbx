@@ -305,11 +305,13 @@ do
 		table.insert(bots, string.lower(QS.Info_ValueForKey(G.G_GetBotInfoByNumber(i), "name")))
 		i += 1
 	end
-	eq(table.concat(bots, " "), "assassin ghost beret morgan gargoyle broadklin cyber-garg liz penguin sarge andriy grism sergei skelebot metalbot grunt s_marine tony", "the bots left")
+	eq(table.concat(bots, " "), "assassin ghost beret morgan gargoyle broadklin cyber-garg liz penguin sarge andriy grism sergei skelebot metalbot grunt s_marine tony jiangshi", "the bots left, and the Final arena's boss")
 	eq(QS.Info_ValueForKey(G.G_GetBotInfoByName("Grism"), "model"), "sarge", "Grism wears sarge, not sarge/classic")
 	eq(QS.Info_ValueForKey(G.G_GetBotInfoByName("Morgan"), "model"), "beret", "Morgan wears beret, not beret/macho")
 	local arena = G.G_GetArenaInfoByMap("oa_dm1")
 	eq(QS.Info_ValueForKey(arena, "bots"), "sarge", "oa_dm1's Sorceress is Sarge")
+	eq(QS.Info_ValueForKey(G.G_GetArenaInfoByMap("czest1tourney"), "bots"), "jiangshi", "czest1tourney's Kyonshi is Jiangshi")
+	eq(QS.Info_ValueForKey(G.G_GetBotInfoByName("S_Marine"), "aifile"), "bots/smarine_c.c", "S_Marine has his own character")
 
 	local n = cs[1].clientNum
 	local function modelAfter(model: string, head: string): string

@@ -1,5 +1,5 @@
 {
-  "_doc": "The player models the Roblox port ships (docs/ARCHITECTURE.md, Player roster). Read by oaconv convert, tools/roster.py (client/server file packs, botfiles, place/assemble.py) and the lune test hosts. An excluded name drops models/players/<name>/, models/players/heads/<name>/, sound/player/<name>/, scripts/<name>.vc and scripts/player_<name>.shader; an excluded <model>/<skin> drops that skin's .skin files and icons plus the paths (and shader names) starting with a prefix listed for it in files. Shipped .skin files name the kept texture in retexture in place of a dropped one. A path starting with a prefix in toned ships only from the toned overlay (assets/toned), never from the pk3s. Bots in bot_models stay and wear that model; other bots whose model is excluded leave scripts/bots.txt, and arenas name the substitute in arena_bots instead.",
+  "_doc": "The player models the Roblox port ships (docs/ARCHITECTURE.md, Player roster). Read by oaconv convert, tools/roster.py (client/server file packs, botfiles, place/assemble.py) and the lune test hosts. An excluded name drops models/players/<name>/, models/players/heads/<name>/, sound/player/<name>/, scripts/<name>.vc and scripts/player_<name>.shader; an excluded <model>/<skin> drops that skin's .skin files and icons plus the paths (and shader names) starting with a prefix listed for it in files. Shipped .skin files name the kept texture in retexture in place of a dropped one. A path starting with a prefix in toned ships only from the toned overlay (assets/toned), never from the pk3s. Bots in bot_models stay and wear that model; other bots whose model is excluded leave scripts/bots.txt, and arenas name the substitute in arena_bots instead. bots changes a scripts/bots.txt block by name, or adds one; their character files may come from the botfiles overlay (assets/botfiles), which replaces or adds files under botfiles/. strongest names the strongest bot and the second strongest: tools/roster.py check holds their characters above every other bot's at every skill level.",
   "default": "sarge",
   "kept": {
     "sarge": "armoured soldier; arms bare, torso plated. The classic skins are dropped below",
@@ -57,6 +57,11 @@
     "angelyss": "Metalbot",
     "dark": "Tony",
     "murielle": "Assassin",
-    "kyonshi": "Sarge"
-  }
+    "kyonshi": "Jiangshi"
+  },
+  "bots": {
+    "jiangshi": {"name": "Jiangshi", "model": "beret/cooldude", "aifile": "bots/kyonshi_c.c", "why": "the Final arena's boss (czest1tourney, Kyonshi's in 0.8.8): Kyonshi's text-only character, chat, item and weapon files, tuned in assets/botfiles; beret's chrome Cooldude skin is a kept model no other bot wears"},
+    "s_marine": {"aifile": "bots/smarine_c.c", "why": "his own character (Grunt shares grunt_c.c), tuned in assets/botfiles as the second strongest bot"}
+  },
+  "strongest": ["Jiangshi", "S_Marine"]
 }

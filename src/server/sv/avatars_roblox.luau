@@ -16,10 +16,15 @@ any later version. See COPYING.
 -- parts come with the description), and put in ReplicatedStorage.OAAvatars
 -- as "c<clientNum>" with a UserId attribute. The models are never
 -- characters: nothing simulates them, the game's own pmove and bbox stay
--- authoritative. A friend-bot (friendbots.luau) gets its friend's avatar
--- the same way; other bots keep their OA model.
+-- authoritative. A bot wearing an account (botroster.luau, friendbots.luau)
+-- gets that account's avatar the same way; other bots keep their OA model.
 --
 -- g_robloxAvatars (serverinfo, default 1): 0 removes them all.
+--
+-- Bot roster: the accounts' names are fetched once (retried every 30 s
+-- while the service fails); when they arrive and whenever a human joins or
+-- leaves, the roster bots are rechecked (a human on a bot's account sends
+-- that bot back to its OA identity while they are here).
 --
 -- Friend-bots: each human's friend list is fetched once when they join and
 -- dropped when they leave. The friend the next added bot would wear is
@@ -29,7 +34,9 @@ any later version. See COPYING.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local UserService = game:GetService("UserService")
 
+local BotRoster = require("./botroster")
 local FriendBots = require("./friendbots")
 
 local Avatars = {}
@@ -37,6 +44,7 @@ local Avatars = {}
 local wanted: { [number]: number } = {} -- UserId by clientNum
 local built: { [number]: Model } = {} -- by UserId: the copy every map change clones again
 local enabled = false
+local rosterDirty = false
 
 local function folder(): Folder
 	local f = ReplicatedStorage:FindFirstChild("OAAvatars")
@@ -117,6 +125,7 @@ local function joined(player: Player)
 		return -- a test player has no friends to fetch
 	end
 	FriendBots.SetHuman(player.UserId, true)
+	rosterDirty = true
 	task.spawn(function()
 		FriendBots.SetFriends(player.UserId, FriendBots.Fetch(Players, player.UserId))
 	end)
@@ -152,6 +161,12 @@ function Avatars.Start(Game: any)
 			Avatars.Clear(clientNum)
 		end
 	end
+	task.spawn(function()
+		while not BotRoster.Fetch(UserService) do
+			task.wait(30)
+		end
+		rosterDirty = true
+	end)
 	update()
 	RunService.Heartbeat:Connect(function(dt: number)
 		since += dt
@@ -159,6 +174,10 @@ function Avatars.Start(Game: any)
 			since = 0
 			update()
 			preview()
+			if rosterDirty then
+				rosterDirty = false
+				Game.SV.BotRosterRefresh()
+			end
 		end
 	end)
 	Players.PlayerAdded:Connect(joined)
@@ -168,6 +187,7 @@ function Avatars.Start(Game: any)
 	Players.PlayerRemoving:Connect(function(player: Player)
 		built[player.UserId] = nil
 		FriendBots.SetHuman(player.UserId, false)
+		rosterDirty = true
 	end)
 end
 

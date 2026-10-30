@@ -143,6 +143,10 @@ end
 h.Game.Command("bot_enable 1")
 h.Game.Command("map oa_dm1")
 frames(10)
+-- the friend-bots path: no fixed roster (tests/bots/botroster.luau)
+h.Game.Command("g_botRoster 0")
+h.Game.Command("g_friendBots 1")
+frames(1)
 
 FB.SetHuman(1001, true)
 FB.SetHuman(1002, true)
