@@ -16,15 +16,12 @@ import base64
 import hashlib
 import struct
 import sys
-import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import roster  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
-PK3 = ROOT / "vendor/oa088/openarena-0.8.8/baseoa"
-PAKS = ["pak6-misc.pk3", "pak6-patch085.pk3", "pak6-patch088.pk3"]
 OUT = ROOT / "build/botfiles"
 CHUNK = 190000 // 4 * 4  # base64 characters per chunk module, a multiple of 4
 
@@ -57,15 +54,9 @@ end
 
 
 def main():
-    files = {}
-    for pak in PAKS:
-        with zipfile.ZipFile(PK3 / pak) as z:
-            for info in z.infolist():
-                if info.filename.lower().startswith("botfiles/") and not info.is_dir():
-                    files[info.filename] = z.read(info)
-    # the character files of bots the roster drops stay out (tools/roster.py)
-    shipped = roster.Shipped().owner
-    files = {p: d for p, d in files.items() if p.lower() in shipped}
+    # the character files of bots the roster drops stay out, and the
+    # overlay's are in (tools/roster.py)
+    files = roster.Shipped().botfiles()
     blob = bytearray(b"OABF" + struct.pack("<I", len(files)))
     for path in sorted(files):
         p = path.encode()

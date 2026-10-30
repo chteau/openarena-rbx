@@ -254,13 +254,14 @@ function G.BotValidChatPosition(bs)
 	return 1
 end
 
--- bot_nochat, and (not in OA) a friend-bot with bot_friendChat 0: insults
--- "from" a real person's friend read badly, so they stay quiet
+-- bot_nochat, and (not in OA) a bot wearing a Roblox account (roster or
+-- friend-bot) with bot_friendChat 0: insults "from" a real person read
+-- badly, so they stay quiet
 function G.BotNoChat(bs)
 	if G.bot_nochat.integer ~= 0 then
 		return true
 	end
-	return G.bot_friendChat.integer == 0 and QS.Info_ValueForKey(G.trap_GetUserinfo(bs.client), "oabot") ~= ""
+	return G.bot_friendChat.integer == 0 and G.trap_FriendBotWorn(bs.client)
 end
 
 function G.BotChat_EnterGame(bs)

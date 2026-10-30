@@ -39,6 +39,7 @@ local Cmd = require("./cmd")
 local Fs = require("./fs")
 local Collision = require("../../shared/Collision")
 local FriendBots = require("./friendbots")
+local BotRoster = require("./botroster")
 local QS = require("../../shared/q_shared")
 local Q = require("../../shared/q_math")
 local S = require("../../shared/structs")
@@ -234,6 +235,40 @@ end
 
 function G.trap_FriendBotValid(clientNum: number): boolean
 	return FriendBots.Valid(clientNum)
+end
+
+-- the bot roster (botroster.luau): whether oabot has an account, and the
+-- name it shows now (nil: its OA identity), wearing or giving back its
+-- avatar
+function G.trap_RosterBot(clientNum: number, oabot: string): (boolean, string?)
+	if not BotRoster.Listed(oabot) then
+		return false, nil
+	end
+	local acc = BotRoster.Account(oabot)
+	if acc then
+		FriendBots.Wear(clientNum, acc)
+	else
+		FriendBots.Release(clientNum)
+	end
+	return true, acc and acc.name
+end
+
+function G.trap_FriendBotWorn(clientNum: number): boolean
+	return FriendBots.Worn(clientNum) ~= nil
+end
+
+-- the host's names arrived or a human came or went: roster bots take or
+-- give back their account now, not at the next map change
+function SV.BotRosterRefresh()
+	if sv.state ~= SV.SS_GAME or sv.gameClients == nil then
+		return
+	end
+	for i = 0, sv_maxclients() - 1 do
+		local cl = svs.clients[i]
+		if cl.isBot and cl.state >= SV.CS_CONNECTED and BotRoster.Listed(QS.Info_ValueForKey(cl.userinfo, "oabot")) then
+			G.G_BotIdentityRecheck(i, true)
+		end
+	end
 end
 
 -- the friend the next bot added to `team` would wear (the add bot menu)

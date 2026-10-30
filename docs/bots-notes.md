@@ -157,6 +157,126 @@ A port bug fixed on the way: botlib stored `aas_entityinfo_t.valid` as a
 boolean while the AI compares it with 0 (as C does), so every "is this
 entity valid / in the PVS" test passed. It is an int again.
 
+## Bot roster
+
+Not in OA. Every bot is a fixed Roblox account, the same in every server
+and in the single-player arenas: it keeps its botfiles character (skill,
+aim, weapons, chat) and wears the account's avatar and name exactly as a
+friend-bot does (below): the display name behind the `^3[BOT]^7` tag, the
+username when OA's font can't draw the display name.
+
+| OA bot | first SP arena | Roblox user id | shows as |
+|---|---|---|---|
+| Grunt | oa_rpg3dm2 | 828726934 | MiranzaUGC |
+| Liz | oa_rpg3dm2 | 73392736 | Mathew |
+| Tony | oa_minia | 260342963 | Berzappy |
+| Penguin | oa_minia | 105519417 | Viken |
+| Skelebot | slimefac | 10138699399 | Float |
+| Ghost | oa_dm5 | 2678188290 | SL0W |
+| Beret | oa_dm5 | 3 | Jane Doe |
+| Broadklin | oa_dm7 | 66246631 | ASIATDETER |
+| Morgan | oa_dm7 | 2 | John Doe |
+| Assassin | sleekgrinder | 1 | Roblox |
+| Cyber-Garg | pxlfan | 123757139 | MattStott |
+| Andriy | am_lavaarena | 5290932442 | mel |
+| Sergei | am_lavaarena | 58526171 | Wasaba |
+| Metalbot | blitzkrieg3 | 156 | builderman |
+| Gargoyle | mlca1 | 11759238920 | OnlyQualityGames |
+| Sarge | oa_dm1 | 10595767136 | Depo |
+| Grism | am_galmevish2 | 8950832609 | Reazy |
+| S_Marine | suspended (Tier 7) | 925308243 | Cheeteau |
+| Jiangshi | czest1tourney (Tier 8, Final) | 8313172606 | misaa |
+
+The ids live in `src/server/sv/botroster.luau`. The server looks the names
+up once (`UserService:GetUserInfosByUserIdsAsync`, all 19 in one call,
+retried every 30 s while the service fails) and keeps them for its life;
+the avatar is `Players:GetHumanoidDescriptionFromUserId`, the players'
+path (`avatars_roblox.luau`).
+
+Precedence, in `BotIdentity` (`src/server/g_bot.luau`):
+
+- `g_botRoster` (archived, default 1): a bot with an id wears its account.
+  An account missing from the lookup (deleted or banned), or names not
+  fetched yet, leave the bot its OA name and model.
+- A bot whose account is in the server as a human (Chee joining while
+  S_Marine plays) is its OA self while they are here: the server rechecks
+  the roster bots within a second of a human joining or leaving, and of the
+  names arriving (`SV.BotRosterRefresh`), and at every map change.
+- The friend-bots path (`g_friendBots`, now default 0) only serves a bot
+  without an id, or every bot with `g_botRoster 0`.
+- An explicit alt name (`addbot sarge 4 free 0 Name`) keeps the bot as
+  named, as before.
+
+A bot that may wear an account keeps its OA name in the userinfo as
+`oabot` (kick by OA name, the recheck); `bot_friendChat` 0 keeps every bot
+wearing an account out of the taunt chat.
+
+### Jiangshi, the Final boss
+
+In 0.8.8 the Final arena (czest1tourney) was Kyonshi's, whose model is
+dropped (female); the roster used to put Sarge there, who already plays in
+Tiers 4, 5 and 7. Jiangshi (Kyonshi's name in Mandarin) takes the arena:
+a `bots.txt` entry added by `tools/oaconv/roster.json` (`bots`) on
+Kyonshi's text-only botfiles (character, chat, items, weapons), drawn with
+`g_robloxAvatars 0` as beret's chrome Cooldude skin, which ships and no
+other bot wears.
+
+Its character (`assets/botfiles/bots/kyonshi_c.c`) is tuned like Q3A's
+Xaero, the strongest bot in the game at every skill level: each aim,
+accuracy, attack skill, view and alertness value closes 20 % (skill 1),
+80 % (skill 4) of the gap between the best stock bot's value and 1, with
+the reaction time and view speed well past the best stock bot's; it always
+fires (fire throttle 1), always jumps and rocket-jumps, uses the grapple,
+never crouches, walks or camps. Its weapons (`kyonshi_w.c`) lean on the
+rocket launcher, railgun, lightning gun and plasma gun.
+
+| skill | best stock bot | Jiangshi | S_Marine |
+|---|---|---|---|
+| 1 | aim/attack/accuracy 0.30, reaction 1.5 s, view 90 deg/s | 0.44, 1.0 s, 150 | 0.384, 1.25 s, 120 |
+| 4 | view factor 0.90, reaction 1.0 s, view 240, weapon accuracy 0.90 | 0.98, 0.5 s, 330, 0.98 | 0.95, 0.75 s, 300, 0.95 |
+| 5 | every value at its cap (1.0, reaction 0) | at the cap | at the cap |
+
+S_Marine (Chee) has a character of his own (`assets/botfiles/bots/smarine_c.c`,
+Grunt's `grunt_c.c` tuned the same way at 12 % and 50 %): above every stock
+bot, below Jiangshi. At skill 5 every bot is already at the caps, so the
+three tie there and Jiangshi's edge is its weapon and movement choices.
+`tools/roster.py check` fails if either falls below another bot anywhere.
+
+Live on 2026-10-30, in real Roblox (Sober through rbx-native's Play, Chee's
+play sandbox, logged in as Cheeteau): a 7.4 MB place from
+`place/assemble.py --maps oa_minia,czest1tourney --players sarge,beret`.
+The SP level menu shows Tier 1 with the OA bots' names and icons
+(`docs/parity/botroster/sp_menu_tier1.jpg`). On Roblox the menu's Fight
+turns into a `callvote map` with the client's `g_gametype` (0), so it
+starts oa_minia as a free-for-all without the arena's bots
+(`src/client/sys/Client.luau`, `mapVote`; not changed here); the arenas
+were started with `spmap oa_minia` and `spmap czest1tourney` in the Server
+data model over MCP instead. Pictures in `docs/parity/botroster/`:
+
+- `oa_minia_tony.jpg`, `oa_minia_penguin.jpg`: following `[BOT] Berzappy`
+  (Tony) and `[BOT] Viken` (Penguin), each drawn as its account's avatar;
+- `oa_minia_scores.jpg`: the scoreboard with both, their headshots and the
+  tag; the log had `Kill: 1 0 7: ^3[BOT]^7 Berzappy killed ^3[BOT]^7 Viken
+  by MOD_ROCKET_SPLASH`;
+- `czest1tourney_boss.jpg`: the Final arena's only bot, `[BOT] misaa`
+  (Jiangshi, userinfo `model beret/cooldude`), in misaa's avatar;
+- `czest1tourney_smarine_chee_here.jpg`: `addbot s_marine 4` while Chee's
+  account was the human in the server: the bot is plain `S_Marine`, no
+  avatar (its OA model isn't in this place, hence the "Failed to load model
+  file" line).
+
+`ReplicatedStorage.OAAvatars` held `c<n>` with each account's UserId
+(105519417, 260342963, 8313172606) and Chee's own for the human. Sending
+`connect` from the client after a server-side map change disconnects the
+player and ends the playtest; the client reconnects by itself.
+
+`tests/bots/botroster.luau` checks the id table, the lookup against a
+stubbed `UserService` (display name, username fallback, a deleted account,
+a failing service), and on a running server: oa_minia's arena bots (Tony,
+Penguin) and the Final arena's Jiangshi wearing their accounts with their
+OA characters, a human on S_Marine's account and leaving again, the failed
+lookup, and `g_botRoster 0` falling back to friend-bots and then OA's bots.
+
 ## Friend-bots
 
 Not in OA. A bot can wear the Roblox avatar and display name of a friend of
@@ -215,8 +335,9 @@ Chat: `bot_friendChat` (default 0) keeps friend-bots out of OA's chat
 read badly. 1 lets them chat like other bots, the tag on every line since
 it is part of the name. `bot_nochat` still applies to every bot.
 
-Settings: `g_friendBots` (archived, default 1); 0 adds bots exactly as OA
-does (no friend is asked for and the userinfo has no `oabot`). Turning it
+Settings: `g_friendBots` (archived, default 0 since the bot roster;
+it serves only bots without a roster account, or all of them with
+`g_botRoster 0`); 0 adds bots exactly as OA does (no friend is asked for and the userinfo has no `oabot`). Turning it
 off doesn't rename bots already in, the next map change does. The add bot
 menu shows "Wears: <name> [BOT]" for the friend the next bot would take
 (the server publishes it on `ReplicatedStorage.OAAvatars` as

@@ -12,7 +12,8 @@ the lune test hosts.
   pk3s;
 - scripts/bots.txt moves the bots in bot_models to their kept model and loses
   the other bots whose model is excluded, and botfiles/ the character files
-  only they use, so `addbot <name>` finds no such bot;
+  only they use, so `addbot <name>` finds no such bot; bots changes or adds
+  blocks, and assets/botfiles replaces or adds files under botfiles/;
 - scripts/arenas.txt and *.arena name the roster's substitute (arena_bots)
   for every dropped bot.
 
@@ -30,6 +31,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG = os.path.join(ROOT, 'tools/oaconv/roster.json')
 BASEOA = os.path.join(ROOT, 'vendor/oa088/openarena-0.8.8/baseoa')
 TONED = os.path.join(ROOT, 'assets/toned')
+BOTFILES = os.path.join(ROOT, 'assets/botfiles')
 SKIP_PAKS = {'pak2-players-mature.pk3'}
 TEXT_EXT = {'.cfg', '.skin', '.shader', '.arena', '.txt', '.menu'}
 
@@ -101,9 +103,27 @@ def move_bot(seg, info):
     return re.sub(r'(?im)^(\s*model\s+)"?[^"\s]*"?', lambda m: m.group(1) + model, seg, count=1)
 
 
+def set_bot_fields(seg, fields):
+    for k, v in fields.items():
+        line = '%s\t\t%s' % (k, v)
+        seg, n = re.subn(r'(?im)^\s*%s\s+.*$' % re.escape(k), lambda m: line, seg, count=1)
+        if n == 0:
+            seg = seg[:seg.rindex('}')] + line + '\n}'
+    return seg
+
+
 def filter_bots(text):
-    return ''.join(seg if info is None else move_bot(seg, info)
-                   for seg, info in bot_blocks(text) if info is None or not bot_excluded(info))
+    """bots.txt as shipped: dropped bots out, bot_models moved, bots applied."""
+    changes = {k.lower(): {f: v for f, v in b.items() if f != 'why'} for k, b in config().get('bots', {}).items()}
+    out = []
+    for seg, info in bot_blocks(text):
+        if info is not None and not bot_excluded(info):
+            seg = set_bot_fields(move_bot(seg, info), changes.pop(info['name'].lower(), {}))
+        if info is None or not bot_excluded(info):
+            out.append(seg)
+    for fields in changes.values():
+        out.append(set_bot_fields('\n// openarena-rbx (tools/oaconv/roster.json, bots)\n{\n}', fields) + '\n')
+    return ''.join(out)
 
 
 def retexture(text):
@@ -158,9 +178,10 @@ class Shipped:
         def stems(bots):
             return {os.path.basename(i.get('aifile', '')).lower().rsplit('_', 1)[0]
                     for i in blocks if i['name'].lower() in bots}
-        kept = {i['name'].lower() for i in blocks} - self.dropped_bots
+        self.shipped_bots = [i for _, i in bot_blocks(filter_bots(self.bots_txt)) if i]
+        kept_stems = {os.path.basename(i.get('aifile', '')).lower().rsplit('_', 1)[0] for i in self.shipped_bots}
         # character files only dropped bots use (and Jenna's, which no bot uses)
-        drop_stems = (stems(self.dropped_bots) | self.dropped_bots) - stems(kept)
+        drop_stems = (stems(self.dropped_bots) | self.dropped_bots) - kept_stems
         self.owner = {low: v for low, v in everything.items() if not excludes(low) and not toned_only(low) and not (
             low.startswith('botfiles/bots/') and os.path.basename(low).rsplit('_', 1)[0] in drop_stems)}
 
@@ -185,6 +206,18 @@ class Shipped:
             return retexture(data.decode('latin-1')).encode('latin-1')
         return data
 
+    def botfiles(self):
+        """{path: bytes} of every shipped file under botfiles/, the overlay
+        (assets/botfiles) over the pk3s."""
+        out = {n: self._read(self.owner, low) for low, (_, n) in self.owner.items() if low.startswith('botfiles/')}
+        for d, _, fs in os.walk(BOTFILES):
+            for f in fs:
+                rel = 'botfiles/' + os.path.relpath(os.path.join(d, f), BOTFILES).replace(os.sep, '/')
+                out = {k: v for k, v in out.items() if k.lower() != rel.lower()}
+                with open(os.path.join(d, f), 'rb') as fh:
+                    out[rel] = fh.read()
+        return out
+
     def text_files(self, prefixes=None):
         """The text files the game reads (the client/server FS pack), or
         those under `prefixes`."""
@@ -197,6 +230,45 @@ class Shipped:
             if os.path.splitext(low)[1] in TEXT_EXT and wanted(low):
                 out[low] = self.read(low).decode('latin-1')
         return out
+
+
+# the characteristics that make a bot stronger the higher they are (lower,
+# for the reaction time); the rest are personality
+STRENGTH = re.compile(r'^(ATTACK_SKILL|AIM_SKILL|AIM_ACCURACY|VIEW_FACTOR|VIEW_MAXCHANGE|REACTIONTIME|ALERTNESS|'
+                      r'AIM_ACCURACY_\w+|AIM_SKILL_\w+)$')
+
+
+def character(text):
+    """{skill: {characteristic: value}} of a botfiles character's numbers."""
+    return {m.group(1): {k: float(v) for k, v in re.findall(r'CHARACTERISTIC_(\w+)\s+(\d+(?:\.\d+)?)\s*$',
+                                                            m.group(2), re.M) if STRENGTH.match(k)}
+            for m in re.finditer(r'skill\s+(\d)\s*\{(.*?)\}', text, re.S)}
+
+
+def strength_problems(bots, botfiles):
+    """strongest[0] at or above every other bot at every skill level and
+    characteristic, strongest[1] at or above every other but below
+    strongest[0] somewhere (ties only where a value is at its cap)."""
+    order = [n.lower() for n in config().get('strongest', [])]
+    chars = {}
+    for i in bots:
+        data = botfiles.get('botfiles/' + i.get('aifile', '').lower())
+        if data:
+            chars[i['name'].lower()] = character(data.decode('latin-1'))
+    problems = []
+    for rank, name in enumerate(order):
+        if name not in chars:
+            return ['strongest: %s is not a shipped bot' % name]
+        others = [b for b in chars if b not in order[:rank + 1]]
+        for skill, values in chars[name].items():
+            for k, v in values.items():
+                better = (lambda a, b: a <= b) if k == 'REACTIONTIME' else (lambda a, b: a >= b)
+                worse = [b for b in others if k in chars[b].get(skill, {}) and not better(v, chars[b][skill][k])]
+                if worse:
+                    problems.append('strongest: %s skill %s %s %g is below %s' % (name, skill, k, v, ', '.join(worse)))
+    if len(order) == 2 and order[0] in chars and order[1] in chars and chars[order[0]] == chars[order[1]]:
+        problems.append('strongest: %s is no stronger than %s' % tuple(order))
+    return problems
 
 
 def check():
@@ -213,7 +285,12 @@ def check():
         if low.startswith('models/players/') and low.count('/') > 2 and low.split('/')[2] != 'heads' \
                 and model_excluded(low.split('/')[2]) and low in s.owner:
             problems.append('%s ships' % low)
-    kept_bots = {i['name'].lower() for _, i in bot_blocks(s.bots_txt) if i} - s.dropped_bots
+    kept_bots = {i['name'].lower() for i in s.shipped_bots}
+    botfiles = {k.lower(): v for k, v in s.botfiles().items()}
+    for i in s.shipped_bots:
+        if 'botfiles/' + i.get('aifile', '').lower() not in botfiles:
+            problems.append('bot %s: no character file %s' % (i['name'], i.get('aifile')))
+    problems += strength_problems(s.shipped_bots, botfiles)
     for _, i in bot_blocks(s.read('scripts/bots.txt').decode('latin-1')):
         if i and any(model_excluded(i[k]) for k in ('model', 'headmodel') if i.get(k)):
             problems.append('bot %s wears dropped model %s' % (i['name'], i.get('model')))

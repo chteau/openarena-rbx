@@ -44,6 +44,10 @@ function FriendBots.SetHuman(userId: number, here: boolean)
 	end
 end
 
+function FriendBots.Here(userId: number): boolean
+	return table.find(humans, userId) ~= nil
+end
+
 function FriendBots.SetFriends(userId: number, list: { Friend })
 	if table.find(humans, userId) then
 		lists[userId] = list
@@ -137,6 +141,19 @@ function FriendBots.Pick(clientNum: number, prefer: { number }?): Friend?
 		end
 	end
 	return f
+end
+
+-- a given account, not one from the lists (botroster.luau)
+function FriendBots.Wear(clientNum: number, f: Friend)
+	local old = worn[clientNum]
+	if old and old.id == f.id and old.name == f.name then
+		return
+	end
+	FriendBots.Release(clientNum)
+	worn[clientNum] = f
+	if FriendBots.onWear then
+		FriendBots.onWear(clientNum, f)
+	end
 end
 
 function FriendBots.Worn(clientNum: number): Friend?

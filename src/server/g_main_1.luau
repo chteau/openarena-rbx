@@ -46,7 +46,7 @@ local vmCvarNames = {
 	"g_debugMove", "g_debugDamage", "g_debugAlloc", "g_weaponRespawn", "g_weaponTeamRespawn",
 	"g_motd", "g_motdfile", "g_votemaps", "g_votecustom", "g_synchronousClients", "g_warmup",
 	"g_doWarmup", "g_restarted", "g_logfile", "g_logfileSync", "g_blood", "g_podiumDist",
-	"g_podiumDrop", "g_friendBots", "g_allowVote", "g_teamAutoJoin", "g_teamForceBalance", "g_banIPs", "g_filterBan",
+	"g_podiumDrop", "g_botRoster", "g_friendBots", "g_allowVote", "g_teamAutoJoin", "g_teamForceBalance", "g_banIPs", "g_filterBan",
 	"g_smoothClients", "pmove_fixed", "pmove_msec", "pmove_float", "g_rankings", "g_listEntity",
 	"g_obeliskHealth", "g_obeliskRegenPeriod", "g_obeliskRegenAmount",
 	"g_obeliskRespawnDelay", "g_cubeTimeout", "g_enableDust",
@@ -152,8 +152,10 @@ local gameCvarTableList = {
 
 	E(G.g_podiumDist, "g_podiumDist", "80", 0, 0, false),
 	E(G.g_podiumDrop, "g_podiumDrop", "70", 0, 0, false),
-	-- not in OA: bots wear human players' Roblox friends (g_bot.luau)
-	E(G.g_friendBots, "g_friendBots", "1", C.CVAR_ARCHIVE, 0, false),
+	-- not in OA: bots wear their fixed roster account, or (no account, or
+	-- g_botRoster 0) human players' Roblox friends (g_bot.luau)
+	E(G.g_botRoster, "g_botRoster", "1", C.CVAR_ARCHIVE, 0, false),
+	E(G.g_friendBots, "g_friendBots", "0", C.CVAR_ARCHIVE, 0, false),
 
 	--Votes start:
 	E(G.g_allowVote, "g_allowVote", "1", bit32.bor(C.CVAR_SERVERINFO, C.CVAR_ARCHIVE), 0, false),

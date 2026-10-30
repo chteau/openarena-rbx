@@ -498,33 +498,48 @@ function G.G_RemoveQueuedBotBegin(clientNum)
 	end
 end
 
--- Not in OA: friend-bots (docs/bots-notes.md, "Friend-bots"). A bot can
--- wear a Roblox friend of a human player here: it keeps its botfiles
--- character, and its name is the friend's with a tag no player name has, so
--- it can't pass for the person. The OA bot name stays in the userinfo
--- ("oabot") for kick.
+-- Not in OA: the bot roster and friend-bots (docs/bots-notes.md, "Bot
+-- roster" and "Friend-bots"). A bot can wear a Roblox account: its fixed
+-- roster account (g_botRoster), else a friend of a human player here
+-- (g_friendBots). It keeps its botfiles character, and its name is the
+-- account's with a tag no player name has, so it can't pass for the
+-- person. A bot that may wear one keeps its OA bot name in the userinfo
+-- ("oabot") for kick and to find its account again.
 local FRIEND_TAG = "^3[BOT]^7 "
 
--- a friend for clientNum (nil: none free, or g_friendBots 0), its team
--- preferred in team games
-local function FriendBotName(clientNum, team)
+-- the tagged name clientNum wears now, or nil for its OA identity. A
+-- roster bot takes its account or nothing; a friend-bot already wearing
+-- `current` keeps it while that friend stays valid, else takes the next
+-- free friend (its team's first in team games)
+local function BotIdentity(clientNum, oabot, team, current)
+	if G.g_botRoster.integer ~= 0 then
+		local listed, name = G.trap_RosterBot(clientNum, oabot)
+		if listed then
+			return name and FRIEND_TAG .. name
+		end
+	end
 	if G.g_friendBots.integer == 0 then
 		return nil
+	end
+	if current and G.trap_FriendBotValid(clientNum) then
+		return current
 	end
 	local side = if G.g_gametype.integer >= C.GT_TEAM and G.g_ffa_gt ~= 1 then team else nil
 	local friend = G.trap_FriendBot(clientNum, side)
 	return friend and FRIEND_TAG .. friend
 end
 
--- a map change: a friend-bot whose friend's player left (or g_friendBots
--- 0) takes another friend, or goes back to its OA name
-local function FriendBotRecheck(clientNum)
+-- a map change, or (live) the roster's names or the humans here changed:
+-- the bot takes the account it should wear now, or goes back to its OA
+-- name. `announce` sends the new name to everyone at once.
+function G.G_BotIdentityRecheck(clientNum, announce)
 	local userinfo = G.trap_GetUserinfo(clientNum)
 	local oabot = QS.Info_ValueForKey(userinfo, "oabot")
-	if oabot == "" or (G.g_friendBots.integer ~= 0 and G.trap_FriendBotValid(clientNum)) then
+	if oabot == "" then
 		return
 	end
-	local name = FriendBotName(clientNum, QS.Info_ValueForKey(userinfo, "team"))
+	local current = QS.Info_ValueForKey(userinfo, "name")
+	local name = BotIdentity(clientNum, oabot, QS.Info_ValueForKey(userinfo, "team"), current)
 	if name == nil then
 		G.trap_FriendBotRelease(clientNum)
 		local botinfo = G.G_GetBotInfoByName(oabot) or ""
@@ -532,9 +547,13 @@ local function FriendBotRecheck(clientNum)
 		if name == "" then
 			name = oabot
 		end
-		userinfo = QS.Info_RemoveKey(userinfo, "oabot")
 	end
-	G.trap_SetUserinfo(clientNum, QS.Info_SetValueForKey(userinfo, "name", name))
+	if name ~= current then
+		G.trap_SetUserinfo(clientNum, QS.Info_SetValueForKey(userinfo, "name", name))
+		if announce then
+			G.ClientUserinfoChanged(clientNum)
+		end
+	end
 end
 
 --[[
@@ -544,7 +563,7 @@ G_BotConnect
 ]]
 function G.G_BotConnect(clientNum, restart)
 	if restart then
-		FriendBotRecheck(clientNum)
+		G.G_BotIdentityRecheck(clientNum, false)
 	end
 	local userinfo = G.trap_GetUserinfo(clientNum)
 
@@ -679,10 +698,10 @@ local function G_AddBot(name, skill, team, delay, altname)
 	userinfo = QS.Info_SetValueForKey(userinfo, "team", team)
 
 	-- an explicit altname keeps the bot as named
-	local friend = if altname == nil or altname == "" then FriendBotName(clientNum, team) else nil
-	if friend then
-		userinfo = QS.Info_SetValueForKey(userinfo, "name", friend)
-		userinfo = QS.Info_SetValueForKey(userinfo, "oabot", QS.Info_ValueForKey(botinfo, "name"))
+	if (altname == nil or altname == "") and (G.g_botRoster.integer ~= 0 or G.g_friendBots.integer ~= 0) then
+		local oabot = QS.Info_ValueForKey(botinfo, "name")
+		userinfo = QS.Info_SetValueForKey(userinfo, "oabot", oabot)
+		userinfo = QS.Info_SetValueForKey(userinfo, "name", BotIdentity(clientNum, oabot, team, nil) or botname)
 	end
 
 	bot = G.g_entities[clientNum]

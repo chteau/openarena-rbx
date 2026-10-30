@@ -144,7 +144,7 @@ What uses it:
   Grism wears `sarge`, Morgan `beret`) and loses the 15 bots with a dropped
   model (so `addbot neko` prints OA's "Bot 'neko'
   not defined", and `bot_minplayers`, random bots and the menus only see the
-  18 kept ones), `botfiles/` loses the character files only they use, and
+  18 kept ones and Jiangshi, below), `botfiles/` loses the character files only they use, and
   `scripts/arenas.txt` / `*.arena` name a kept substitute (`arena_bots`):
 
   | dropped | substitute | dropped | substitute |
@@ -155,14 +155,25 @@ What uses it:
   | Headcrash | Andriy | Angelyss | Metalbot |
   | Major | Skelebot | Dark | Tony |
   | Nekoyss | Broadklin | Murielle | Assassin |
-  | Arachna | Cyber-Garg | Kyonshi | Sarge |
+  | Arachna | Cyber-Garg | Kyonshi | Jiangshi |
   | Neko | Penguin | | |
 
   No arena names the same bot twice. q3_ui's team-game bot seeds (Kyonshi,
-  Merman) take the same substitutes. `tools/roster.py check` validates the
+  Merman) take Sarge and Beret.
+
+  Kyonshi was the boss of the Final arena (czest1tourney). Her model is
+  dropped but her botfiles are text only, so the roster's `bots` adds
+  Jiangshi, a new bot on her character, chat, item and weapon files and on
+  beret's chrome Cooldude skin (a kept skin no other bot wears), and
+  S_Marine gets a character of his own. Both characters are tuned copies in
+  the botfiles overlay `assets/botfiles/`, which replaces or adds files under
+  `botfiles/`: Jiangshi is the strongest bot in the game and S_Marine the
+  second (roster.json `strongest`; docs/bots-notes.md, "Bot roster"). `tools/roster.py check` validates the
   config against the pk3s and fails on a dropped name hardcoded in `src/`, a
   shipped `.skin` naming a dropped texture, a `toned` path with no copy in
-  `assets/toned/` or a bot wearing a dropped model.
+  `assets/toned/`, a bot wearing a dropped model or without its character
+  file, or a `strongest` bot whose aim, accuracy, attack skill, view or
+  reaction falls below another bot's at any skill level.
 - The server (`ClientUserinfoChanged`) turns a dropped skin of a kept model
   into that model's default skin (`sarge/classic` -> `sarge`, `beret/macho`
   -> `beret`), and a `model`/`headmodel` with no shipped skin file into
