@@ -16,6 +16,7 @@ local SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT = 8, 16
 local lines: { string } = {}
 local times: { number } = {} -- per line, Milliseconds when printed (0 = cleared)
 local partial = ""
+Console.lines = lines -- for tests
 Console.open = false
 Console.input = ""
 Console.cursor = 0
@@ -31,79 +32,142 @@ local function cleanForEcho(s: string): string
 	return (s:gsub("%^[^%^]", ""))
 end
 
+-- CL_ConsolePrint: lines wrap at the console width, at word boundaries
+local lineX, lineColor, partialTime = 0, 7, 0
+
+local function linefeed()
+	table.insert(lines, partial)
+	table.insert(times, Clock.Milliseconds())
+	if #lines > MAX_LINES then
+		table.remove(lines, 1)
+		table.remove(times, 1)
+	end
+	partial = if lineColor ~= 7 then "^" .. lineColor else ""
+	lineX = 0
+end
+
 function Console.Print(msg: string)
 	if Console.echo then
 		Console.echo(cleanForEcho((msg:gsub("\n$", ""))))
 	end
-	local text = partial .. msg
-	partial = ""
-	local start = 1
-	while true do
-		local nl = text:find("\n", start, true)
-		if nl == nil then
-			partial = text:sub(start)
-			break
-		end
-		table.insert(lines, text:sub(start, nl - 1))
-		table.insert(times, Clock.Milliseconds())
-		if #lines > MAX_LINES then
-			table.remove(lines, 1)
-			table.remove(times, 1)
-		end
-		start = nl + 1
+	local R2D = require(script.Parent.R2D)
+	-- Con_CheckResize: (vidWidth / SMALLCHAR_WIDTH) - 2
+	local linewidth = if R2D.width > 0 then R2D.width // SMALLCHAR_WIDTH - 2 else 78
+	local Q = require(script.Parent.Parent.q.Q)
+	if lineColor ~= 7 then
+		partial ..= "^7"
 	end
+	lineColor = 7
+	local i, n = 1, #msg
+	while i <= n do
+		local c = string.byte(msg, i)
+		if c == 94 and i < n and string.byte(msg, i + 1) ~= 94 then -- Q_IsColorString
+			lineColor = Q.ColorIndex(string.byte(msg, i + 1))
+			partial ..= "^" .. lineColor
+			i += 2
+			continue
+		end
+		-- count word length
+		local l = 0
+		while l < linewidth and i + l <= n and string.byte(msg, i + l) > 32 do
+			l += 1
+		end
+		-- word wrap
+		if l ~= linewidth and lineX + l >= linewidth then
+			linefeed()
+		end
+		if c == 10 then
+			linefeed()
+		elseif c == 13 then
+			lineX = 0
+		else
+			partial ..= string.char(c)
+			lineX += 1
+			if lineX >= linewidth then
+				linefeed()
+			end
+		end
+		i += 1
+	end
+	partialTime = Clock.Milliseconds()
 end
 
 function Console.ClearNotify()
+	partialTime = 0
 	for i = 1, #times do
 		times[i] = 0
 	end
 end
 
--- Draws one string at real pixel (x, y) with Q3 colour codes.
-function Console.DrawSmallString(x: number, y: number, s: string, alpha: number?)
+-- SCR_DrawStringExt in real pixels: w x h characters with Q3 colour codes
+-- (shown as text too when noColorEscape), and the 2-unit drop shadow of
+-- SCR_DrawBigString when `shadow` is its size in pixels.
+function Console.DrawString(x: number, y: number, w: number, h: number, s: string, alpha: number?,
+	noColorEscape: boolean?, shadow: number?)
 	local R2D = require(script.Parent.R2D)
 	local Assets = require(script.Parent.Assets)
 	local Q = require(script.Parent.Parent.q.Q)
 	local charset = Assets.RegisterShader("gfx/2d/bigchars", false)
-	local color = { [0] = 1, [1] = 1, [2] = 1, [3] = alpha or 1 }
-	R2D.SetColor(color)
-	local i = 1
-	while i <= #s do
-		local c = string.byte(s, i)
-		if c == 94 and i < #s and string.byte(s, i + 1) ~= 94 then -- '^'
-			local idx = Q.ColorIndex(string.byte(s, i + 1))
-			local col = Q.g_color_table[idx]
-			color = { [0] = col[0], [1] = col[1], [2] = col[2], [3] = alpha or 1 }
-			R2D.SetColor(color)
-			i += 2
-		else
+	local a = alpha or 1
+	local function chars(x0: number, y0: number, colored: boolean)
+		local i = 1
+		while i <= #s do
+			local c = string.byte(s, i)
+			if c == 94 and i < #s and string.byte(s, i + 1) ~= 94 then -- '^'
+				if colored then
+					local col = Q.g_color_table[Q.ColorIndex(string.byte(s, i + 1))]
+					R2D.SetColor({ [0] = col[0], [1] = col[1], [2] = col[2], [3] = a })
+				end
+				if not noColorEscape then
+					i += 2
+					continue
+				end
+			end
 			if c ~= 32 then
 				local row, colm = bit32.rshift(c, 4), bit32.band(c, 15)
 				local size = 0.0625
-				R2D.DrawStretchPic(x, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT,
-					colm * size, row * size, colm * size + size, row * size + size, charset)
+				R2D.DrawStretchPic(x0, y0, w, h, colm * size, row * size, colm * size + size, row * size + size, charset)
 			end
-			x += SMALLCHAR_WIDTH
+			x0 += w
 			i += 1
 		end
 	end
+	if shadow then
+		R2D.SetColor({ [0] = 0, [1] = 0, [2] = 0, [3] = a })
+		chars(x + shadow, y + shadow, false)
+	end
+	R2D.SetColor({ [0] = 1, [1] = 1, [2] = 1, [3] = a })
+	chars(x, y, true)
 	R2D.SetColor(nil)
 end
 
--- Con_DrawNotify: the last NUM_CON_TIMES lines younger than con_notifytime.
-function Console.DrawNotify()
+-- One string of SMALLCHAR characters at real pixel (x, y).
+function Console.DrawSmallString(x: number, y: number, s: string, alpha: number?)
+	Console.DrawString(x, y, SMALLCHAR_WIDTH, SMALLCHAR_HEIGHT, s, alpha)
+end
+
+-- Con_DrawNotify: the lines from con.current - NUM_CON_TIMES + 1 to the
+-- one being written (con.current), so the last three finished lines and
+-- the unfinished one, each while younger than con_notifytime. Returns the
+-- height drawn, in pixels.
+function Console.DrawNotify(): number
 	local now = Clock.Milliseconds()
 	-- top-left, clear of the safe-area insets
-	local x, y = Screen.insets.left + SMALLCHAR_WIDTH, Screen.insets.top
-	local first = math.max(1, #lines - NUM_CON_TIMES + 1)
-	for i = first, #lines do
+	local x, y0 = Screen.insets.left + SMALLCHAR_WIDTH, Screen.insets.top
+	local y = y0
+	local limit = con_notifytime.value * 1000
+	for i = math.max(1, #lines - NUM_CON_TIMES + 2), #lines do
 		local t = times[i]
-		if t ~= 0 and now - t < con_notifytime.value * 1000 then
+		if t ~= 0 and now - t <= limit and cleanForEcho(lines[i]):find("[^ ]") then
 			Console.DrawSmallString(x, y, lines[i])
 			y += SMALLCHAR_HEIGHT
 		end
 	end
+	if partialTime ~= 0 and now - partialTime <= limit and cleanForEcho(partial):find("[^ ]") then
+		Console.DrawSmallString(x, y, partial)
+		y += SMALLCHAR_HEIGHT
+	end
+	return y - y0
 end
 
 -- Con_DrawSolidConsole at half the screen height.

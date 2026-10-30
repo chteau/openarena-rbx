@@ -270,6 +270,71 @@ TGA files are written without their TGA 2.0 footer first: OA's menu art
 declares "no alpha" there while the pixels carry it, and ImageMagick
 trusts it (Q3 doesn't), which drew black boxes behind icons.
 
+## Chat
+
+What players type is OA's chat on top of Roblox's text chat, so it is
+filtered as Roblox requires. Roblox's own UI is off: `OAClient.client.luau`
+turns off `TextChatService`'s chat window, input bar and bubbles first
+thing and retries `SetCoreGuiEnabled(PlayerList / Chat, false)` until the
+CoreGui takes it. Tab is OA's `+scores` (default.cfg).
+
+The engine half follows ioquake3 (`vendor/ioq3/code/client`):
+
+- **Notify lines** (`sys/Console.luau`, `cl_console.c` `CL_ConsolePrint`
+  and `Con_DrawNotify`): lines wrap at `vidWidth / 8 - 2` columns at word
+  boundaries (the rest of the word is measured at every character, like
+  the C), colours carry over a wrap, and the last three finished lines plus
+  the unfinished one show while younger than `con_notifytime` (3 s), in
+  8x16 real pixels at the top left, below the safe-area inset (the Roblox
+  topbar).
+- **The prompt** (`sys/Chat.luau`, `Con_MessageMode*_f`, `Message_Key`,
+  `Field_KeyDownEvent`/`Field_CharEvent`/`Field_VariableSizeDraw`):
+  `messagemode` (T in 0.8.8's default.cfg), `messagemode2` (team; 0.8.8
+  binds no key, the controls menu does), `messagemode3`/`4` (tell the
+  crosshair player / last attacker). `say:` or `say_team:` and the field
+  are big chars with the drop shadow at 640x480 (8, v * 480 / vidHeight +
+  8), the field 30 (25 for team) characters wide with OA's scrolling,
+  insert/overstrike cursor, Home/End/Del/arrows and ctrl-a/e/h/c. A key's
+  own character is dropped when its bind changed the key catcher (ioq3
+  runs the bind a frame later), so T doesn't type a t.
+- **Sending**: Enter sends the line with `TextChannel:SendAsync` on
+  `TextChatService.OAChat.Say` (Metadata `tell <n>` for messagemode3/4) or
+  `.Team`, never as a `say` command. The server
+  (`server/sv/chat_roblox.luau`) runs the game's own `G_Say` (or
+  `Cmd_Tell_f`'s two calls) on the first `ShouldDeliverCallback` of the
+  message, catching the `chat`/`tchat` commands it sends: every human it
+  picked gets `rchat <MessageId> <chat|tchat> "<name prefix>"`, everyone
+  else is refused delivery, so OA's team, tell and tourney rules decide who
+  sees it. The client joins the prefix with the text Roblox delivered
+  (`MessageReceived`, filtered for that viewer, or `SendAsync`'s own copy
+  for the sender) and runs the cgame's `CG_ChatMessage`, the `chat`/`tchat`
+  path of `CG_ServerCommand`: talk sound, `cg_teamChatsOnly`, the team chat
+  box (`cg_teamChatHeight`, 0 by default as in 0.8.8) and the notify line.
+  Bots G_Say picked get the line with the text filtered for broadcast
+  (`TextService`), so their replies only ever quote filtered text.
+- **Never unfiltered**: the engine refuses `say`, `say_team` and `tell` from
+  players (`SV_ExecuteClientCommand`), so a console `say` goes nowhere;
+  bots and the server (frags, "entered the game", bot chat from
+  `botfiles/`) still print directly. A player's name is their Roblox
+  display name (the username when it has characters OA's font lacks), set
+  by the engine over the `name` cvar (`SV.RobloxName`).
+- **Who can chat**: the server sets the Player attribute `OACanChat` from
+  `TextChatService:CanUserChatAsync`; without it the messagemode commands
+  open nothing.
+
+Not 1:1: OA draws the prompt stretched to the screen (x * vidWidth / 640),
+ours keeps the 640x480 scale uniform like the rest of the HUD; Escape
+cancels the prompt but also opens Roblox's menu (Roblox keeps Escape);
+paste (ctrl-v, shift-insert) does nothing (scripts can't read the
+clipboard); 0.8.8 has no flood limit on say (it is commented out in
+`ClientCommand`) and none was added, Roblox rate-limits `SendAsync`;
+admin commands typed in chat (`g_adminParseSay`) run on the text as typed.
+
+Live on 2026-10-30 (Sober through rbx-native's Play, rbx-native dev
+56b8d364, the play sandbox): `docs/parity/chat/`, OA references in
+`docs/parity/ref/chat_say.png` and `chat_team.png` (ioquake3 from
+`vendor/ioq3` with 0.8.8's QVMs and data).
+
 ## Integration points
 
 - **feat/game (`src/shared`)**: `adapters/BG` takes `src/shared/BG.luau`
@@ -344,9 +409,9 @@ stretch: `cg_wideScreenHud` is gone.
   | crosshair, crosshair names, center prints, scoreboard, intermission, info screen | centre |
   | tourney scoreboard backdrop | stretch |
 
-  The console notify lines (obituaries, chat, "entered the game") and the
-  chat input are engine text in real pixels at the top left, moved in by
-  the insets. The levelshot of the info screen covers the screen
+  The console notify lines (obituaries, chat, "entered the game") are
+  engine text in real pixels at the top left, moved in by the insets; the
+  chat prompt below them is in 640x480 units pinned there ("Chat"). The levelshot of the info screen covers the screen
   (`Screen.cover`: cropped, not stretched). 0.8.8 has no 2D zoom mask or
   full-screen damage/powerup overlay; those effects are 3D, in the view.
 - **Menus.** q3_ui stays a centred 4:3 layout (`uis.bias`, `uis.ybias` when

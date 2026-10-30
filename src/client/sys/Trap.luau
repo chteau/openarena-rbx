@@ -29,6 +29,10 @@ local trap = {}
 function trap.Print(msg: string)
 	mod("Console").Print(msg)
 end
+-- Roblox: the server's frame of a filtered chat line (cg_servercmds "rchat")
+function trap.ChatFrame(id: string, cmd: string, prefix: string)
+	mod("Chat").Frame(id, cmd, prefix)
+end
 function trap.Error(msg: string)
 	error(msg, 2)
 end

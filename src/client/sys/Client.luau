@@ -10,6 +10,7 @@ local Input = require(script.Parent.Input)
 local Net = require(script.Parent.Net)
 local Clock = require(script.Parent.Clock)
 local Console = require(script.Parent.Console)
+local Chat = require(script.Parent.Chat)
 local R2D = require(script.Parent.R2D)
 local Assets = require(script.Parent.Assets)
 local R3D = require(script.Parent.R3D)
@@ -24,7 +25,6 @@ Client.cgameActive = false
 Client.uiActive = false
 Client.realtime = 0
 local lastFrame = 0
-local chat: { team: boolean, text: string }? = nil
 
 local cl_timeNudge = Cvar.Get("cl_timeNudge", "0", C.CVAR_TEMP)
 Cvar.Get("protocol", "71", C.CVAR_ROM)
@@ -58,13 +58,11 @@ Cmd.AddCommand("togglemenu", function()
 	Keys.Event(C.K_ESCAPE, true, t)
 	Keys.Event(C.K_ESCAPE, false, t)
 end)
-Cmd.AddCommand("messagemode", function()
-	chat = { team = false, text = "" }
-	Keys.SetCatcher(bit32.bxor(Keys.GetCatcher(), C.KEYCATCH_MESSAGE))
-end)
-Cmd.AddCommand("messagemode2", function()
-	chat = { team = true, text = "" }
-	Keys.SetCatcher(bit32.bxor(Keys.GetCatcher(), C.KEYCATCH_MESSAGE))
+Chat.Register(Cmd, function(which: string): number
+	if not Client.cgameActive then
+		return -1
+	end
+	return if which == "crosshair" then G.CG_CrosshairPlayer() else G.CG_LastAttacker()
 end)
 Cmd.AddCommand("exec", function()
 	local name = Cmd.Argv(1)
@@ -133,27 +131,7 @@ function Client.ToggleConsole()
 end
 
 Keys.console = { Toggle = Client.ToggleConsole, Key = Console.Key }
-Keys.message = {
-	Key = function(k: number, char: string?)
-		if chat == nil then
-			return
-		end
-		if k == C.K_ESCAPE then
-			chat = nil
-			Keys.SetCatcher(bit32.band(Keys.GetCatcher(), bit32.bnot(C.KEYCATCH_MESSAGE)))
-		elseif k == C.K_ENTER or k == C.K_KP_ENTER then
-			if chat.text ~= "" then
-				Net.SendClientCommand(('%s "%s"'):format(if chat.team then "say_team" else "say", chat.text:gsub('"', "'")))
-			end
-			chat = nil
-			Keys.SetCatcher(bit32.band(Keys.GetCatcher(), bit32.bnot(C.KEYCATCH_MESSAGE)))
-		elseif k == C.K_BACKSPACE then
-			chat.text = chat.text:sub(1, -2)
-		elseif char and #char == 1 and #chat.text < 150 then
-			chat.text ..= char
-		end
-	end,
-}
+Keys.message = { Key = Chat.Key }
 Keys.connState = function()
 	return Net.state
 end
@@ -228,6 +206,9 @@ function Client.Frame(dtSec: number)
 	Client.realtime = now
 
 	Cmd.Execute()
+	if Client.cgameActive then
+		Chat.Drain(G.CG_ChatMessage)
+	end
 
 	-- CL_SendCmd
 	-- CL_CreateNewCommands runs from CA_PRIMED on: the server moves a client
@@ -275,16 +256,13 @@ function Client.UpdateScreen()
 	elseif Client.cgameActive and Net.state == C.CA_ACTIVE and not uiFullscreen then
 		G.CG_DrawActiveFrame(Net.serverTime, C.STEREO_CENTER, false)
 		if bit32.band(Keys.GetCatcher(), bit32.bor(C.KEYCATCH_UI, C.KEYCATCH_CGAME)) == 0 then
-			Console.DrawNotify()
+			Chat.Draw(Console.DrawNotify())
 		end
 	elseif U and (Net.state == C.CA_CONNECTING or Net.state == C.CA_PRIMED) and Client.connectRequested then
 		U.UI_DrawConnectScreen(false)
 	end
 	if U and bit32.band(Keys.GetCatcher(), C.KEYCATCH_UI) ~= 0 then
 		U.UI_Refresh(now)
-	end
-	if chat then
-		Console.DrawSmallString(Screen.insets.left + 8, Screen.insets.top + 64, (if chat.team then "say_team: " else "say: ") .. chat.text .. "_")
 	end
 	if Console.open then
 		Console.DrawConsole(R2D.width, R2D.height)
@@ -366,8 +344,11 @@ local function onInput(io: InputObject, isDown: boolean)
 	if k == nil then
 		return
 	end
+	local catcher = Keys.GetCatcher()
 	Keys.Event(k, isDown, Clock.Milliseconds())
-	if isDown then
+	-- ioq3 buffers a bind's command, so the key's own character reaches the
+	-- catcher it was pressed under: the t of messagemode isn't typed
+	if isDown and Keys.GetCatcher() == catcher then
 		local ch = charFor(k)
 		if ch then
 			Keys.CharEvent(ch)
@@ -501,6 +482,7 @@ end
 
 function Client.Start(opts: { root: Instance?, width: number?, height: number? }?)
 	Client.Boot(opts)
+	Chat.Start()
 	local UIS = game:GetService("UserInputService")
 	UIS.MouseIconEnabled = false
 	UIS.InputBegan:Connect(function(io)

@@ -59,6 +59,13 @@ ids. These are listed once here, not on every row.
 | "Fragged by", "Click FIRE to respawn", spectator banner | draws | play `dm1_fragged_scores.png`, `ctf2_spectator.png` |
 | in-game menu, team join menu, setup screens, vote menus, demos, mods, credits | ported, not opened in play | smoke (menu frames) |
 | console | ported, not opened in play (F10 does not reach the embedded client) | - |
+| no Roblox player list, chat window, input bar or bubbles | done | play `chat/menu_no_playerlist.png` and every shot in `chat/` |
+| Tab: OA's scoreboard (`+scores`, default.cfg) | works | play `chat/tab_scores.png` |
+| notify lines (3 lines, `con_notifytime`, word wrap, colours) | matches | play `chat/bot_taunts.png`; OA `ref/chat_say.png` |
+| `say:` prompt (T, `messagemode`) and `say_team:` (`messagemode2`, no default key as in 0.8.8) | matches; uniform scale, not stretched (see client notes) | play `chat/say_prompt.png`, `chat/team_prompt.png`; side by side `chat/say_side.png`, `chat/team_side.png` (OA left) |
+| say / say_team lines through Roblox's filter, name colours, team prefix | works | play `chat/say_line.png`, `chat/team_line.png`; a bot teammate got the team line; tests `chat.test.luau` |
+| bot chat (taunts, team orders) | works | play `chat/bot_taunts.png` (`bot_fastchat 1`) |
+| talk sound | called (`sound/player/talk.wav`), silent until the sound atlases have ids | play (hooked `Snd.StartSound`) |
 
 ## Weapons
 

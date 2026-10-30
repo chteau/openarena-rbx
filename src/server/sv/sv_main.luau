@@ -413,9 +413,24 @@ function SV.SV_DropClient(drop, reason: string)
 	SV.SV_SetUserinfo(drop.index, "")
 end
 
+-- Roblox: a player is named by their Roblox display name (moderated by
+-- Roblox; the username when it has characters OA's font lacks), never by
+-- the free text of the name cvar.
+function SV.RobloxName(player: any, userinfo: string): string
+	if typeof(player) ~= "Instance" or not player:IsA("Player") then
+		return userinfo
+	end
+	local name = player.DisplayName
+	if name == "" or string.find(name, '[^%w_ ]') then
+		name = player.Name
+	end
+	return QS.Info_SetValueForKey(userinfo, "name", name)
+end
+
 -- Pull specific info from a newly changed userinfo string into a more C
 -- friendly form.
 function SV.SV_UserinfoChanged(cl)
+	cl.userinfo = SV.RobloxName(cl.player, cl.userinfo)
 	-- name for C code
 	cl.name = string.sub(QS.Info_ValueForKey(cl.userinfo, "name"), 1, C.MAX_NAME_LENGTH - 1)
 
@@ -520,10 +535,17 @@ local function Cmd_Args_Sanitize()
 	end
 end
 
+-- Roblox: what a player types reaches the game only through
+-- TextChatService's filter (chat_roblox.luau); only bots say things directly
+local FILTERED_CMDS = { say = true, say_team = true, tell = true }
+
 -- Also called by bot code
 function SV.SV_ExecuteClientCommand(cl, s: string, clientOK: boolean)
 	local bProcessed = false
 	Cmd.Cmd_TokenizeString(s)
+	if not cl.isBot and FILTERED_CMDS[string.lower(Cmd.Cmd_Argv(0))] then
+		return
+	end
 
 	-- see if it is a server level command
 	local u = ucmds[Cmd.Cmd_Argv(0)]
@@ -860,7 +882,7 @@ function SV.SV_DirectConnect(userinfo: string, handle: any, address: string?, gu
 	newcl.guid = guid
 
 	-- save the userinfo
-	newcl.userinfo = string.sub(userinfo, 1, C.MAX_INFO_STRING - 1)
+	newcl.userinfo = SV.RobloxName(handle, string.sub(userinfo, 1, C.MAX_INFO_STRING - 1))
 
 	-- get the game a chance to reject this connection or modify the userinfo
 	local denied = G.vmMain(C.GAME_CLIENT_CONNECT, clientNum, true, false)

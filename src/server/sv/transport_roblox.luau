@@ -20,6 +20,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
 local Avatars = require("./avatars_roblox")
+local Chat = require("./chat_roblox")
 
 local Transport = {}
 
@@ -68,6 +69,7 @@ function Transport.Start(Game: Game)
 
 	local clientOf: { [Player]: number } = {}
 	local playerOf: { [number]: Player } = {}
+	Chat.Start(Game, clientOf)
 
 	SV.send = function(clientNum: number, data: buffer)
 		local player = playerOf[clientNum]
