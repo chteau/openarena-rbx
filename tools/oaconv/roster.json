@@ -1,11 +1,11 @@
 {
-  "_doc": "The player models the Roblox port ships (docs/ARCHITECTURE.md, Player roster). Read by oaconv convert, tools/roster.py (client/server file packs, botfiles, place/assemble.py) and the lune test hosts. An excluded name drops models/players/<name>/, models/players/heads/<name>/, sound/player/<name>/, scripts/<name>.vc and scripts/player_<name>.shader; an excluded <model>/<skin> drops that skin's .skin files and icons plus the paths (and shader names) starting with a prefix listed for it in files. Bots whose model is excluded leave scripts/bots.txt, and arenas name the substitute in arena_bots instead.",
+  "_doc": "The player models the Roblox port ships (docs/ARCHITECTURE.md, Player roster). Read by oaconv convert, tools/roster.py (client/server file packs, botfiles, place/assemble.py) and the lune test hosts. An excluded name drops models/players/<name>/, models/players/heads/<name>/, sound/player/<name>/, scripts/<name>.vc and scripts/player_<name>.shader; an excluded <model>/<skin> drops that skin's .skin files and icons plus the paths (and shader names) starting with a prefix listed for it in files. Shipped .skin files name the kept texture in retexture in place of a dropped one. Bots in bot_models stay and wear that model; other bots whose model is excluded leave scripts/bots.txt, and arenas name the substitute in arena_bots instead.",
   "default": "sarge",
   "kept": {
-    "sarge": "armoured soldier; arms bare, torso plated. The classic skins (Grism bot) paint a cartoon bare abdomen strip under an open vest: kept, flagged for Chee",
-    "grism": "not a model: the texture folder sarge's skins use",
+    "sarge": "armoured soldier; arms bare, torso plated. The classic skins are dropped below",
+    "grism": "not a model: the texture folder sarge's skins use; the classic skins' morphed* textures are dropped with them",
     "assassin": "hooded robe and mask, fully covered",
-    "beret": "soldier in a vest or tank top (default, macho/Morgan, cooldude); the Headcrash skin is dropped below",
+    "beret": "soldier in a camo vest and beret. skin1* (bare arms, chest and face) is dropped with the Macho skin, so default, red and blue draw every surface from the clothing texture skin2* (retexture); cooldude is an environment-mapped flare. Headcrash and Macho are dropped below",
     "gargoyle": "green/stone/tech creature skins, no human-like torso; the l_gen surface named in its .skin does not exist in lower.md3",
     "liz": "scaled lizard creature with belly plates",
     "penguin": "cartoon penguin",
@@ -24,10 +24,23 @@
     "arachna": "female model (mature pk3 only; its bot, voice, shader and sounds are in the other pk3s)",
     "ayumi": "female model (mature pk3 only; bots Ayumi and Jenna)",
     "merman": "the body texture is a realistic bare human torso (pecs, abs, flesh tone) that a nudity classifier can read as a nude torso",
-    "beret/headcrash": "headcrash1.jpg paints a bare hairy chest with a nipple and no vest over it"
+    "beret/headcrash": "headcrash1.jpg paints a bare hairy chest with a nipple and no vest over it",
+    "sarge/classic": "grism/morphedg.tga paints a bare male abdomen under an open vest",
+    "sarge/classicred": "grism/morphedr.tga, the red classic skin: the same bare abdomen",
+    "sarge/classicblue": "grism/morphed2.tga, the blue classic skin: the same bare abdomen",
+    "beret/macho": "skin1*.tga paint a bare male upper body (muscled arms and chest) and macho has no vest over it"
   },
   "files": {
-    "beret/headcrash": ["models/players/beret/headcrash", "models/players/beret/spec_headcrash"]
+    "beret/headcrash": ["models/players/beret/headcrash", "models/players/beret/spec_headcrash"],
+    "sarge/classic": ["models/players/grism/morphed"],
+    "beret/macho": ["models/players/beret/skin1", "models/players/beret/spec_skin1"]
+  },
+  "retexture": {
+    "models/players/beret/skin1": "models/players/beret/skin2"
+  },
+  "bot_models": {
+    "grism": "sarge",
+    "morgan": "beret"
   },
   "arena_bots": {
     "ayumi": "Grunt",

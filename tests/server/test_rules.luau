@@ -306,6 +306,8 @@ do
 		i += 1
 	end
 	eq(table.concat(bots, " "), "assassin ghost beret morgan gargoyle broadklin cyber-garg liz penguin sarge andriy grism sergei skelebot metalbot grunt s_marine tony", "the bots left")
+	eq(QS.Info_ValueForKey(G.G_GetBotInfoByName("Grism"), "model"), "sarge", "Grism wears sarge, not sarge/classic")
+	eq(QS.Info_ValueForKey(G.G_GetBotInfoByName("Morgan"), "model"), "beret", "Morgan wears beret, not beret/macho")
 	local arena = G.G_GetArenaInfoByMap("oa_dm1")
 	eq(QS.Info_ValueForKey(arena, "bots"), "sarge", "oa_dm1's Sorceress is Sarge")
 
@@ -320,7 +322,9 @@ do
 		return QS.Info_ValueForKey(cs, "model") .. " " .. QS.Info_ValueForKey(cs, "hmodel")
 	end
 	eq(modelAfter("neko", "neko/red"), "sarge sarge", "model neko falls back to sarge")
-	eq(modelAfter("beret/headcrash", "merman"), "sarge sarge", "dropped skin and head fall back to sarge")
+	eq(modelAfter("beret/headcrash", "merman"), "beret sarge", "dropped skin falls back to its model, dropped head to sarge")
+	eq(modelAfter("sarge/classicred", "beret/macho"), "sarge beret", "dropped skins fall back to their model's default")
+	eq(modelAfter("beret/red", "sarge/classic"), "beret/red sarge", "beret/red ships, sarge/classic does not")
 	eq(modelAfter("tony/blue", "sergei"), "tony/blue sergei", "kept models stay")
 end
 

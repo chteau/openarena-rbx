@@ -17,6 +17,9 @@ pub struct Roster {
     /// Path prefixes an excluded `model/skin` owns (its textures and shaders).
     #[serde(default)]
     pub files: BTreeMap<String, Vec<String>>,
+    /// Dropped texture prefix -> the kept one shipped `.skin` files name instead.
+    #[serde(default)]
+    pub retexture: BTreeMap<String, String>,
 }
 
 impl Roster {
@@ -60,6 +63,18 @@ impl Roster {
         })
     }
 
+    /// A `.skin` texture with a dropped prefix swapped for its kept one.
+    pub fn retexture(&self, texture: &str) -> String {
+        let low = texture.to_ascii_lowercase();
+        self.retexture
+            .iter()
+            .find_map(|(from, to)| {
+                low.starts_with(&from.to_ascii_lowercase())
+                    .then(|| format!("{to}{}", &texture[from.len()..]))
+            })
+            .unwrap_or_else(|| texture.to_string())
+    }
+
     /// Whether a build output (`images/<pk3 path>.png`, `md3/<pk3 dir>/...`)
     /// was made from an excluded path.
     pub fn excludes_output(&self, path: &str) -> bool {
@@ -94,15 +109,25 @@ mod tests {
             "models/players/beret/icon_headcrash.tga",
             "models/players/beret/headcrash1.jpg",
             "models/players/beret/headcrash2",
+            "models/players/beret/upper_macho.skin",
+            "models/players/beret/icon_macho.tga",
+            "models/players/beret/skin1.tga",
+            "models/players/beret/skin1red.tga",
+            "models/players/sarge/lower_classicblue.skin",
+            "models/players/sarge/icon_classicred.tga",
+            "models/players/grism/morphedg.tga",
+            "models/players/grism/morphed2.tga",
         ] {
             assert!(r.excludes(p), "{p}");
         }
         for p in [
             "models/players/sarge/upper.md3",
-            "models/players/grism/morphedg.tga",
+            "models/players/grism/enkiskin.tga",
+            "models/players/gargoyle/morphedgarg.tga",
             "models/players/heads/sergei/sergei.md3",
             "models/players/beret/upper_default.skin",
-            "models/players/beret/skin1.tga",
+            "models/players/beret/skin2red.tga",
+            "models/players/sarge/upper_red.skin",
             "sound/player/sarge/death1.wav",
             "scripts/sarge.vc",
             "models/players/sergei/upper.md3",
@@ -111,7 +136,19 @@ mod tests {
         }
         assert!(r.excludes_output("images/models/players/beret/headcrash1.png"));
         assert!(r.excludes_output("md3/models/players/neko/lower_static_0.glb"));
-        assert!(!r.excludes_output("images/models/players/beret/skin1.png"));
+        assert!(r.excludes_output("images/models/players/beret/skin1.png"));
+        assert!(!r.excludes_output("images/models/players/beret/skin2.png"));
+        assert_eq!(
+            r.retexture("models/players/beret/skin1blue.tga"),
+            "models/players/beret/skin2blue.tga"
+        );
+        assert_eq!(
+            r.retexture("models/players/beret/skin2.tga"),
+            "models/players/beret/skin2.tga"
+        );
+        for (from, to) in &r.retexture {
+            assert!(r.excludes(from) && !r.excludes(to), "retexture {from} -> {to}");
+        }
         assert!(!r.excludes_output("sound/sfx_00.ogg"));
         for k in r.kept.keys() {
             assert!(!r.excluded.contains_key(k), "{k} is both kept and excluded");

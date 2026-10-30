@@ -34,27 +34,34 @@ local BG = require("../shared/BG")
 local SF = G.FileStatics("g_client")
 
 -- Roblox port: only the roster's player models ship (tools/oaconv/roster.json,
--- tools/roster.py). A model or head whose skin file isn't in the shipped
--- files becomes OA's default model, the one the cgame falls back to when a
--- model can't load, so no client is announced with a dropped model.
+-- tools/roster.py). A dropped skin of a kept model becomes that model's
+-- default skin; a model or head with no shipped skin file at all becomes
+-- OA's default model, the one the cgame falls back to when a model can't
+-- load, so no client is announced with a dropped model or skin.
 local function shippedModel(name: string, part: string): string
 	if name == "" then
 		return name
 	end
 	local head = string.sub(name, 1, 1) == "*"
 	local base, skin = string.match(if head then string.sub(name, 2) else name, "^([^/]*)/?(.*)$")
-	if skin == "" then
-		skin = "default"
+	local function ships(s: string): boolean
+		local path = if head
+			then QS.va("models/players/heads/%s/head_%s.skin", base, s)
+			else QS.va("models/players/%s/%s_%s.skin", base, part, s)
+		local _, file = G.trap_FS_FOpenFile(path, C.FS_READ)
+		if file == 0 then
+			return false
+		end
+		G.trap_FS_FCloseFile(file)
+		return true
 	end
-	local path = if head
-		then QS.va("models/players/heads/%s/head_%s.skin", base, skin)
-		else QS.va("models/players/%s/%s_%s.skin", base, part, skin)
-	local _, file = G.trap_FS_FOpenFile(path, C.FS_READ)
-	if file == 0 then
-		return "sarge"
+	if ships(if skin == "" then "default" else skin) then
+		return name
 	end
-	G.trap_FS_FCloseFile(file)
-	return name
+	if skin ~= "" and ships("default") then
+		return (if head then "*" else "") .. base
+	end
+	return "sarge"
 end
 
 local function isxdigitAt(s, i)
