@@ -540,6 +540,7 @@ function Client.Boot(opts: { root: Instance?, width: number?, height: number?, t
 		root = gui
 	end
 	R2D.root = root
+	FS.maps = Assets.index.maps
 	local key = ""
 	resize = function()
 		local cam = workspace.CurrentCamera
