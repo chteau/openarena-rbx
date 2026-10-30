@@ -41,6 +41,8 @@ for _, v in {
 	Cvar.Get(v[1], v[2], bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
 end
 Cvar.Get("teamtask", "0", C.CVAR_USERINFO)
+-- the server browser's ping timeout (a Roblox lookup takes a round trip or two)
+Cvar.Get("cl_maxPing", "800", C.CVAR_ARCHIVE)
 Cvar.Get("cg_predictItems", "1", bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
 
 local function loadModules(folder: Instance)
