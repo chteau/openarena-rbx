@@ -1,5 +1,5 @@
 //! The texture half of `oaconv tone`: bodysuits painted from an existing
-//! toned skin's mask, painted dots (nipples) filled in, and the painted
+//! toned skin's mask, shirts painted over bare torsos, painted dots (nipples) filled in, and the painted
 //! detail inside the flattened regions smoothed away. Each image starts from
 //! `assets/toned-src/<path>` when a hand-edited base exists there, else the
 //! pk3 original, and is written to the overlay.
@@ -10,7 +10,8 @@ use std::path::Path;
 use image::{Rgba, RgbaImage};
 use serde::Deserialize;
 
-use super::paint::{coverage, smooth};
+use super::math::V3;
+use super::paint::{coverage, piece_positions, smooth};
 use super::Field;
 use crate::md3::{self, Md3};
 use crate::vfs::{Vfs, OVERLAY};
@@ -25,6 +26,9 @@ pub struct TextureCfg {
     /// pk3 original (the same UV layout), shaded like that copy.
     #[serde(default)]
     pub suits: Vec<Suit>,
+    /// Paint a shirt over a bare torso, found by 3D position on the model.
+    #[serde(default)]
+    pub shirts: Vec<Shirt>,
     /// Fill painted dots: per image, `[x, y, radius]` in texels.
     #[serde(default)]
     pub spots: BTreeMap<String, Vec<[f32; 3]>>,
@@ -38,6 +42,30 @@ pub struct TextureCfg {
 pub struct Suit {
     pub mask: String,
     /// Image -> suit colour (RGB).
+    pub images: BTreeMap<String, [u8; 3]>,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Shirt {
+    pub model: String,
+    pub part: String,
+    /// Animation whose first frame the positions below are taken on.
+    pub reference: String,
+    pub surface: String,
+    /// The shirt covers the pieces (UV-connected parts) of `surface` that
+    /// hold the vertex nearest each of these points.
+    pub pieces: Vec<V3>,
+    /// Height of the neckline: above it the pieces stay bare.
+    pub neckline: f32,
+    /// Width (in units) of the soft edge at the neckline.
+    pub feather: f32,
+    /// Blur radius, in texels of a 512-wide image, of the shading taken
+    /// from the original art (each material normalised to its mean).
+    pub radius: u32,
+    /// Fraction of that shading's contrast kept.
+    pub contrast: f32,
+    /// Image -> shirt colour (RGB).
     pub images: BTreeMap<String, [u8; 3]>,
 }
 
@@ -127,6 +155,65 @@ fn paint_suit(repo: &Path, base: &Vfs, suit: &Suit, images: &mut Images) -> Resu
     Ok(())
 }
 
+fn paint_shirt(base: &Vfs, shirt: &Shirt, images: &mut Images) -> Result<(), String> {
+    let dir = format!("models/players/{}", shirt.model);
+    let read = |p: String| base.read(&p).ok_or(format!("{p}: not in any pk3"));
+    let cfg = md3::parse_animation_cfg(&String::from_utf8_lossy(&read(format!(
+        "{dir}/animation.cfg"
+    ))?))?;
+    let model = md3::parse(&read(format!("{dir}/{}.md3", shirt.part))?)?;
+    let frame = super::anim_frame(&cfg, &shirt.reference, shirt.part == "lower")?;
+    for (path, colour) in &shirt.images {
+        let img = images.get(path)?;
+        let (w, h) = img.dimensions();
+        let at = piece_positions(&model, frame, &shirt.surface, &shirt.pieces, w, h)?;
+        let covered: Vec<bool> = at.iter().map(Option::is_some).collect();
+        let weight: Vec<f32> = at
+            .iter()
+            .map(|p| {
+                p.map_or(0.0, |p| {
+                    ((shirt.neckline - p[2]) / shirt.feather + 0.5).clamp(0.0, 1.0)
+                })
+            })
+            .collect();
+        // Shading: luma over each material's mean (grey cloth vs. skin), so
+        // the old top's edges don't print through, then blurred flat.
+        let grey =
+            |p: &Rgba<u8>| p.0[..3].iter().max().unwrap() - p.0[..3].iter().min().unwrap() < 32;
+        let mut mean = [(0.0f32, 0u32); 2];
+        for (p, _) in img.pixels().zip(&weight).filter(|(_, &k)| k > 0.0) {
+            let m = &mut mean[grey(p) as usize];
+            m.0 += luma(p);
+            m.1 += 1;
+        }
+        let mean = mean.map(|(sum, n)| sum / n.max(1) as f32);
+        let mut shade = img.clone();
+        for (s, p) in shade.pixels_mut().zip(img.pixels()) {
+            let k = luma(p) / mean[grey(p) as usize].max(1.0) * 128.0;
+            *s = Rgba([k.round().clamp(0.0, 255.0) as u8, 0, 0, 255]);
+        }
+        let shade = smooth(
+            &shade,
+            &vec![1.0; covered.len()],
+            &covered,
+            (shirt.radius * w).div_ceil(512),
+        );
+        for ((px, s), &k) in img.pixels_mut().zip(shade.pixels()).zip(&weight) {
+            if k <= 0.0 {
+                continue;
+            }
+            let light = 1.0 + (s[0] as f32 / 128.0 - 1.0) * shirt.contrast;
+            for c in 0..3 {
+                let cloth = colour[c] as f32 * light;
+                px[c] = (px[c] as f32 * (1.0 - k) + cloth * k)
+                    .round()
+                    .clamp(0.0, 255.0) as u8;
+            }
+        }
+    }
+    Ok(())
+}
+
 fn fill_spots(img: &mut RgbaImage, spots: &[[f32; 3]]) {
     let (w, h) = img.dimensions();
     let covered = vec![true; (w * h) as usize];
@@ -187,6 +274,9 @@ pub fn run(
     };
     for suit in &cfg.suits {
         paint_suit(repo, base, suit, &mut images)?;
+    }
+    for shirt in &cfg.shirts {
+        paint_shirt(base, shirt, &mut images)?;
     }
     for (path, spots) in &cfg.spots {
         fill_spots(images.get(path)?, spots);

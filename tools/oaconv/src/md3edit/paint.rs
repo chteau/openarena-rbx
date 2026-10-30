@@ -4,6 +4,7 @@
 
 use image::RgbaImage;
 
+use super::math::{sub, V3};
 use super::Field;
 use crate::md3::Md3;
 
@@ -37,6 +38,64 @@ pub fn coverage(
         }
     }
     (weight, covered)
+}
+
+/// Per texel of a `w` x `h` image, the position on `frame` of the
+/// pieces of `surface` (its UV-connected parts) whose vertex nearest one of
+/// `near` lies on them; `None` where no such piece covers the texel.
+pub fn piece_positions(
+    model: &Md3,
+    frame: usize,
+    surface: &str,
+    near: &[V3],
+    w: u32,
+    h: u32,
+) -> Result<Vec<Option<V3>>, String> {
+    let s = model
+        .surfaces
+        .iter()
+        .find(|s| s.name == surface)
+        .ok_or(format!("no surface {surface}"))?;
+    let pos: Vec<V3> = s.xyz[frame]
+        .iter()
+        .map(|p| p.map(|c| c as f32 * crate::md3::XYZ_SCALE))
+        .collect();
+    let mut piece: Vec<usize> = (0..pos.len()).collect();
+    fn root(p: &mut [usize], mut i: usize) -> usize {
+        while p[i] != i {
+            p[i] = p[p[i]];
+            i = p[i];
+        }
+        i
+    }
+    for t in &s.triangles {
+        let r = t.map(|i| root(&mut piece, i as usize));
+        piece[r[1]] = r[0];
+        piece[r[2]] = r[0];
+    }
+    let wanted: Vec<usize> = near
+        .iter()
+        .map(|q| {
+            let d = |p: &V3| sub(*p, *q).iter().map(|c| c * c).sum::<f32>();
+            let i = (0..pos.len())
+                .min_by(|&a, &b| d(&pos[a]).total_cmp(&d(&pos[b])))
+                .unwrap_or(0);
+            root(&mut piece, i)
+        })
+        .collect();
+    let mut out = vec![None; (w * h) as usize];
+    for t in &s.triangles {
+        let [a, b, c] = t.map(|i| i as usize);
+        if !wanted.contains(&root(&mut piece, a)) {
+            continue;
+        }
+        let uv = [a, b, c].map(|i| [s.st[i][0] * w as f32, s.st[i][1] * h as f32]);
+        raster(uv, w, h, |x, y, l| {
+            let p = [0, 1, 2].map(|k| l[0] * pos[a][k] + l[1] * pos[b][k] + l[2] * pos[c][k]);
+            out[(y * w + x) as usize] = Some(p);
+        });
+    }
+    Ok(out)
 }
 
 /// Calls `f(x, y, barycentrics)` for texel centres inside the UV triangle,

@@ -4,10 +4,12 @@ Modified copies of OpenArena 0.8.8 art (GPL-2.0, same licence as the
 originals), kept at the same paths as in the pk3s. `tools/oaconv` reads this
 folder after every pk3, so these files replace the originals in `build/`.
 
-**None of this ships any more**: every model below is dropped from the
-Roblox roster (`tools/oaconv/roster.json`, docs/ARCHITECTURE.md "Player
+**Only beret's `skin1*` ships.** Every other model below is dropped from
+the Roblox roster (`tools/oaconv/roster.json`, docs/ARCHITECTURE.md "Player
 roster"), so `oaconv convert` skips these files like the originals. They stay
-for the repo's history, and `oaconv tone` still rebuilds them.
+for the repo's history, and `oaconv tone` still rebuilds them. Beret's
+`skin1*` are listed under `toned` in the roster: the converter takes these
+copies and never the pk3 originals (a test checks the converted PNGs' sha256).
 
 Why: the female player models were too revealing for Roblox's rules on
 suggestive content. They keep their faces, hair, colours and silhouettes; the
@@ -15,8 +17,9 @@ chest is now flat to modestly athletic, the buttocks are smaller, nothing
 suggests nipples, and the two most exposed outfits cover the chest, midriff
 and hips.
 
-Before/after: `docs/toned-models.jpg` (shapes, in game) and
-`docs/toned-skins.jpg` (the earlier neko/angelyss repaint).
+Before/after: `docs/toned-models.jpg` (shapes, in game),
+`docs/toned-skins.jpg` (the earlier neko/angelyss repaint) and
+`docs/toned-beret.jpg` (beret's t-shirt, in ioquake3).
 
 ## Generated files
 
@@ -60,6 +63,7 @@ byte the originals.
 | `models/players/angelyss/retro.tga` | the navy bodysuit from `assets/toned-src/`, chest shading smoothed out |
 | `models/players/hnt/{skin,skin_red,skin_blue,drkskin_red,drkskin_blue}.tga` | the same bodysuit painted over Angelyss's other skins (grey, red, blue, dark red, dark navy) |
 | `models/players/sorceress/{drowbody,reddrowbody}.tga` | painted nipples filled in |
+| `models/players/beret/{skin1,skin1red,skin1blue}.tga` | a plain t-shirt (grey, red, blue) over his bare chest, back, belly and shoulders: the `shirts` entry in the config |
 
 ### Hand-made
 
@@ -75,6 +79,17 @@ position on the idle-pose mesh, with soft shading taken from the original
 art. Angelyss's red, blue and dark skins use `models/players/hnt/` textures
 from `pak6-patch085.pk3` (not only the mature pk3, as noted earlier), so they
 get the same suit. Every other player icon is framed on the face and stays.
+
+Beret's shirt needs no hand-painted base: `oaconv tone` paints it from the
+pk3 originals and the `shirts` entry alone. His `u_body` surface splits into
+UV-connected pieces (front and back torso with the upper arms, forearms,
+hands, neck bits); the shirt takes the two torso pieces, picked by a point
+on each, below a neckline height on the idle pose (`TORSO_STAND`), so it
+ends at the neck and at the seam half way down the upper arm, a short
+sleeve. Face, head, forearms, hands, vest (its own `skin2*` surface), gear
+and legs stay as they were. Its shading is the original's, each material
+(the grey tank top, skin) divided by its own mean, blurred over 8 texels and
+kept at 60 % contrast, so no muscle, nipple or tank-top edge shows through.
 
 ## Angelyss is not playable from these pk3s
 

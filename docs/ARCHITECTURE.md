@@ -113,10 +113,12 @@ reason it was dropped:
   merman, and beret's Headcrash skin;
 - dropped, a bare male upper body: sarge's Classic skins (classic,
   classicred, classicblue, textures `grism/morphed*`) and beret's Macho skin
-  with its `skin1*` textures (bare arms, chest and face). Beret's default, red
-  and blue skins used `skin1*` too: they ship with every surface on the
-  clothing texture `skin2*` instead (`retexture`), a camo-clad beret with no
-  bare skin;
+  (his bare-chested `skin1*` with no vest);
+- shipped only toned (`toned`): beret's `skin1`, `skin1red` and `skin1blue`,
+  which paint a bare muscled chest, back and shoulders under his vest. The
+  copies in `assets/toned/` paint a plain t-shirt (grey, red, blue) over
+  every bare torso texel, so his default, red and blue skins keep their face,
+  arms and hands (`docs/toned-beret.jpg`); the pk3 originals never ship;
 - kept: sarge (its textures live in `grism/`), assassin, beret, gargoyle,
   liz, penguin, sergei, skelebot, smarine, tony.
 
@@ -124,8 +126,10 @@ What uses it:
 
 - `oaconv convert` drops the excluded paths from its VFS (`src/roster.rs`):
   no texture, icon, md3, glb, sound or shader of theirs, and no upload entry;
-  its `models.json` skins name the `retexture` texture instead. `oaconv upload` also skips such entries left in an older manifest. `oaconv
-  tone` still regenerates `assets/toned/`, which now ships nothing.
+  its `models.json` skins name the `retexture` texture instead (no entry
+  today). A `toned` path resolves only from the overlay (`assets/toned/`),
+  never from a pk3. `oaconv upload` also skips such entries left in an older manifest. `oaconv
+  tone` regenerates `assets/toned/`; of it, only beret's `skin1*` ships.
 - `tools/roster.py` applies the same rules to the game's file packs
   (`place/assemble.py`, `scripts/client-dev-assets.py`,
   `tools/pack-botfiles.py`, the lune test hosts): shipped `.skin` files name
@@ -151,7 +155,8 @@ What uses it:
   No arena names the same bot twice. q3_ui's team-game bot seeds (Kyonshi,
   Merman) take the same substitutes. `tools/roster.py check` validates the
   config against the pk3s and fails on a dropped name hardcoded in `src/`, a
-  shipped `.skin` naming a dropped texture or a bot wearing a dropped model.
+  shipped `.skin` naming a dropped texture, a `toned` path with no copy in
+  `assets/toned/` or a bot wearing a dropped model.
 - The server (`ClientUserinfoChanged`) turns a dropped skin of a kept model
   into that model's default skin (`sarge/classic` -> `sarge`, `beret/macho`
   -> `beret`), and a `model`/`headmodel` with no shipped skin file into
