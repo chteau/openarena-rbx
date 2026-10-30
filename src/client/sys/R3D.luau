@@ -495,6 +495,7 @@ end
 local frameTargets: { any } = {}
 
 function R3D.BeginFrame()
+	require(script.Parent.Avatar).BeginFrame()
 	for _, t in targets do
 		resetTarget(t)
 	end
@@ -506,6 +507,7 @@ function R3D.EndFrame()
 	for _, t in targets do
 		hideUnused(t)
 	end
+	require(script.Parent.Avatar).EndFrame()
 	for i = viewportsUsed + 1, #viewports do
 		viewports[i].Visible = false
 	end

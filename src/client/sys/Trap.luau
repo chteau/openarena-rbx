@@ -255,6 +255,24 @@ end
 function trap.R_ModelBounds(model: number, mins, maxs)
 	mod("Assets").ModelBounds(model, mins, maxs)
 end
+-- Roblox avatars (sys/Avatar.luau): no C syscall has them
+function trap.R_AvatarReady(clientNum: number): boolean
+	return mod("Avatar").Ready(clientNum)
+end
+function trap.R_AddAvatarToScene(av): boolean
+	local Avatar = mod("Avatar")
+	Avatar.root = mod("R3D").worldRoot
+	return Avatar.Draw(av)
+end
+function trap.R_AvatarTag(entNum: number, name: string, tag): boolean
+	return mod("Avatar").Tag(entNum, name, tag)
+end
+function trap.R_AvatarHeadShader(clientNum: number): number
+	return mod("Avatar").HeadShader(clientNum)
+end
+function trap.R_AvatarAnimations()
+	return require(script.Parent.Parent.avatar.AvatarAnim).animations()
+end
 function trap.R_LerpTag(tag, model: number, startFrame: number, endFrame: number, frac: number, name: string): boolean
 	return mod("Assets").LerpTag(tag, model, startFrame, endFrame, frac, name)
 end
