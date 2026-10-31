@@ -538,6 +538,24 @@ function Avatar.LocalHeadShader(): number
 	return Avatar.Headshot(player and player.UserId)
 end
 
+-- The local player's whole avatar as a picture (the player settings menu),
+-- 0 without an account.
+local bodies: { [number]: number } = {}
+function Avatar.LocalBodyShader(): number
+	local player = Players.LocalPlayer
+	local uid = player and player.UserId
+	if uid == nil or uid <= 0 then
+		return 0
+	end
+	local h = bodies[uid]
+	if h == nil then
+		local url = string.format("rbxthumb://type=Avatar&id=%d&w=420&h=420", uid)
+		h = Assets.RegisterImage("avatar/body/" .. uid, url, 420, 420)
+		bodies[uid] = h
+	end
+	return h
+end
+
 function Avatar.BeginFrame()
 	for _, inst in instances do
 		inst.used = false

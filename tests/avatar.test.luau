@@ -347,5 +347,7 @@ H.test("avatar.headshots", function()
 	H.eq(Avatar.BotHeadShader("Tony"), h)
 	H.eq(image(Avatar.BotHeadShader("Cyber-Garg")), "rbxthumb://type=AvatarHeadShot&id=123757139&w=150&h=150")
 	H.eq(Avatar.BotHeadShader("sarge"), 0)
+	-- the player settings preview: nothing drawn without a local account
+	H.eq(Avatar.LocalBodyShader(), 0)
 	folder:Destroy()
 end)
