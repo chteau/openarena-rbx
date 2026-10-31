@@ -52,3 +52,6 @@ images/textures/oquartz/blood2.png
 images/textures/oquartz/blood3.png
 images/textures/oquartz/blood4.png
 images/textures/oquartz/blood.png
+# Map stand-ins reviewed 2026-10-31: inverted-cross lights, a blood-like smear.
+images/textures/gothic_light/ironcrosslt2
+images/textures/base_wall2/scuffs1~

@@ -2052,6 +2052,10 @@
    "decal": 87504910293686,
    "image": 101326216760577
   },
+  "images/models/mapobjects/cosmoflash/tele4_frame_glow~1_1.png": {
+   "decal": 75463638085263,
+   "image": 96497539707308
+  },
   "images/models/mapobjects/cosmoflash/tele4_portal.png": {
    "decal": 128793665298347,
    "image": 104898633622012
@@ -3964,6 +3968,10 @@
    "decal": 86928304267387,
    "image": 130720218946934
   },
+  "images/textures/amph-dm01/flame~1_1.png": {
+   "decal": 116538220190337,
+   "image": 77451922236092
+  },
   "images/textures/amph-dm01/smoke.png": {
    "decal": 88658031609911,
    "image": 82912098364888
@@ -3971,6 +3979,10 @@
   "images/textures/amph-dm01/spark.png": {
    "decal": 135020684064954,
    "image": 81213198423790
+  },
+  "images/textures/amph-dm01/spark~1_1.png": {
+   "decal": 86045944045978,
+   "image": 96944249672671
   },
   "images/textures/base_floor/clang_decal2.png": {
    "decal": 104479294255186,
@@ -4040,9 +4052,17 @@
    "decal": 121629310487058,
    "image": 117808572974621
   },
+  "images/textures/base_floor/skylight1_lm~1_1.png": {
+   "decal": 121554060030800,
+   "image": 85224161574046
+  },
   "images/textures/base_floor/skylight_spec.png": {
    "decal": 88091767297191,
    "image": 79763279268744
+  },
+  "images/textures/base_floor/skylight_spec~dc_sa.png": {
+   "decal": 120057597976117,
+   "image": 130382490682782
   },
   "images/textures/base_floor/tilefloor7_ow.png": {
    "decal": 83351145317907,
@@ -4051,6 +4071,10 @@
   "images/textures/base_floor/tilefloor7_owfx.png": {
    "decal": 86488551233167,
    "image": 83406638426963
+  },
+  "images/textures/base_floor/tilefloor7_owfx~1_1.png": {
+   "decal": 119706894145627,
+   "image": 82613982182395
   },
   "images/textures/base_light/ceil1_22a.blend.png": {
    "decal": 135025396910709,
@@ -4067,6 +4091,10 @@
   "images/textures/base_light/ceil1_30.png": {
    "decal": 81769869012195,
    "image": 98178729328302
+  },
+  "images/textures/base_light/ceil1_30~1_isa.png": {
+   "decal": 87049967265695,
+   "image": 130461448035758
   },
   "images/textures/base_light/ceil1_34.blend.png": {
    "decal": 102348791217306,
@@ -4116,6 +4144,10 @@
    "decal": 89505509885506,
    "image": 136655699937527
   },
+  "images/textures/base_light/geolight_glow~1_1.png": {
+   "decal": 110688324974137,
+   "image": 121361434932382
+  },
   "images/textures/base_light/jaildr03_2.blend.png": {
    "decal": 94148983454284,
    "image": 112750538815847
@@ -4140,9 +4172,17 @@
    "decal": 97430750927045,
    "image": 139735492326433
   },
+  "images/textures/base_light/proto_lightblue~1_1.png": {
+   "decal": 82538009938293,
+   "image": 72497254129653
+  },
   "images/textures/base_light/proto_lightred.png": {
    "decal": 75351691204394,
    "image": 80190239856376
+  },
+  "images/textures/base_light/proto_lightred~1_1.png": {
+   "decal": 108863779952157,
+   "image": 79733122013126
   },
   "images/textures/base_light/runway.png": {
    "decal": 104768196917384,
@@ -4172,9 +4212,17 @@
    "decal": 93511528855164,
    "image": 74641235372188
   },
+  "images/textures/base_light/scrolllight2~1_1.png": {
+   "decal": 90996504638114,
+   "image": 86025233583890
+  },
   "images/textures/base_light/wsupprt1_12.png": {
    "decal": 104719535778621,
    "image": 136946346539240
+  },
+  "images/textures/base_light/wsupprt1_12~1_1.png": {
+   "decal": 115967782836983,
+   "image": 92126967197957
   },
   "images/textures/base_light/xlight5.blend.png": {
    "decal": 101969530185264,
@@ -4212,6 +4260,10 @@
    "decal": 112221841084389,
    "image": 82728253845170
   },
+  "images/textures/base_trim/tinfx~1_1.png": {
+   "decal": 104764346050900,
+   "image": 98987990851472
+  },
   "images/textures/base_trim/wires01.png": {
    "decal": 130385680915892,
    "image": 120652712442109
@@ -4228,9 +4280,17 @@
    "decal": 113659403106843,
    "image": 140491425453455
   },
+  "images/textures/base_wall/bluemetal1b_shiny~dc_sa.png": {
+   "decal": 83947968506932,
+   "image": 82697901467657
+  },
   "images/textures/base_wall/bluemetal2_shiny.png": {
    "decal": 130249690610509,
    "image": 89159625040915
+  },
+  "images/textures/base_wall/bluemetal2_shiny~dc_sa.png": {
+   "decal": 98511889315953,
+   "image": 126779001119255
   },
   "images/textures/base_wall/bluemetalsupport2c.png": {
    "decal": 98780359506509,
@@ -4260,6 +4320,10 @@
    "decal": 131991226701504,
    "image": 118442981764983
   },
+  "images/textures/base_wall/bms2fglow~dc_0.png": {
+   "decal": 125031644313080,
+   "image": 135894372122435
+  },
   "images/textures/base_wall/bms2ftv_glow.png": {
    "decal": 94752067026633,
    "image": 91825952500416
@@ -4271,6 +4335,14 @@
   "images/textures/base_wall/chrome_env2.png": {
    "decal": 111810096797546,
    "image": 103136135405500
+  },
+  "images/textures/base_wall/chrome_env2~1_1.png": {
+   "decal": 103002576739631,
+   "image": 83907582098275
+  },
+  "images/textures/base_wall/chrome_env~1_1.png": {
+   "decal": 88257781128855,
+   "image": 105144042889519
   },
   "images/textures/base_wall/chrome_metal.png": {
    "decal": 77141433843348,
@@ -4404,6 +4476,14 @@
    "decal": 107055533955861,
    "image": 135186986053955
   },
+  "images/textures/bubctf1/e8_jumppad02_fxr~1_1.png": {
+   "decal": 123646100071657,
+   "image": 137065471721733
+  },
+  "images/textures/bubctf1/e8_jumppad02_fx~1_1.png": {
+   "decal": 116144127300444,
+   "image": 91104654685515
+  },
   "images/textures/bubctf1/e8_jumppad02r.png": {
    "decal": 136774696194945,
    "image": 103360921462458
@@ -4436,21 +4516,41 @@
    "decal": 124520128695302,
    "image": 103867240063192
   },
+  "images/textures/clown/b_edge~1_1.png": {
+   "decal": 75478357761546,
+   "image": 120264765913162
+  },
   "images/textures/clown/blue_1.png": {
    "decal": 72635772661415,
    "image": 94487451975851
+  },
+  "images/textures/clown/blue_1~dc_0.png": {
+   "decal": 103971306683104,
+   "image": 133644999939460
   },
   "images/textures/clown/blue_2.png": {
    "decal": 79590560668584,
    "image": 84807169750703
   },
+  "images/textures/clown/blue_2~dc_0.png": {
+   "decal": 109583127372300,
+   "image": 101232301655186
+  },
   "images/textures/clown/blue_3.png": {
    "decal": 83484093842664,
    "image": 103976639334853
   },
+  "images/textures/clown/blue_3~dc_0.png": {
+   "decal": 91455441418658,
+   "image": 112148482957796
+  },
   "images/textures/clown/blue_banner.png": {
    "decal": 126015937486373,
    "image": 124198888062581
+  },
+  "images/textures/clown/blue_banner~dc_0.png": {
+   "decal": 133011355718671,
+   "image": 80526079657134
   },
   "images/textures/clown/bms2fl_rglow.png": {
    "decal": 77050401418769,
@@ -4460,6 +4560,10 @@
    "decal": 89295312513862,
    "image": 77031156584133
   },
+  "images/textures/clown/burn_ow~dc_0.png": {
+   "decal": 118985812455759,
+   "image": 137444255019207
+  },
   "images/textures/clown/cable.png": {
    "decal": 100866314743226,
    "image": 94737851696454
@@ -4467,6 +4571,10 @@
   "images/textures/clown/circ4glow.png": {
    "decal": 95307584760046,
    "image": 114879131271576
+  },
+  "images/textures/clown/circ4glow~1_1.png": {
+   "decal": 97331663591999,
+   "image": 105451106949806
   },
   "images/textures/clown/dark_sky.png": {
    "decal": 99738143880267,
@@ -4484,33 +4592,65 @@
    "decal": 110566496357626,
    "image": 132042717238781
   },
+  "images/textures/clown/flame1~sa_1.png": {
+   "decal": 78767421636695,
+   "image": 85908553037638
+  },
   "images/textures/clown/flame2.png": {
    "decal": 105878029482516,
    "image": 79953404221948
+  },
+  "images/textures/clown/flame2~sa_1.png": {
+   "decal": 97612769306968,
+   "image": 97699662399682
   },
   "images/textures/clown/flame3.png": {
    "decal": 136669551310985,
    "image": 81655747366270
   },
+  "images/textures/clown/flame3~sa_1.png": {
+   "decal": 140418466854764,
+   "image": 123555622832903
+  },
   "images/textures/clown/flame4.png": {
    "decal": 111790760911508,
    "image": 83721443509973
+  },
+  "images/textures/clown/flame4~sa_1.png": {
+   "decal": 95616854073146,
+   "image": 139404209305717
   },
   "images/textures/clown/flame5.png": {
    "decal": 71145605429584,
    "image": 126551892280069
   },
+  "images/textures/clown/flame5~sa_1.png": {
+   "decal": 95641605396705,
+   "image": 109717589342060
+  },
   "images/textures/clown/flame6.png": {
    "decal": 116217141359228,
    "image": 131089867323337
+  },
+  "images/textures/clown/flame6~sa_1.png": {
+   "decal": 139729430968046,
+   "image": 75514467741342
   },
   "images/textures/clown/flame7.png": {
    "decal": 72185270625933,
    "image": 92664669947773
   },
+  "images/textures/clown/flame7~sa_1.png": {
+   "decal": 99188848660728,
+   "image": 84319003757003
+  },
   "images/textures/clown/flame8.png": {
    "decal": 78451733591444,
    "image": 123390020730063
+  },
+  "images/textures/clown/flame8~sa_1.png": {
+   "decal": 71805980839820,
+   "image": 113992604764656
   },
   "images/textures/clown/glass.png": {
    "decal": 94249288976431,
@@ -4528,9 +4668,17 @@
    "decal": 99000798371270,
    "image": 137718236261292
   },
+  "images/textures/clown/metalfloor_wall_14sr~dc_sa.png": {
+   "decal": 136090662587333,
+   "image": 90745876644959
+  },
   "images/textures/clown/portal_1r.png": {
    "decal": 107433526974899,
    "image": 132130247212113
+  },
+  "images/textures/clown/portal_1r~1_1.png": {
+   "decal": 94506871319907,
+   "image": 112673605377829
   },
   "images/textures/clown/portal_2r.png": {
    "decal": 98682269427664,
@@ -4548,6 +4696,10 @@
    "decal": 128154525597419,
    "image": 89182532800697
   },
+  "images/textures/clown/r_edge~1_1.png": {
+   "decal": 100094871062345,
+   "image": 75317543070547
+  },
   "images/textures/clown/rain.png": {
    "decal": 78443254466498,
    "image": 114560080536001
@@ -4556,17 +4708,33 @@
    "decal": 75716416828169,
    "image": 110690226567624
   },
+  "images/textures/clown/red_1~dc_0.png": {
+   "decal": 123645079954786,
+   "image": 104189670566393
+  },
   "images/textures/clown/red_2.png": {
    "decal": 104736961968268,
    "image": 139130409510141
+  },
+  "images/textures/clown/red_2~dc_0.png": {
+   "decal": 121688184085555,
+   "image": 90972298635596
   },
   "images/textures/clown/red_3.png": {
    "decal": 126788732955558,
    "image": 80616015130357
   },
+  "images/textures/clown/red_3~dc_0.png": {
+   "decal": 125857583596312,
+   "image": 79234255795721
+  },
   "images/textures/clown/red_banner.png": {
    "decal": 107414700897597,
    "image": 80778422066493
+  },
+  "images/textures/clown/red_banner~dc_0.png": {
+   "decal": 114697881053300,
+   "image": 83424380147832
   },
   "images/textures/clown/steel_b.png": {
    "decal": 84667730803700,
@@ -4600,6 +4768,10 @@
    "decal": 95814945356828,
    "image": 87390542863826
   },
+  "images/textures/common/invisible~1_isa.png": {
+   "decal": 139841592209300,
+   "image": 106078929927762
+  },
   "images/textures/cosmo_block/ns_brick3.png": {
    "decal": 82051994668664,
    "image": 112606475628110
@@ -4607,6 +4779,10 @@
   "images/textures/cosmo_floor/metalgrid.png": {
    "decal": 74539549080519,
    "image": 70990835789433
+  },
+  "images/textures/cosmo_floor/metalgrid~dc_0.png": {
+   "decal": 138315363662260,
+   "image": 77938695367771
   },
   "images/textures/cosmo_light/dmask1.png": {
    "decal": 101903461833477,
@@ -4616,9 +4792,17 @@
    "decal": 102987115721995,
    "image": 108819490473757
   },
+  "images/textures/cosmo_light/dmask1_b~1_1.png": {
+   "decal": 84677264648790,
+   "image": 97797235406107
+  },
   "images/textures/cosmo_light/dmask1_r.png": {
    "decal": 82973902684723,
    "image": 74906925911397
+  },
+  "images/textures/cosmo_light/dmask1_r~1_1.png": {
+   "decal": 91152345264920,
+   "image": 99687505494588
   },
   "images/textures/cosmo_light/lightyel03.png": {
    "decal": 79052124631089,
@@ -4651,6 +4835,10 @@
   "images/textures/cosmo_sfx/cobweb1.png": {
    "decal": 81129070227699,
    "image": 102630517870013
+  },
+  "images/textures/cosmo_sfx/cobweb1~1_sa.png": {
+   "decal": 118530381154722,
+   "image": 93028459110967
   },
   "images/textures/cosmo_sfx/decal1.png": {
    "decal": 110008138391022,
@@ -4712,6 +4900,10 @@
    "decal": 79314885921292,
    "image": 132136490054339
   },
+  "images/textures/cosmo_sfx/jumppad_b~1_1.png": {
+   "decal": 128796703755920,
+   "image": 140705307239963
+  },
   "images/textures/cosmo_sfx/orb_b1.png": {
    "decal": 70643295019531,
    "image": 81636018508853
@@ -4764,6 +4956,10 @@
    "decal": 121187620325245,
    "image": 71585489354725
   },
+  "images/textures/cosmo_trim/flashyspots1~1_1.png": {
+   "decal": 113607135656799,
+   "image": 103954935605097
+  },
   "images/textures/cosmo_trim/leaves1.png": {
    "decal": 138813512777231,
    "image": 125597224417600
@@ -4788,9 +4984,17 @@
    "decal": 132448917648880,
    "image": 140494430430222
   },
+  "images/textures/ctf2/blueteam01~dc_1.png": {
+   "decal": 127835482264261,
+   "image": 84557939153873
+  },
   "images/textures/ctf2/redteam01.png": {
    "decal": 93447924029898,
    "image": 127873288141165
+  },
+  "images/textures/ctf2/redteam01~dc_1.png": {
+   "decal": 131099212340906,
+   "image": 138590947192850
   },
   "images/textures/czest2ctf/redclouds.png": {
    "decal": 139632157066330,
@@ -4827,6 +5031,10 @@
   "images/textures/dsi/weapspawn01_glow.png": {
    "decal": 102185714628703,
    "image": 76169177997510
+  },
+  "images/textures/dsi/weapspawn01~1_1.png": {
+   "decal": 102011026542532,
+   "image": 93009607131810
   },
   "images/textures/e8/e8jumpspawn02b-1.png": {
    "decal": 99964972141998,
@@ -4920,9 +5128,17 @@
    "decal": 88010119587143,
    "image": 125374167201123
   },
+  "images/textures/effects/jumpcircblue~1_1.png": {
+   "decal": 86422627634104,
+   "image": 108085819424579
+  },
   "images/textures/effects/jumpcircred.png": {
    "decal": 89555667284713,
    "image": 102483614722061
+  },
+  "images/textures/effects/jumpcircred~1_1.png": {
+   "decal": 112739007096382,
+   "image": 86868241663433
   },
   "images/textures/effects/jumpcirc~1_1.png": {
    "decal": 130159803852343,
@@ -5055,6 +5271,10 @@
   "images/textures/effects/tinfx~1_1.png": {
    "decal": 89685232773550,
    "image": 72229343667464
+  },
+  "images/textures/effects/tinfx~dc_0.png": {
+   "decal": 85607232319492,
+   "image": 82230893903361
   },
   "images/textures/evil8_base/e8crete03.png": {
    "decal": 102555811514821,
@@ -5200,6 +5420,10 @@
    "decal": 73980315966095,
    "image": 122365848502848
   },
+  "images/textures/gothic_block/wetwall_fx~1_1.png": {
+   "decal": 76826305243950,
+   "image": 127684447963520
+  },
   "images/textures/gothic_button/timbutton.png": {
    "decal": 130937647351286,
    "image": 133912040038559
@@ -5227,6 +5451,10 @@
   "images/textures/gothic_light/gothic_light2_blend.png": {
    "decal": 75150589978671,
    "image": 76614217556401
+  },
+  "images/textures/gothic_light/gothic_light2_blend~1_1.png": {
+   "decal": 96897022918545,
+   "image": 119119021119027
   },
   "images/textures/gothic_light/gothic_light3.png": {
    "decal": 133133788288723,
@@ -5272,6 +5500,10 @@
    "decal": 88771758461222,
    "image": 96100901404300
   },
+  "images/textures/gothic_light/s_light2_blend~1_1.png": {
+   "decal": 128020220679782,
+   "image": 133855488983688
+  },
   "images/textures/gothic_light/skulllight01.png": {
    "decal": 137387661058621,
    "image": 112638269587435
@@ -5283,6 +5515,10 @@
   "images/textures/gothic_trim/metalsupport4h_shiny.png": {
    "decal": 104523632064274,
    "image": 127659330591969
+  },
+  "images/textures/gothic_trim/metalsupport4h_shiny~dc_sa.png": {
+   "decal": 83116711801873,
+   "image": 117626761661614
   },
   "images/textures/gothic_trim/metalsupport4i.png": {
    "decal": 78369557829639,
@@ -5296,9 +5532,17 @@
    "decal": 73788779547211,
    "image": 137728281503066
   },
+  "images/textures/ice/coldwater~dc_0.png": {
+   "decal": 103007851222462,
+   "image": 123038309051852
+  },
   "images/textures/liquids/kc_fogcloud3.png": {
    "decal": 92407699382983,
    "image": 72565236207260
+  },
+  "images/textures/liquids/kc_fogcloud3~dc_0.png": {
+   "decal": 120654233659513,
+   "image": 75445291529242
   },
   "images/textures/liquids/lavafloor.png": {
    "decal": 114251532512883,
@@ -5328,6 +5572,10 @@
    "decal": 111503919342993,
    "image": 112024971668312
   },
+  "images/textures/liquids/pool2~dc_0.png": {
+   "decal": 88700850280795,
+   "image": 77555752741864
+  },
   "images/textures/liquids/pool3d_3.png": {
    "decal": 78612572165187,
    "image": 110966644035667
@@ -5347,6 +5595,14 @@
   "images/textures/liquids/pool3d_5e.png": {
    "decal": 107865257798973,
    "image": 133145012969328
+  },
+  "images/textures/liquids/pool3d_5e~dc_1.png": {
+   "decal": 112780795584485,
+   "image": 76212329948946
+  },
+  "images/textures/liquids/pool3d_5~dc_1.png": {
+   "decal": 71294507831624,
+   "image": 112151200326731
   },
   "images/textures/liquids/pool3d_6.png": {
    "decal": 76762291421194,
@@ -5392,6 +5648,14 @@
    "decal": 102845469824797,
    "image": 113579927086374
   },
+  "images/textures/liquids/vorwater~1_1.png": {
+   "decal": 89367764632228,
+   "image": 133633578037568
+  },
+  "images/textures/liquids/vorwater~dc_0.png": {
+   "decal": 107359471717125,
+   "image": 107137684012237
+  },
   "images/textures/mapobjects/leafs1.png": {
    "decal": 90841379498133,
    "image": 105582893766728
@@ -5412,9 +5676,17 @@
    "decal": 110753405672350,
    "image": 76274883416757
   },
+  "images/textures/mc-oa-dm02/logo2~1_1.png": {
+   "decal": 111532571575691,
+   "image": 117587536597552
+  },
   "images/textures/mc-oa-dm02/teleport.png": {
    "decal": 79512431289191,
    "image": 106812079413461
+  },
+  "images/textures/mc-oa-dm02/teleport~1_1.png": {
+   "decal": 132785663374308,
+   "image": 140735153464794
   },
   "images/textures/mc-oa-dm04/anodm2_grey0_jumper.png": {
    "decal": 76804128920263,
@@ -5423,6 +5695,10 @@
   "images/textures/mc-oa-dm04/anodm2_grey0_jumper_blend.png": {
    "decal": 94401424185594,
    "image": 76777810706683
+  },
+  "images/textures/mc-oa-dm04/anodm2_grey0_jumper_blend~1_1.png": {
+   "decal": 88085779750813,
+   "image": 96403533435289
   },
   "images/textures/nki/nki_forest4.png": {
    "decal": 132095768203735,
@@ -5868,6 +6144,10 @@
    "decal": 75961486770738,
    "image": 93316742531892
   },
+  "images/textures/organics/pjrock7d~dc_0.png": {
+   "decal": 139712907016358,
+   "image": 71599422952683
+  },
   "images/textures/proto2/blue_zot.png": {
    "decal": 122974309002482,
    "image": 108915241887166
@@ -5876,9 +6156,17 @@
    "decal": 101075087463494,
    "image": 137373028687621
   },
+  "images/textures/proto2/blue_zot~1_1.png": {
+   "decal": 131026059188319,
+   "image": 133041289364960
+  },
   "images/textures/proto2/bluea_dcl.png": {
    "decal": 80573873985050,
    "image": 99785467550777
+  },
+  "images/textures/proto2/bluea_dcl~dc_1.png": {
+   "decal": 70919284466364,
+   "image": 92313002483616
   },
   "images/textures/proto2/blueat_dcl.png": {
    "decal": 112346190086215,
@@ -5892,9 +6180,21 @@
    "decal": 107161221422183,
    "image": 111148371690557
   },
+  "images/textures/proto2/blueflare2~1_1.png": {
+   "decal": 115553997071945,
+   "image": 101826367449096
+  },
+  "images/textures/proto2/blueflare~1_1.png": {
+   "decal": 106783036406492,
+   "image": 108648350679000
+  },
   "images/textures/proto2/bluelight_on.png": {
    "decal": 131846382452654,
    "image": 92376539928236
+  },
+  "images/textures/proto2/bluelight_on~1_1.png": {
+   "decal": 127954372531791,
+   "image": 77036343765819
   },
   "images/textures/proto2/concrete01wetwall.png": {
    "decal": 97711193277635,
@@ -5904,9 +6204,17 @@
    "decal": 79843204220720,
    "image": 100082056490487
   },
+  "images/textures/proto2/concrete_blue~dc_sa.png": {
+   "decal": 112458366376866,
+   "image": 86243861843919
+  },
   "images/textures/proto2/concrete_red.png": {
    "decal": 88138929734916,
    "image": 121473358533719
+  },
+  "images/textures/proto2/concrete_red~dc_sa.png": {
+   "decal": 88446389115703,
+   "image": 129966949705316
   },
   "images/textures/proto2/marble02b_floor.png": {
    "decal": 116054367554717,
@@ -5916,6 +6224,10 @@
    "decal": 114034991339165,
    "image": 90218161580472
   },
+  "images/textures/proto2/marble02b_s~dc_sa.png": {
+   "decal": 131910523674934,
+   "image": 138113580019426
+  },
   "images/textures/proto2/red_zot.png": {
    "decal": 99590444261931,
    "image": 108867388451578
@@ -5924,9 +6236,17 @@
    "decal": 78945518454470,
    "image": 125902968074276
   },
+  "images/textures/proto2/red_zot~1_1.png": {
+   "decal": 132536348682755,
+   "image": 123586556483628
+  },
   "images/textures/proto2/reda_dcl.png": {
    "decal": 79294216122674,
    "image": 109134804524593
+  },
+  "images/textures/proto2/reda_dcl~dc_1.png": {
+   "decal": 90031837539017,
+   "image": 74856871490016
   },
   "images/textures/proto2/redat_dcl.png": {
    "decal": 71941364939791,
@@ -5940,6 +6260,14 @@
    "decal": 76890640977884,
    "image": 106824578912152
   },
+  "images/textures/proto2/redflare2~1_1.png": {
+   "decal": 83991527465978,
+   "image": 105805073528994
+  },
+  "images/textures/proto2/redflare~1_1.png": {
+   "decal": 126202382127524,
+   "image": 139730543284881
+  },
   "images/textures/proto2/steam01.png": {
    "decal": 100749846834366,
    "image": 96825345157405
@@ -5952,6 +6280,10 @@
    "decal": 133989469111307,
    "image": 74041583860368
   },
+  "images/textures/pulchr/airwalk-env~1_1.png": {
+   "decal": 97816441352201,
+   "image": 110439487854105
+  },
   "images/textures/pulchr/back.png": {
    "decal": 78556838491584,
    "image": 88398696035672
@@ -5960,9 +6292,17 @@
    "decal": 128012716647455,
    "image": 98870399839569
   },
+  "images/textures/pulchr/beam-pulchr-white~1_1.png": {
+   "decal": 137127132352652,
+   "image": 109653184227536
+  },
   "images/textures/pulchr/beam-teleporter.png": {
    "decal": 105937485252345,
    "image": 109792217031504
+  },
+  "images/textures/pulchr/beam-teleporter~1_1.png": {
+   "decal": 122071381580287,
+   "image": 83548196425488
   },
   "images/textures/pulchr/five-steps-ahead-pindel.png": {
    "decal": 94472263808078,
@@ -5980,6 +6320,10 @@
    "decal": 128923041915958,
    "image": 91332187510781
   },
+  "images/textures/pulchr/listlight_blend~1_1.png": {
+   "decal": 74091023350699,
+   "image": 126213897014543
+  },
   "images/textures/pulchr/pul1duelsky-a.png": {
    "decal": 83247523145394,
    "image": 134137558495216
@@ -5995,6 +6339,10 @@
   "images/textures/pulchr/teleenv.png": {
    "decal": 109267337183016,
    "image": 72759860309864
+  },
+  "images/textures/pulchr/teleenv~1_1.png": {
+   "decal": 122789229366704,
+   "image": 91314135712184
   },
   "images/textures/pulchr/telepulchr.png": {
    "decal": 135361563373486,
@@ -6012,6 +6360,10 @@
    "decal": 92435679104417,
    "image": 125873608791321
   },
+  "images/textures/pulchr_light/light-blue-on~1_1.png": {
+   "decal": 78658556354086,
+   "image": 79744128738151
+  },
   "images/textures/pulchr_light/light-red-base.png": {
    "decal": 106438094284175,
    "image": 102796599097828
@@ -6020,21 +6372,41 @@
    "decal": 127165890831308,
    "image": 92197567734860
   },
+  "images/textures/pulchr_light/light-red-on~1_1.png": {
+   "decal": 87724412666380,
+   "image": 115115401179585
+  },
   "images/textures/pulchr_sfx/beam-blue.png": {
    "decal": 119942193961271,
    "image": 136146242756797
+  },
+  "images/textures/pulchr_sfx/beam-blue~1_1.png": {
+   "decal": 101094675749309,
+   "image": 104460738877328
   },
   "images/textures/pulchr_sfx/beam-grellow.png": {
    "decal": 106003191013924,
    "image": 100723342363345
   },
+  "images/textures/pulchr_sfx/beam-grellow~1_1.png": {
+   "decal": 119986579115442,
+   "image": 120248766765741
+  },
   "images/textures/pulchr_sfx/beam-red.png": {
    "decal": 105086495078423,
    "image": 103222599529607
   },
+  "images/textures/pulchr_sfx/beam-red~1_1.png": {
+   "decal": 124474850134572,
+   "image": 76687792363367
+  },
   "images/textures/pulchr_sfx/jumppad-casing.png": {
    "decal": 93800617318158,
    "image": 124370136513539
+  },
+  "images/textures/pulchr_sfx/jumppad-casing~1_1.png": {
+   "decal": 88038671156797,
+   "image": 107611505309329
   },
   "images/textures/pulchr_skies/skypulchr01.png": {
    "decal": 129932096964965,
@@ -6047,6 +6419,10 @@
   "images/textures/pxl_fx/jumpcircle.png": {
    "decal": 85745671439869,
    "image": 119441602647380
+  },
+  "images/textures/pxl_fx/jumpcircle~1_1.png": {
+   "decal": 138693302343523,
+   "image": 77124697018471
   },
   "images/textures/pxl_fx/letter_a.png": {
    "decal": 87841461432084,
@@ -6264,33 +6640,65 @@
    "decal": 126426986515308,
    "image": 79849942596784
   },
+  "images/textures/sfx/b_flame1~sa_1.png": {
+   "decal": 86936016118858,
+   "image": 98947503409167
+  },
   "images/textures/sfx/b_flame2.png": {
    "decal": 100963476622634,
    "image": 134808831942138
+  },
+  "images/textures/sfx/b_flame2~sa_1.png": {
+   "decal": 78174999662137,
+   "image": 82891152350475
   },
   "images/textures/sfx/b_flame3.png": {
    "decal": 79409271208885,
    "image": 100991443915351
   },
+  "images/textures/sfx/b_flame3~sa_1.png": {
+   "decal": 140352800647633,
+   "image": 128429742463343
+  },
   "images/textures/sfx/b_flame4.png": {
    "decal": 85527327124492,
    "image": 85651145642211
+  },
+  "images/textures/sfx/b_flame4~sa_1.png": {
+   "decal": 87584963568240,
+   "image": 134902842636458
   },
   "images/textures/sfx/b_flame5.png": {
    "decal": 87665147703899,
    "image": 91917315760291
   },
+  "images/textures/sfx/b_flame5~sa_1.png": {
+   "decal": 85710323609761,
+   "image": 73040867652438
+  },
   "images/textures/sfx/b_flame6.png": {
    "decal": 140119173905301,
    "image": 126363237866448
+  },
+  "images/textures/sfx/b_flame6~sa_1.png": {
+   "decal": 123109698422931,
+   "image": 86129749724906
   },
   "images/textures/sfx/b_flame7.png": {
    "decal": 74548088588141,
    "image": 138362784613172
   },
+  "images/textures/sfx/b_flame7~sa_1.png": {
+   "decal": 91726633667587,
+   "image": 82696027913010
+  },
   "images/textures/sfx/b_flame8.png": {
    "decal": 110755975781110,
    "image": 118221873012986
+  },
+  "images/textures/sfx/b_flame8~sa_1.png": {
+   "decal": 81971368924397,
+   "image": 86197795244124
   },
   "images/textures/sfx/b_flameball.png": {
    "decal": 112014338837769,
@@ -6304,13 +6712,25 @@
    "decal": 122545243945191,
    "image": 84963784748380
   },
+  "images/textures/sfx/beam_blue4~1_1.png": {
+   "decal": 102562232457743,
+   "image": 107326348147343
+  },
   "images/textures/sfx/beam_red.png": {
    "decal": 126629943224440,
    "image": 129573863042254
   },
+  "images/textures/sfx/beam_red~1_1.png": {
+   "decal": 76599653193601,
+   "image": 134345780976001
+  },
   "images/textures/sfx/beam_waterlight.png": {
    "decal": 80534392742477,
    "image": 99577936898189
+  },
+  "images/textures/sfx/beam~1_1.png": {
+   "decal": 77173456844574,
+   "image": 76029886264088
   },
   "images/textures/sfx/blakk.png": {
    "decal": 95118032822547,
@@ -6380,33 +6800,81 @@
    "decal": 98650403105335,
    "image": 123528266704640
   },
+  "images/textures/sfx/flame1~1_1.png": {
+   "decal": 107520722786933,
+   "image": 89484829713913
+  },
+  "images/textures/sfx/flame1~sa_1.png": {
+   "decal": 105099764649425,
+   "image": 125239437325242
+  },
   "images/textures/sfx/flame2.png": {
    "decal": 140332871132070,
    "image": 134980120569603
+  },
+  "images/textures/sfx/flame2~sa_1.png": {
+   "decal": 104780288198499,
+   "image": 118314059966390
   },
   "images/textures/sfx/flame3.png": {
    "decal": 124576807096159,
    "image": 131432079604888
   },
+  "images/textures/sfx/flame3~1_1.png": {
+   "decal": 93481592935493,
+   "image": 77413627457513
+  },
+  "images/textures/sfx/flame3~sa_1.png": {
+   "decal": 132478767410534,
+   "image": 119173363608620
+  },
   "images/textures/sfx/flame4.png": {
    "decal": 113062077340608,
    "image": 80133746336667
+  },
+  "images/textures/sfx/flame4~sa_1.png": {
+   "decal": 95274287249874,
+   "image": 94191105633752
   },
   "images/textures/sfx/flame5.png": {
    "decal": 82515535002961,
    "image": 83495713226407
   },
+  "images/textures/sfx/flame5~1_1.png": {
+   "decal": 79679859841929,
+   "image": 86929603452865
+  },
+  "images/textures/sfx/flame5~sa_1.png": {
+   "decal": 71485343147130,
+   "image": 104697767050551
+  },
   "images/textures/sfx/flame6.png": {
    "decal": 128671366543200,
    "image": 108127553955369
+  },
+  "images/textures/sfx/flame6~sa_1.png": {
+   "decal": 83614583022256,
+   "image": 118081970751103
   },
   "images/textures/sfx/flame7.png": {
    "decal": 92419703893892,
    "image": 95796150321043
   },
+  "images/textures/sfx/flame7~1_1.png": {
+   "decal": 84443886208516,
+   "image": 88614540096361
+  },
+  "images/textures/sfx/flame7~sa_1.png": {
+   "decal": 79138425808964,
+   "image": 75390087894983
+  },
   "images/textures/sfx/flame8.png": {
    "decal": 113371173815280,
    "image": 112633654892054
+  },
+  "images/textures/sfx/flame8~sa_1.png": {
+   "decal": 139073395386687,
+   "image": 92188562150747
   },
   "images/textures/sfx/flameball.png": {
    "decal": 135542367910558,
@@ -6419,6 +6887,10 @@
   "images/textures/sfx/forcefieldd.png": {
    "decal": 123191583851711,
    "image": 131053712766239
+  },
+  "images/textures/sfx/forcefieldd~1_1.png": {
+   "decal": 77642643318445,
+   "image": 130112311786233
   },
   "images/textures/sfx/g_flame1.png": {
    "decal": 118120079007855,
@@ -6532,6 +7004,10 @@
    "decal": 131335747728112,
    "image": 136155199411523
   },
+  "images/textures/sfx/portal_sfx_ring_electric~1_1.png": {
+   "decal": 111789007351891,
+   "image": 139957408573920
+  },
   "images/textures/sfx/proto_zzzt.png": {
    "decal": 105630282678142,
    "image": 112025733872244
@@ -6540,37 +7016,73 @@
    "decal": 131692117072364,
    "image": 98679399648556
   },
+  "images/textures/sfx/proto_zzztblu3~1_1.png": {
+   "decal": 74087962547663,
+   "image": 75010500949227
+  },
   "images/textures/sfx/r_flame1.png": {
    "decal": 82057128264447,
    "image": 115105863768355
+  },
+  "images/textures/sfx/r_flame1~sa_1.png": {
+   "decal": 129517189516677,
+   "image": 123761399744773
   },
   "images/textures/sfx/r_flame2.png": {
    "decal": 108468833359283,
    "image": 116298547083354
   },
+  "images/textures/sfx/r_flame2~sa_1.png": {
+   "decal": 132173472432114,
+   "image": 82172963425407
+  },
   "images/textures/sfx/r_flame3.png": {
    "decal": 80628257396662,
    "image": 105823107668606
+  },
+  "images/textures/sfx/r_flame3~sa_1.png": {
+   "decal": 79917033556657,
+   "image": 85283318849775
   },
   "images/textures/sfx/r_flame4.png": {
    "decal": 124678233867427,
    "image": 93442319896673
   },
+  "images/textures/sfx/r_flame4~sa_1.png": {
+   "decal": 138252476439972,
+   "image": 98178326756267
+  },
   "images/textures/sfx/r_flame5.png": {
    "decal": 86293703894017,
    "image": 127680777881525
+  },
+  "images/textures/sfx/r_flame5~sa_1.png": {
+   "decal": 89662973810297,
+   "image": 105315249014508
   },
   "images/textures/sfx/r_flame6.png": {
    "decal": 110411669619021,
    "image": 92416044455173
   },
+  "images/textures/sfx/r_flame6~sa_1.png": {
+   "decal": 109364934325707,
+   "image": 124946679224411
+  },
   "images/textures/sfx/r_flame7.png": {
    "decal": 139705061588376,
    "image": 130848845252812
   },
+  "images/textures/sfx/r_flame7~sa_1.png": {
+   "decal": 80224579360293,
+   "image": 84203215280156
+  },
   "images/textures/sfx/r_flame8.png": {
    "decal": 125976998154098,
    "image": 78293485647641
+  },
+  "images/textures/sfx/r_flame8~sa_1.png": {
+   "decal": 87050298610738,
+   "image": 134431433502176
   },
   "images/textures/sfx/r_flameball.png": {
    "decal": 128514685268416,
@@ -6596,6 +7108,10 @@
    "decal": 75268285091910,
    "image": 101215057468354
   },
+  "images/textures/sfx/tesla1~1_1.png": {
+   "decal": 100621999174354,
+   "image": 126431740947051
+  },
   "images/textures/sfx/tread.png": {
    "decal": 87991562703826,
    "image": 109881234120565
@@ -6608,6 +7124,10 @@
    "decal": 84707045202638,
    "image": 131417500410986
   },
+  "images/textures/sfx/xian_dm3padwallglow~1_1.png": {
+   "decal": 90068693867622,
+   "image": 97752620155110
+  },
   "images/textures/sfx/zap_scroll.png": {
    "decal": 91247277570871,
    "image": 129536963005444
@@ -6616,13 +7136,25 @@
    "decal": 106321294326441,
    "image": 91258465672903
   },
+  "images/textures/sfx/zap_scroll2~1_1.png": {
+   "decal": 73130218970483,
+   "image": 102782067516296
+  },
   "images/textures/sfx2/b_blur.png": {
    "decal": 80690633846219,
    "image": 104304627853179
   },
+  "images/textures/sfx2/b_blur~sa_1.png": {
+   "decal": 138209309650237,
+   "image": 107629473366778
+  },
   "images/textures/sfx2/bluegoal2.png": {
    "decal": 82624713474984,
    "image": 103089999937880
+  },
+  "images/textures/sfx2/bluegoal2~1_1.png": {
+   "decal": 72087245165133,
+   "image": 140537369949181
   },
   "images/textures/sfx2/jump_pad02.png": {
    "decal": 134083512323695,
@@ -6639,6 +7171,10 @@
   "images/textures/sfx2/redgoal2.png": {
    "decal": 78443726167005,
    "image": 93558932052831
+  },
+  "images/textures/sfx2/redgoal2~1_1.png": {
+   "decal": 108816054014236,
+   "image": 103558776223840
   },
   "images/textures/skies/anoice1.png": {
    "decal": 120744538524219,
@@ -6663,6 +7199,10 @@
   "images/textures/skies/intelredclouds.png": {
    "decal": 78884934767538,
    "image": 116426007735904
+  },
+  "images/textures/skies/intelredclouds~1_1.png": {
+   "decal": 80123572207649,
+   "image": 114712301876754
   },
   "images/textures/skies/islandclouds.png": {
    "decal": 90928040877766,
@@ -6800,6 +7340,10 @@
    "decal": 123549568861610,
    "image": 113779863941429
   },
+  "images/textures/suction/solid_blue~dc_0.png": {
+   "decal": 82090074436057,
+   "image": 133441994392768
+  },
   "images/textures/suction/solid_green.png": {
    "decal": 76897802328909,
    "image": 85057253634063
@@ -6807,6 +7351,10 @@
   "images/textures/suction/solid_red.png": {
    "decal": 136470707734390,
    "image": 106539735066802
+  },
+  "images/textures/suction/solid_red~dc_0.png": {
+   "decal": 89887496329160,
+   "image": 75217296911160
   },
   "images/textures/symbols/blueteam.png": {
    "decal": 108411582432803,
