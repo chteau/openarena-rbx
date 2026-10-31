@@ -78,6 +78,19 @@ function BotRoster.Listed(oabot: string): boolean
 	return BotRoster.ids[string.lower(oabot)] ~= nil
 end
 
+-- "name=id name=id ..." of every bot whose account the lookup returned,
+-- sorted: the menus' head icons (avatars_roblox.luau)
+function BotRoster.Accounts(): string
+	local out = {}
+	for bot, id in BotRoster.ids do
+		if names[id] then
+			table.insert(out, bot .. "=" .. id)
+		end
+	end
+	table.sort(out)
+	return table.concat(out, " ")
+end
+
 -- the account a roster bot wears now: nil while its name is unknown or its
 -- account is in the server as a human
 function BotRoster.Account(oabot: string): FriendBots.Friend?

@@ -183,7 +183,7 @@ function G.CG_DrawHead(x, y, w, h, clientNum, headAngles)
 	local mins = Q.vec3(0, 0, 0)
 	local maxs = Q.vec3(0, 0, 0)
 
-	-- not in OA: a Roblox avatar's face is its headshot (cg_avatars.luau)
+	-- not in OA: a Roblox account's face is its headshot (cg_avatars.luau)
 	local headshot = G.CG_AvatarHeadShader(clientNum)
 	if headshot ~= 0 then
 		G.CG_DrawPic(x, y, w, h, headshot)

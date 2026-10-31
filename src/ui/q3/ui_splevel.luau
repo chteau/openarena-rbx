@@ -115,6 +115,7 @@ local function newInfo()
 		awardSounds = {},
 		numBots = 0,
 		botPics = {},
+		botAccounts = {}, -- not in OA: bots.txt names, for the roster's headshots
 		botNames = {},
 	}
 	for i = 0, 3 do
@@ -210,6 +211,7 @@ local function UI_SPLevelMenu_SetBots()
 			botInfo = U.UI_GetBotInfoByNumber(levelMenuInfo.numBots)
 		end
 		local n = levelMenuInfo.numBots
+		levelMenuInfo.botAccounts[n] = if botInfo ~= nil then Q.Info_ValueForKey(botInfo, "name") else bot
 		if botInfo ~= nil then
 			levelMenuInfo.botPics[n] = PlayerIconHandle(Q.Info_ValueForKey(botInfo, "model"))
 			levelMenuInfo.botNames[n] = string.sub(Q.Info_ValueForKey(botInfo, "name"), 1, 9)
@@ -463,6 +465,11 @@ local function UI_SPLevelMenu_MenuDraw()
 		levelMenuInfo.item_player.generic.name = levelMenuInfo.playerPicName
 		levelMenuInfo.item_player.shader = 0
 	end
+	-- not in OA: the player's face is their Roblox headshot
+	local head = trap.R_LocalHeadShader()
+	if head ~= 0 then
+		levelMenuInfo.item_player.shader = head
+	end
 
 	-- standard menu drawing
 	U.Menu_Draw(levelMenuInfo.menu)
@@ -548,8 +555,13 @@ local function UI_SPLevelMenu_MenuDraw()
 	local pad = Q.idiv((7 - levelMenuInfo.numBots) * (64 + 26), 2)
 	for n = 0, levelMenuInfo.numBots - 1 do
 		x = 18 + pad + (64 + 26) * n
-		if levelMenuInfo.botPics[n] ~= 0 then
-			U.UI_DrawHandlePic(x, y, 64, 64, levelMenuInfo.botPics[n])
+		-- not in OA: a roster bot's face is its account's headshot
+		local pic = trap.R_BotHeadShader(levelMenuInfo.botAccounts[n])
+		if pic == 0 then
+			pic = levelMenuInfo.botPics[n]
+		end
+		if pic ~= 0 then
+			U.UI_DrawHandlePic(x, y, 64, 64, pic)
 		else
 			U.UI_FillRect(x, y, 64, 64, U.color_black)
 			U.UI_DrawProportionalString(x + 22, y + 18, "?", C.UI_BIGFONT, U.color_orange)

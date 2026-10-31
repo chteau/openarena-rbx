@@ -275,6 +275,12 @@ end
 function trap.R_AvatarHeadShader(clientNum: number): number
 	return mod("Avatar").HeadShader(clientNum)
 end
+function trap.R_BotHeadShader(name: string): number
+	return mod("Avatar").BotHeadShader(name)
+end
+function trap.R_LocalHeadShader(): number
+	return mod("Avatar").LocalHeadShader()
+end
 -- friend-bots: the friend the next bot added to team ("", "red", "blue")
 -- would wear, when the server knows (server/sv/avatars_roblox.luau)
 function trap.FriendBotNext(team: string): string?

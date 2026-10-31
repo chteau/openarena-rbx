@@ -320,3 +320,32 @@ H.test("avatar.look", function()
 	regen.time = 300
 	H.eq(A.look(regen).enabled, false)
 end)
+
+H.test("avatar.headshots", function()
+	local Avatar = H.require("client/sys/Avatar")
+	local Assets = H.require("client/sys/Assets")
+	local function image(h: number): string?
+		local sh = Assets.Shader(h)
+		local img = sh and Assets.Image(sh.name)
+		return img and img.id
+	end
+	local rs = H.game:GetService("ReplicatedStorage")
+	local folder = H.roblox.Instance.new("Folder")
+	folder.Name = "OAAvatars"
+	folder.Parent = rs
+	H.eq(Avatar.HeadShader(3), 0)
+	-- a client wearing an account, avatar model or not
+	folder:SetAttribute("User3", "260342963")
+	local h = Avatar.HeadShader(3)
+	H.eq(image(h), "rbxthumb://type=AvatarHeadShot&id=260342963&w=150&h=150")
+	H.eq(Avatar.HeadShader(3), h)
+	folder:SetAttribute("User4", "-1") -- a Studio test player
+	H.eq(Avatar.HeadShader(4), 0)
+	-- roster bots in the menus, by bots.txt name
+	H.eq(Avatar.BotHeadShader("tony"), 0)
+	folder:SetAttribute("BotRoster", "cyber-garg=123757139 tony=260342963")
+	H.eq(Avatar.BotHeadShader("Tony"), h)
+	H.eq(image(Avatar.BotHeadShader("Cyber-Garg")), "rbxthumb://type=AvatarHeadShot&id=123757139&w=150&h=150")
+	H.eq(Avatar.BotHeadShader("sarge"), 0)
+	folder:Destroy()
+end)

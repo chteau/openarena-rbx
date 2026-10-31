@@ -21,6 +21,12 @@ any later version. See COPYING.
 --
 -- g_robloxAvatars (serverinfo, default 1): 0 removes them all.
 --
+-- Head icons: whatever g_robloxAvatars says, the folder's User<clientNum>
+-- attribute is the account each client wears (a string: ids outgrow
+-- float attributes in some runtimes), and BotRoster lists the
+-- roster bots' accounts ("grunt=1274097373 liz=..."), so the client can
+-- draw the account's headshot in place of an OA icon.
+--
 -- Bot roster: the accounts' names are fetched once (retried every 30 s
 -- while the service fails); when they arrive and whenever a human joins or
 -- leaves, the roster bots are rechecked (a human on a bot's account sends
@@ -105,6 +111,7 @@ end
 
 function Avatars.Set(clientNum: number, userId: number)
 	wanted[clientNum] = userId
+	folder():SetAttribute("User" .. clientNum, tostring(userId))
 	if enabled then
 		build(clientNum, userId)
 	end
@@ -113,6 +120,7 @@ end
 function Avatars.Clear(clientNum: number)
 	local userId = wanted[clientNum]
 	wanted[clientNum] = nil
+	folder():SetAttribute("User" .. clientNum, nil)
 	remove(clientNum)
 	-- a friend-bot's friend isn't in the server: forget their model
 	if userId and Players:GetPlayerByUserId(userId) == nil then
@@ -153,6 +161,8 @@ function Avatars.Start(Game: any)
 		for _, side in { "", "red", "blue" } do
 			folder():SetAttribute("NextFriendBot" .. side, if on then Game.SV.FriendBotNext(side) else nil)
 		end
+		local roster = Game.Cvar.VariableIntegerValue("g_botRoster") ~= 0
+		folder():SetAttribute("BotRoster", if roster then BotRoster.Accounts() else nil)
 	end
 	FriendBots.onWear = function(clientNum: number, friend)
 		if friend then
