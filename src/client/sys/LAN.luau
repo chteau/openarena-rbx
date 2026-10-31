@@ -193,6 +193,11 @@ function LAN.Flush()
 			LAN.hideLoading()
 			LAN.fail(res.err or "Couldn't start the server")
 		elseif here then
+			-- the postgame's MENU disconnected: come back in, as a listen
+			-- server's spmap reconnects its own client
+			if Net.state == C.CA_DISCONNECTED then
+				LAN.connect()
+			end
 			LAN.Team(c.team)
 		end
 	end)

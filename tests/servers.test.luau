@@ -713,9 +713,23 @@ H.test("servers.lan_client", function()
 		return { live = true, kind = "host", code = "2HERE2", host = 5 }
 	end
 	calls = {}
+	local Net = H.require("client/sys/Net")
+	local reconnects = 0
+	LAN.connect = function()
+		reconnects += 1
+	end
+	Net.state = C.CA_ACTIVE
 	Cmd.ExecuteText(C.EXEC_NOW, "map oa_dm1")
 	run()
 	H.eq(calls[1].op, "apply")
+	H.eq(reconnects, 0)
+	-- after the postgame's MENU (disconnect), the applied map brings the client back
+	Net.state = C.CA_DISCONNECTED
+	calls = {}
+	Cmd.ExecuteText(C.EXEC_NOW, "map oa_dm1")
+	run()
+	H.eq(calls[1].op, "apply")
+	H.eq(reconnects, 1)
 	-- the host's ADD BOTS goes to rcon
 	calls = {}
 	Cmd.ExecuteText(C.EXEC_NOW, "addbot sarge 3 red 0")
