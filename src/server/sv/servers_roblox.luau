@@ -59,6 +59,7 @@ function Servers.fromGame()
 		env.MemoryStoreService = game:GetService("MemoryStoreService")
 		local DataStoreService = game:GetService("DataStoreService")
 		env.favorites = DataStoreService:GetDataStore(Config.favorites.store)
+		env.progress = DataStoreService:GetDataStore(Config.progress.store)
 		env.budget = function(): number
 			return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
 		end
@@ -95,6 +96,8 @@ function Servers.new(env: any, Game: any, mapExists: (string) -> boolean)
 		buckets = {},
 		favPending = {},
 		favLast = {},
+		spPending = {},
+		spLast = {},
 		hostnameSource = nil :: string?,
 	}, Servers)
 	-- the join code, shown by the in-game SERVER INFO menu (registered
@@ -426,29 +429,41 @@ function Servers:loadFavorites(player: any): { string }
 	return out
 end
 
--- writes a player's pending favorites if the interval and the DataStore
--- budget allow; otherwise they wait for the next try
-function Servers:flushFavorites(userId: number, force: boolean?): boolean
-	local env = self.env
-	local codes = self.favPending[userId]
-	if codes == nil or env.favorites == nil then
+local function flushStore(env: any, store: any, pending: any, last: any, userId: number, force: boolean?): boolean
+	local v = pending[userId]
+	if v == nil or store == nil then
 		return true
 	end
-	local last = self.favLast[userId] or -math.huge
-	if not force and env.now() - last < Config.favorites.minInterval then
+	if not force and env.now() - (last[userId] or -math.huge) < Config.favorites.minInterval then
 		return false
 	end
 	if env.budget() < Config.favorites.minBudget then
 		return false
 	end
-	self.favLast[userId] = env.now()
+	last[userId] = env.now()
 	local ok = pcall(function()
-		env.favorites:SetAsync("u" .. userId, codes, { userId })
+		store:SetAsync("u" .. userId, v, { userId })
 	end)
 	if ok then
-		self.favPending[userId] = nil
+		pending[userId] = nil
 	end
 	return ok
+end
+
+-- writes a player's pending favorites and SP progress if the interval and
+-- the DataStore budget allow; otherwise they wait for the next try
+function Servers:flushFavorites(userId: number, force: boolean?): boolean
+	local env = self.env
+	local sp = flushStore(env, env.progress, self.spPending, self.spLast, userId, force)
+	return flushStore(env, env.favorites, self.favPending, self.favLast, userId, force) and sp
+end
+
+function Servers:loadProgress(player: any): { [string]: string }
+	local store = self.env.progress
+	local ok, v = pcall(function()
+		return store and store:GetAsync("u" .. player.UserId)
+	end)
+	return ok and S.validateProgress(v) or {}
 end
 
 -- one RemoteFunction call
@@ -531,6 +546,18 @@ function Servers:handle(player: any, op: any, arg: any, arrival: any): any
 			end
 		end
 		self.favPending[player.UserId] = codes
+		self.env.delay(Config.favorites.minInterval, function()
+			self:flushFavorites(player.UserId)
+		end)
+		return { ok = true, saved = self:flushFavorites(player.UserId) }
+	elseif op == "progress" then
+		return { ok = true, cvars = self:loadProgress(player) }
+	elseif op == "progsave" then
+		local cvars = S.validateProgress(arg)
+		if not cvars then
+			return { ok = false }
+		end
+		self.spPending[player.UserId] = cvars
 		self.env.delay(Config.favorites.minInterval, function()
 			self:flushFavorites(player.UserId)
 		end)

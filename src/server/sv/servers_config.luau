@@ -50,4 +50,5 @@ return {
 	-- Favorites: one DataStore key per user, written at most every
 	-- `minInterval` s and only while the write budget is above `minBudget`
 	favorites = { store = "OAFavorites", max = 16, minInterval = 30, minBudget = 10 },
+	progress = { store = "OAProgress" },
 }

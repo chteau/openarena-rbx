@@ -186,6 +186,11 @@ function Net.GetServerCommand(n: number): boolean
 		elseif cmd == "bcs2" then
 			s = bigConfigString .. Cmd.Argv(2) .. '"'
 			-- rescan the reassembled "cs" command
+		elseif cmd == "postgame" then
+			-- the server's console command for the SP postgame menu, which
+			-- the UI takes from the command buffer as in Q3
+			Cmd.AddText(s .. "\n")
+			return false
 		elseif cmd == "cs" then
 			configstringModified()
 			Cmd.TokenizeString(s)

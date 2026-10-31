@@ -73,6 +73,8 @@ function G.LogExit(string_)
 	end
 end
 
+local INTERMISSION_IDLE_EXIT = 30000
+
 --[[
 =================
 CheckIntermissionExit
@@ -136,6 +138,12 @@ function G.CheckIntermissionExit()
 		-- if nobody wants to go, clear timer
 		if ready == 0 then
 			level.readyToExit = false
+			-- port: a Roblox player idling or sitting in a menu never
+			-- presses fire, and would hold the whole server at the
+			-- scoreboard; nobody ready still moves on in the end
+			if level.time >= level.intermissiontime + INTERMISSION_IDLE_EXIT then
+				G.ExitLevel()
+			end
 			return
 		end
 
