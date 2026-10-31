@@ -228,6 +228,13 @@ local function UI_SPPostgameMenu_DrawAwardsPresentation(timer)
 	end
 end
 
+-- a roster bot's [BOT] tag is for the game: menus show the bare username
+local function clientName(clientNum: number): string
+	local info = trap.GetConfigString(C.CS_PLAYERS + clientNum)
+	local name = Q.CleanStr(string.sub(Q.Info_ValueForKey(info, "n"), 1, 63))
+	return (string.gsub(name, "^%[BOT%] ", ""))
+end
+
 local function UI_SPPostgameMenu_MenuDrawScoreLine(n, y)
 	if n > (postgameMenuInfo.numClients + 1) then
 		n -= (postgameMenuInfo.numClients + 2)
@@ -242,8 +249,7 @@ local function UI_SPPostgameMenu_MenuDrawScoreLine(n, y)
 		U.UI_DrawString(640 - 31 * C.SMALLCHAR_WIDTH, y, "(tie)", bit32.bor(C.UI_LEFT, C.UI_SMALLFONT), U.color_white)
 		rank = bit32.band(rank, bit32.bnot(C.RANK_TIED_FLAG))
 	end
-	local info = trap.GetConfigString(C.CS_PLAYERS + postgameMenuInfo.clientNums[n])
-	local name = Q.CleanStr(string.sub(Q.Info_ValueForKey(info, "n"), 1, 63))
+	local name = clientName(postgameMenuInfo.clientNums[n])
 
 	U.UI_DrawString(
 		640 - 25 * C.SMALLCHAR_WIDTH,
@@ -419,8 +425,7 @@ local function UI_SPPostgameMenu_Init()
 end
 
 local function Prepname(index)
-	local info = trap.GetConfigString(C.CS_PLAYERS + postgameMenuInfo.clientNums[index])
-	local name = Q.CleanStr(string.sub(Q.Info_ValueForKey(info, "n"), 1, 63))
+	local name = clientName(postgameMenuInfo.clientNums[index])
 	local len = #name
 
 	while len ~= 0 and U.UI_ProportionalStringWidth(name) > 256 do
