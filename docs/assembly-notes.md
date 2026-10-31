@@ -256,3 +256,11 @@ does). To publish:
 - **Held assets**: 268 files in `tools/oaconv/upload-hold.txt`; the place
   references none of them until they have ids.
 - Audio: sound atlases upload last; until they have ids the game is silent.
+
+## Publishing
+
+    oaconv publish --universe 10773907232 --place 130309438802709 place/openarena.rbxl
+
+uploads the place as a new Published version of the live game (`--saved`
+for a Saved one), with the same key `oaconv upload` uses. Running servers
+keep the old version until they restart.

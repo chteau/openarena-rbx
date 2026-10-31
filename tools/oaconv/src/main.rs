@@ -1,4 +1,4 @@
-//! `oaconv convert | tone | preview | upload | fetch`. See docs/conv-notes.md.
+//! `oaconv convert | tone | preview | upload | fetch | publish`. See docs/conv-notes.md.
 
 mod pipeline;
 
@@ -13,7 +13,8 @@ usage:
   oaconv preview --map NAME [--spawn N | --eye \"x y z yaw\" | --top] [--out FILE.png] [--size WxH] [--repo DIR]
   oaconv upload [--build DIR] [--dry-run] [--only Model|Image|Audio] [--limit N] [--user-id ID]
                 [--hold FILE] [--pace-ms MS]
-  oaconv fetch --out DIR ID...";
+  oaconv fetch --out DIR ID...
+  oaconv publish --universe ID --place ID [--saved] FILE.rbxl";
 
 struct Args(Vec<String>);
 
@@ -173,6 +174,18 @@ fn run() -> Result<(), String> {
                 .map(|v| v.parse().map_err(|_| format!("bad asset id {v}")))
                 .collect::<Result<Vec<u64>, String>>()?;
             oaconv::upload::fetch(&out, &ids)
+        }
+        "publish" => {
+            let universe: u64 = args.number("--universe")?.ok_or("--universe is required")?;
+            let place: u64 = args.number("--place")?.ok_or("--place is required")?;
+            let saved = args.flag("--saved");
+            let file = match args.0.len() {
+                1 => PathBuf::from(args.0.remove(0)),
+                _ => return Err(USAGE.into()),
+            };
+            let version = oaconv::upload::publish(&file, universe, place, saved)?;
+            println!("place {place}: version {version}");
+            Ok(())
         }
         _ => Err(USAGE.into()),
     }

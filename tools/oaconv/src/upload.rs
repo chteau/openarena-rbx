@@ -164,6 +164,20 @@ fn keyring_key() -> Option<rbx_cloud::ApiKey> {
     None
 }
 
+/// Uploads a place file as a new version of `place` (Published, or Saved
+/// with `saved`) and returns its number. The key stays in this process.
+pub fn publish(file: &Path, universe: u64, place: u64, saved: bool) -> Result<u64, String> {
+    let bytes = std::fs::read(file).map_err(|e| format!("{}: {e}", file.display()))?;
+    let mode = if saved {
+        rbx_cloud::PublishMode::Saved
+    } else {
+        rbx_cloud::PublishMode::Published
+    };
+    rbx_cloud::Client::new(Some(api_key()?))
+        .publish_place(universe, place, &bytes, mode)
+        .map_err(|e| e.to_string())
+}
+
 /// Writes each asset's delivered bytes (Open Cloud asset-delivery, keyed) to
 /// `out/<id>` and prints `<id> <assetTypeId>`, or `<id> error <why>`: the
 /// fetch half of place/resolve_ids.py, so the key stays in this process.
