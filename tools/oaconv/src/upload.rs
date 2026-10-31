@@ -89,8 +89,7 @@ pub fn run(build: &Path, opts: &Options) -> Result<usize, String> {
     if todo.is_empty() {
         return Ok(0);
     }
-    let key = rbx_cloud::ApiKey::from_env_or_config()
-        .ok_or("no Open Cloud key: set RBX_API_KEY or sign in with rbxstudio")?;
+    let key = api_key()?;
     let client = rbx_cloud::Client::new(Some(key.clone()));
     let user = match opts.user_id {
         Some(u) => u,
@@ -128,6 +127,71 @@ pub fn run(build: &Path, opts: &Options) -> Result<usize, String> {
         }
     }
     Ok(done)
+}
+
+/// `RBX_API_KEY`, else the key rbxstudio keeps in the OS keyring (read here,
+/// the way rbx-native's `rbxcloud` does), else rbx-native's api_key file.
+pub fn api_key() -> Result<rbx_cloud::ApiKey, String> {
+    if std::env::var_os("RBX_API_KEY").is_none() {
+        rbx_cloud::ApiKey::install(keyring_key());
+    }
+    rbx_cloud::ApiKey::from_env_or_config()
+        .ok_or_else(|| "no Open Cloud key: set RBX_API_KEY or sign in with rbxstudio".into())
+}
+
+#[cfg(target_os = "linux")]
+fn keyring_key() -> Option<rbx_cloud::ApiKey> {
+    if rbx_cloud::keyring_disabled() {
+        return None;
+    }
+    futures_lite::future::block_on(async {
+        let keyring = oo7::Keyring::new().await.ok()?;
+        keyring.unlock().await.ok()?;
+        let items = keyring
+            .search_items(&[("url", "https://apis.roblox.com/rbx-native")])
+            .await
+            .ok()?;
+        let item = items.into_iter().next()?;
+        item.unlock().await.ok()?;
+        let secret = item.secret().await.ok()?;
+        let key = std::str::from_utf8(&secret).ok()?.trim();
+        (!key.is_empty()).then(|| rbx_cloud::ApiKey::new(key))
+    })
+}
+
+#[cfg(not(target_os = "linux"))]
+fn keyring_key() -> Option<rbx_cloud::ApiKey> {
+    None
+}
+
+/// Writes each asset's delivered bytes (Open Cloud asset-delivery, keyed) to
+/// `out/<id>` and prints `<id> <assetTypeId>`, or `<id> error <why>`: the
+/// fetch half of place/resolve_ids.py, so the key stays in this process.
+pub fn fetch(out: &Path, ids: &[u64]) -> Result<(), String> {
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let client = rbx_cloud::Client::new(Some(api_key()?));
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let print = std::sync::Mutex::new(());
+    std::thread::scope(|s| {
+        for _ in 0..8 {
+            s.spawn(|| {
+                while let Some(&id) =
+                    ids.get(next.fetch_add(1, std::sync::atomic::Ordering::Relaxed))
+                {
+                    let line = match client.asset_with_key(id) {
+                        Ok(c) => match std::fs::write(out.join(id.to_string()), &c.bytes) {
+                            Ok(()) => format!("{id} {}", c.asset_type_id.unwrap_or(0)),
+                            Err(e) => format!("{id} error {e}"),
+                        },
+                        Err(e) => format!("{id} error {e}"),
+                    };
+                    let _guard = print.lock();
+                    println!("{line}");
+                }
+            });
+        }
+    });
+    Ok(())
 }
 
 fn upload_one(

@@ -18,9 +18,10 @@ checked with Open Cloud (assets/v1 metadata + asset-delivery-api):
   ImageLabel or MeshPart.TextureID needs the image id, not the decal id.
 - Audio (.ogg): the asset id is the Sound id.
 
-The key comes from the keyring entry rbx-native stores (never printed or
-written anywhere). Already resolved entries are kept, so a re-run after the
-upload grows only resolves what is new.
+The keyed fetches run in `oaconv fetch`, which loads the key itself
+(RBX_API_KEY, else rbx-native's keyring entry), so it never reaches Python.
+Already resolved entries are kept, so a re-run after the upload grows only
+resolves what is new.
 """
 import argparse
 import gzip
@@ -28,11 +29,7 @@ import json
 import os
 import re
 import subprocess
-import sys
 import tempfile
-import time
-import urllib.error
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -60,47 +57,28 @@ print("{" .. table.concat(out, ",") .. "}")
 '''
 
 
-def api_key():
-    import gi
-    gi.require_version('Secret', '1')
-    from gi.repository import Secret
-    key = Secret.password_lookup_sync(None, {'url': 'https://apis.roblox.com/rbx-native'}, None)
-    if not key:
-        sys.exit('no Open Cloud key in the keyring')
-    return key
+OACONV = ['cargo', 'run', '--release', '--quiet', '--manifest-path',
+          os.path.join(ROOT, 'tools', 'oaconv', 'Cargo.toml'), '--']
 
 
-KEY = None
+def fetch(ids, out):
+    """{id: (assetTypeId, body)} for the ids oaconv delivered; failures printed."""
+    lines = subprocess.run(OACONV + ['fetch', '--out', out] + [str(i) for i in ids],
+                           capture_output=True, text=True, check=True).stdout.splitlines()
+    got = {}
+    for line in lines:
+        aid, rest = line.split(' ', 1)
+        if rest.startswith('error'):
+            print('fetch failed', aid, rest)
+            continue
+        body = open(os.path.join(out, aid), 'rb').read()
+        if body[:2] == b'\x1f\x8b':
+            body = gzip.decompress(body)
+        got[int(aid)] = (int(rest), body)
+    return got
 
 
-def get(url, keyed=True, tries=5):
-    for attempt in range(tries):
-        req = urllib.request.Request(url, headers={'x-api-key': KEY} if keyed else {})
-        try:
-            with urllib.request.urlopen(req, timeout=120) as r:
-                return r.read()
-        except urllib.error.HTTPError as e:
-            if e.code in (429, 500, 502, 503, 504) and attempt < tries - 1:
-                time.sleep(2 ** attempt)
-                continue
-            raise
-        except urllib.error.URLError:
-            if attempt < tries - 1:
-                time.sleep(2 ** attempt)
-                continue
-            raise
-
-
-def delivery(asset_id):
-    d = json.loads(get(f'https://apis.roblox.com/asset-delivery-api/v1/assetId/{asset_id}'))
-    body = get(d['location'], keyed=False)
-    if body[:2] == b'\x1f\x8b':
-        body = gzip.decompress(body)
-    return d.get('assetTypeId'), body
-
-
-def resolve_image(decal_id):
-    kind, body = delivery(decal_id)
+def resolve_image(decal_id, kind, body):
     if kind == 1:  # already an Image
         return decal_id
     m = re.search(rb'<Content name="Texture">\s*<url>[^<]*?id=(\d+)', body)
@@ -109,8 +87,7 @@ def resolve_image(decal_id):
     return int(m.group(1))
 
 
-def resolve_model(model_id):
-    kind, body = delivery(model_id)
+def resolve_model(model_id, kind, body):
     if kind != 10:
         raise RuntimeError(f'{model_id}: assetTypeId {kind}, not a Model')
     with tempfile.TemporaryDirectory() as tmp:
@@ -122,7 +99,6 @@ def resolve_model(model_id):
 
 
 def main():
-    global KEY
     ap = argparse.ArgumentParser()
     ap.add_argument('--lock', default=DEFAULT_LOCK)
     args = ap.parse_args()
@@ -131,7 +107,6 @@ def main():
     ids.setdefault('images', {})
     ids.setdefault('models', {})
     ids.setdefault('audio', {})
-    KEY = api_key()
 
     todo = []
     for path, e in sorted(lock.items()):
@@ -147,10 +122,15 @@ def main():
         elif e['type'] == 'Audio':
             ids['audio'][path] = aid
 
+    tmp = tempfile.TemporaryDirectory()
+    delivered = fetch(sorted({job[2] for job in todo}), tmp.name) if todo else {}
+
     def work(job):
         kind, path, aid, fn = job
         try:
-            return kind, path, aid, fn(aid), None
+            if aid not in delivered:
+                raise RuntimeError('not delivered')
+            return kind, path, aid, fn(aid, *delivered[aid]), None
         except Exception as ex:  # report and keep going: a re-run retries it
             return kind, path, aid, None, str(ex)
 
@@ -166,6 +146,7 @@ def main():
                 ids['models'][path] = {'asset': aid, 'meshes': res}
             if n % 200 == 0:
                 print(f'{n}/{len(todo)}')
+    tmp.cleanup()
     for k in ids:
         ids[k] = dict(sorted(ids[k].items()))
     with open(OUT, 'w') as f:

@@ -1,4 +1,4 @@
-//! `oaconv convert | tone | preview | upload`. See docs/conv-notes.md.
+//! `oaconv convert | tone | preview | upload | fetch`. See docs/conv-notes.md.
 
 mod pipeline;
 
@@ -12,7 +12,8 @@ usage:
   oaconv tone [--repo DIR] [--preview DIR]
   oaconv preview --map NAME [--spawn N | --eye \"x y z yaw\" | --top] [--out FILE.png] [--size WxH] [--repo DIR]
   oaconv upload [--build DIR] [--dry-run] [--only Model|Image|Audio] [--limit N] [--user-id ID]
-                [--hold FILE] [--pace-ms MS]";
+                [--hold FILE] [--pace-ms MS]
+  oaconv fetch --out DIR ID...";
 
 struct Args(Vec<String>);
 
@@ -163,6 +164,15 @@ fn run() -> Result<(), String> {
             let n = oaconv::upload::run(&build, &opts)?;
             println!("uploaded {n}");
             Ok(())
+        }
+        "fetch" => {
+            let out = PathBuf::from(args.value("--out").ok_or("--out is required")?);
+            let ids = args
+                .0
+                .iter()
+                .map(|v| v.parse().map_err(|_| format!("bad asset id {v}")))
+                .collect::<Result<Vec<u64>, String>>()?;
+            oaconv::upload::fetch(&out, &ids)
         }
         _ => Err(USAGE.into()),
     }

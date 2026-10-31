@@ -21,6 +21,11 @@ rbx_cloud = { git = "https://github.com/chteau/rbx-native", branch = "dev" }
 # Audio uploads: rbx_cloud wraps Model/Decal only, so the multipart POST for Audio is ours.
 ureq = { version = "3", features = ["json"] }
 
+# The keyring read rbx-native's rbxcloud does, same oo7 build rbx_cloud pulls in.
+[target.'cfg(target_os = "linux")'.dependencies]
+oo7 = { version = "0.6", default-features = false, features = ["async-std", "native_crypto"] }
+futures-lite = "2"
+
 [profile.release]
 debug = 1
 
