@@ -11,8 +11,9 @@ any later version. See COPYING.
 ]]
 -- Not a port: the bot roster (docs/bots-notes.md, "Bot roster"). Every OA
 -- bot is a fixed Roblox account, the same in every server: it keeps its
--- botfiles character and wears the account's avatar and display name, the
--- way a friend-bot does (friendbots.luau, which also keeps who wears whom).
+-- botfiles character and wears the account's avatar and username, the way
+-- a friend-bot wears its friend (friendbots.luau, which also keeps who
+-- wears whom).
 -- The accounts' names are looked up once per server (avatars_roblox.luau
 -- on Roblox, a stub under lune).
 
@@ -43,8 +44,8 @@ BotRoster.ids = {
 	jiangshi = 8313172606, -- the Final arena's boss
 } :: { [string]: number }
 
--- the name each account shows (FriendBots.Label), false for an account the
--- lookup didn't return (deleted or banned); empty until Fetch succeeds
+-- each account's username, false for an account the lookup didn't return
+-- (deleted or banned); empty until Fetch succeeds
 local names: { [number]: string | false } = {}
 
 function BotRoster.Reset()
@@ -69,7 +70,7 @@ function BotRoster.Fetch(userService: any): boolean
 		names[id] = false
 	end
 	for _, info in res do
-		names[info.Id] = FriendBots.Label(info.DisplayName, info.Username)
+		names[info.Id] = string.sub(info.Username, 1, 21)
 	end
 	return true
 end
@@ -78,17 +79,19 @@ function BotRoster.Listed(oabot: string): boolean
 	return BotRoster.ids[string.lower(oabot)] ~= nil
 end
 
--- "name=id name=id ..." of every bot whose account the lookup returned,
--- sorted: the menus' head icons (avatars_roblox.luau)
+-- "bot=id=username;bot=id=username;..." of every bot whose account the
+-- lookup returned, sorted: the menus' head icons and names
+-- (avatars_roblox.luau). ';' because the oldest usernames have spaces.
 function BotRoster.Accounts(): string
 	local out = {}
 	for bot, id in BotRoster.ids do
-		if names[id] then
-			table.insert(out, bot .. "=" .. id)
+		local name = names[id]
+		if name then
+			table.insert(out, bot .. "=" .. id .. "=" .. name)
 		end
 	end
 	table.sort(out)
-	return table.concat(out, " ")
+	return table.concat(out, ";")
 end
 
 -- the account a roster bot wears now: nil while its name is unknown or its

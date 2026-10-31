@@ -161,31 +161,34 @@ entity valid / in the PVS" test passed. It is an int again.
 
 Not in OA. Every bot is a fixed Roblox account, the same in every server
 and in the single-player arenas: it keeps its botfiles character (skill,
-aim, weapons, chat) and wears the account's avatar and name exactly as a
-friend-bot does (below): the display name behind the `^3[BOT]^7` tag, the
-username when OA's font can't draw the display name.
+aim, weapons, chat) and wears the account's avatar and username behind the
+`^3[BOT]^7` tag in game (scoreboard, chat, obituaries, HUD). The menus that
+name bots by their bots.txt name (single player level select, skirmish
+slots and bot select, add bots) show the username too, untagged, and keep
+the bots.txt name for `addbot`; until the lookup answers, they and the game
+show OA's names.
 
 | OA bot | first SP arena | Roblox user id | shows as |
 |---|---|---|---|
 | Grunt | oa_rpg3dm2 | 1274097373 | MoonRb1x |
-| Liz | oa_rpg3dm2 | 73392736 | Mathew |
+| Liz | oa_rpg3dm2 | 73392736 | maththenight |
 | Tony | oa_minia | 260342963 | Berzappy |
-| Penguin | oa_minia | 105519417 | Viken |
-| Skelebot | slimefac | 10138699399 | Float |
-| Ghost | oa_dm5 | 2678188290 | SL0W |
+| Penguin | oa_minia | 105519417 | Syveric |
+| Skelebot | slimefac | 10138699399 | Float_HGames |
+| Ghost | oa_dm5 | 2678188290 | Jocelyn_1940 |
 | Beret | oa_dm5 | 3 | Jane Doe |
-| Broadklin | oa_dm7 | 66246631 | ASIATDETER |
+| Broadklin | oa_dm7 | 66246631 | antoinehuynh |
 | Morgan | oa_dm7 | 2 | John Doe |
 | Assassin | sleekgrinder | 1 | Roblox |
 | Cyber-Garg | pxlfan | 123757139 | MattStott |
-| Andriy | am_lavaarena | 5290932442 | mel |
-| Sergei | am_lavaarena | 58526171 | Wasaba |
+| Andriy | am_lavaarena | 5290932442 | melogracei |
+| Sergei | am_lavaarena | 58526171 | tintin411 |
 | Metalbot | blitzkrieg3 | 156 | builderman |
 | Gargoyle | mlca1 | 11759238920 | OnlyQualityGames |
-| Sarge | oa_dm1 | 10595767136 | Depo |
-| Grism | am_galmevish2 | 8950832609 | Reazy |
+| Sarge | oa_dm1 | 10595767136 | HeyDepoo |
+| Grism | am_galmevish2 | 8950832609 | ar2zzzz |
 | S_Marine | suspended (Tier 7) | 925308243 | Cheeteau |
-| Jiangshi | czest1tourney (Tier 8, Final) | 8313172606 | misaa |
+| Jiangshi | czest1tourney (Tier 8, Final) | 8313172606 | miilkyww |
 
 The ids live in `src/server/sv/botroster.luau`. The server looks the names
 up once (`UserService:GetUserInfosByUserIdsAsync`, all 19 in one call,
@@ -271,7 +274,7 @@ data model over MCP instead. Pictures in `docs/parity/botroster/`:
 player and ends the playtest; the client reconnects by itself.
 
 `tests/bots/botroster.luau` checks the id table, the lookup against a
-stubbed `UserService` (display name, username fallback, a deleted account,
+stubbed `UserService` (usernames, not display names, a deleted account,
 a failing service), and on a running server: oa_minia's arena bots (Tony,
 Penguin) and the Final arena's Jiangshi wearing their accounts with their
 OA characters, a human on S_Marine's account and leaving again, the failed

@@ -566,7 +566,9 @@ local function UI_SPLevelMenu_MenuDraw()
 			U.UI_FillRect(x, y, 64, 64, U.color_black)
 			U.UI_DrawProportionalString(x + 22, y + 18, "?", C.UI_BIGFONT, U.color_orange)
 		end
-		U.UI_DrawString(x, y + 64, levelMenuInfo.botNames[n], bit32.bor(C.UI_SMALLFONT, C.UI_LEFT), U.color_orange)
+		-- not in OA: centred under the face, a roster bot's username
+		local name = trap.BotName(levelMenuInfo.botAccounts[n]) or levelMenuInfo.botNames[n]
+		U.UI_DrawStringFit(x + 32, y + 64, name, 64 + 24, U.color_orange)
 	end
 end
 
