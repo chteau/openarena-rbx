@@ -84,6 +84,9 @@ check(Roster.Account("Penguin").name == "Viken", "display name")
 check(Roster.Account("Sarge").name == "HeyDepoo", "username when OA can't draw the display name")
 check(Roster.Account("Ghost") == nil, "a deleted account has no name")
 check(not Roster.Listed("Kyonshi") and Roster.Account("Kyonshi") == nil, "a bot with no account")
+local accounts = Roster.Accounts()
+check(string.find(accounts, "tony=260342963", 1, true) ~= nil, "the menus' list has Tony's account")
+check(string.find(accounts, "ghost=", 1, true) == nil, "and not a deleted account")
 
 -- the running server
 local FRAME_MS = 50

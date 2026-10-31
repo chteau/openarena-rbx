@@ -492,27 +492,50 @@ function Avatar.Tag(entNum: number, name: string, out): boolean
 	return true
 end
 
--- The status bar / scoreboard face: the player's avatar headshot, once
--- Roblox has it (0 until then).
-local heads: { [number]: number | false } = {}
-function Avatar.HeadShader(clientNum: number): number
-	local src = source(clientNum)
-	local uid = src and src:GetAttribute("UserId")
-	if type(uid) ~= "number" then
+-- A Roblox account's headshot as a 2D shader (0 for no account): the head
+-- icon of every client and bot wearing one, wherever OA draws a player's
+-- icon. The rbxthumb image needs no request of ours; until it has
+-- downloaded the ImageLabel draws nothing.
+local heads: { [number]: number } = {}
+function Avatar.Headshot(uid: any): number
+	uid = tonumber(uid)
+	if uid == nil or uid <= 0 then
 		return 0
 	end
 	local h = heads[uid]
 	if h == nil then
-		heads[uid] = false
-		task.spawn(function()
-			local ok, url = pcall(function()
-				return Players:GetUserThumbnailAsync(uid, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size150x150)
-			end)
-			heads[uid] = if ok and type(url) == "string" then Assets.RegisterImage("avatar/headshot/" .. uid, url, 150, 150) else 0
-		end)
+		local url = string.format("rbxthumb://type=AvatarHeadShot&id=%d&w=150&h=150", uid)
+		h = Assets.RegisterImage("avatar/headshot/" .. uid, url, 150, 150)
+		heads[uid] = h
+	end
+	return h
+end
+
+-- The account a client wears, as the server publishes it
+-- (server/sv/avatars_roblox.luau), whether or not its avatar is drawn.
+function Avatar.HeadShader(clientNum: number): number
+	local folder = ReplicatedStorage:FindFirstChild("OAAvatars")
+	return Avatar.Headshot(folder and folder:GetAttribute("User" .. clientNum))
+end
+
+-- A roster bot's account by its bots.txt name (the single player menus).
+function Avatar.BotHeadShader(name: string): number
+	local folder = ReplicatedStorage:FindFirstChild("OAAvatars")
+	local list = folder and folder:GetAttribute("BotRoster")
+	if type(list) ~= "string" then
 		return 0
 	end
-	return h or 0
+	for bot, id in string.gmatch(list, "(%S+)=(%d+)") do
+		if bot == string.lower(name) then
+			return Avatar.Headshot(id)
+		end
+	end
+	return 0
+end
+
+function Avatar.LocalHeadShader(): number
+	local player = Players.LocalPlayer
+	return Avatar.Headshot(player and player.UserId)
 end
 
 function Avatar.BeginFrame()

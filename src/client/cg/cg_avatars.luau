@@ -162,11 +162,9 @@ function G.CG_AvatarPlayer(cent, ci, renderfx)
 	return true
 end
 
--- The status bar / scoreboard face of an avatar player: their headshot.
+-- The head icon of a client wearing a Roblox account (a player, a roster or
+-- friend bot): the account's headshot, even when its OA model is drawn.
 function G.CG_AvatarHeadShader(clientNum)
-	if not G.CG_AvatarActive(clientNum) then
-		return 0
-	end
 	return trap.R_AvatarHeadShader(clientNum)
 end
 

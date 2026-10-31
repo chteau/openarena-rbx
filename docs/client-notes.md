@@ -657,10 +657,18 @@ are the same either way, since the motors get `AvatarAnim.sample`'s mix.
 
 ### Head icon
 
-The status bar face and the scoreboard heads of an avatar player are their
-`Players:GetUserThumbnailAsync(id, HeadShot, 150x150)` image (an implicit
-2D shader, `Assets.RegisterImage`), drawn once Roblox returns it; until
-then, and for everyone else, OA's 3D head or icon.
+Every head icon of a client wearing a Roblox account (a player, a roster
+bot or a friend-bot) is that account's
+`rbxthumb://type=AvatarHeadShot&id=<id>&w=150&h=150` image (an implicit 2D
+shader, `Assets.RegisterImage`, `Avatar.Headshot`): the status bar face,
+the scoreboard heads, the attacker's head and the loading screen icons
+(`CG_AvatarHeadShader`), whether the avatar or the OA model is drawn
+(`cg_robloxAvatars`, `g_robloxAvatars`). The server publishes the account
+of each client as the `OAAvatars` folder's `User<clientNum>` attribute (a
+string) and the roster bots' accounts as `BotRoster` (`"grunt=1274097373
+liz=..."`, empty with `g_botRoster 0`), which the single player level menu
+uses for its opponents' faces; the player's own face there is their
+headshot too. A client without an account keeps OA's 3D head or icon.
 
 ### Live run
 

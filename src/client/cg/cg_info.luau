@@ -99,7 +99,11 @@ function G.CG_LoadingClient(clientNum)
 		local iconName = Q.va("models/players/%s/icon_%s.tga", model, skin)
 
 		local idx = loadingPlayerIconCount
-		loadingPlayerIcons[idx] = trap.R_RegisterShaderNoMip(iconName)
+		-- not in OA: a Roblox account's face is its headshot (cg_avatars.luau)
+		loadingPlayerIcons[idx] = G.CG_AvatarHeadShader(clientNum)
+		if loadingPlayerIcons[idx] == 0 then
+			loadingPlayerIcons[idx] = trap.R_RegisterShaderNoMip(iconName)
+		end
 		if loadingPlayerIcons[idx] == 0 then
 			iconName = Q.va("models/players/characters/%s/icon_%s.tga", model, skin)
 			loadingPlayerIcons[idx] = trap.R_RegisterShaderNoMip(iconName)
