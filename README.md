@@ -3,6 +3,8 @@
 [OpenArena](https://openarena.ws) 0.8.8 running on Roblox. Same maps, same
 weapons, same bots, same feel, just in a Roblox game.
 
+**Play it on Roblox: https://www.roblox.com/games/130309438802709/OpenArena**
+
 This is a proof of concept for [rbx-native](https://github.com/chteau/rbx-native),
 my native take on Roblox Studio. I wanted to show you can make a real game
 with it, so the whole place was built through rbx-native's MCP server: every
