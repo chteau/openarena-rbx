@@ -560,9 +560,12 @@ function Servers:handle(player: any, op: any, arg: any, arrival: any): any
 	elseif op == "apply" then
 		-- Start Server / an arena from the host of this server: restart it
 		-- with the new settings, as OA's listen server does
-		local spec = isHost and S.validateSpec(arg, self.mapExists)
-		if not spec or spec.kind ~= (if self.kind == "sp" then "sp" else "host") then
+		if not isHost then
 			return { ok = false, err = "Not the host" }
+		end
+		local spec, why = S.validateSpec(arg, self.mapExists)
+		if not spec or spec.kind ~= (if self.kind == "sp" then "sp" else "host") then
+			return { ok = false, err = why or "bad request" }
 		end
 		if spec.kind == "host" then
 			self.public = spec.public

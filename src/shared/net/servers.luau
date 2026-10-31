@@ -158,7 +158,8 @@ function S.validateSpec(raw: any, mapExists: (string) -> boolean): (Spec?, strin
 		return nil, "bad request"
 	end
 	local map = if type(raw.map) == "string" then string.lower(raw.map) else ""
-	if #map > 64 or not string.match(map, "^[%w_]+$") or not mapExists(map) then
+	-- OA ships pul1duel-oa, a single player arena
+	if #map > 64 or not string.match(map, "^[%w_%-]+$") or not mapExists(map) then
 		return nil, "unknown map"
 	end
 	local gametype = if kind == "sp" then S.GT_SINGLE_PLAYER else int(raw.gametype, 0, S.GT_MAX - 1)
