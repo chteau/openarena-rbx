@@ -10,7 +10,7 @@ use oaconv::bake::{first_image, image_output};
 use oaconv::bsp::entities::to_luau;
 use oaconv::luau::write_buffer_modules;
 use oaconv::manifest::{write_json, Manifest, UploadKind};
-use oaconv::shader::{strip_ext, ShaderClass, ShaderSet};
+use oaconv::shader::{stage_animated, strip_ext, ShaderClass, ShaderSet};
 use oaconv::vfs::Vfs;
 use oaconv::{md3, sound, texture};
 
@@ -186,20 +186,27 @@ pub fn images(
             );
         }
     }
-    // The stage the client draws (R3D: the first one with an image) of an
-    // effect shader (not a map surface or map model), when Roblox can't
-    // blend it (add, filter, ...), also gets an alpha-blended stand-in per
-    // blendFunc: `images/<stem>~<suffix>.png` (texture::blend_to_alpha).
+    // The stage the client draws, when Roblox can't blend it (add, filter,
+    // ...), also gets an alpha-blended stand-in per blendFunc:
+    // `images/<stem>~<suffix>.png` (texture::blend_to_alpha). For an effect
+    // that is the first stage with an image (R3D); for a map surface the
+    // converter leaves unbaked, the one whose image textures its mesh
+    // (WorldFx): the first, or an overlay's first animated stage.
     let mut derived: BTreeMap<String, BTreeSet<[String; 2]>> = BTreeMap::new();
     for s in shaders.shaders.values() {
-        if s.name.starts_with("textures/") || s.name.starts_with("models/mapobjects/") {
+        let map = s.name.starts_with("textures/") || s.name.starts_with("models/mapobjects/");
+        if map
+            && matches!(
+                s.class,
+                ShaderClass::Opaque | ShaderClass::Nodraw | ShaderClass::Sky
+            )
+        {
             continue;
         }
-        let Some(st) = s
-            .stages
-            .iter()
-            .find(|st| st.maps.first().is_some_and(|m| !m.starts_with('$')))
-        else {
+        let overlay = map && s.class == ShaderClass::Animated;
+        let Some(st) = s.stages.iter().find(|st| {
+            st.maps.first().is_some_and(|m| !m.starts_with('$')) && (!overlay || stage_animated(st))
+        }) else {
             continue;
         };
         let Some(blend) = st
@@ -209,6 +216,17 @@ pub fn images(
         else {
             continue;
         };
+        // a map shader's only when a converted map's mesh wears it (an
+        // animMap's every frame then)
+        let worn = || {
+            st.maps
+                .first()
+                .and_then(|m| vfs.find_image(m))
+                .is_some_and(|img| runtime.contains(&img))
+        };
+        if map && !worn() {
+            continue;
+        }
         for img in st.maps.iter().filter_map(|m| vfs.find_image(m)) {
             derived.entry(img).or_default().insert(blend.clone());
         }

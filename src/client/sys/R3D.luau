@@ -175,7 +175,7 @@ local function applyBlend(part: BasePart, mode: string, a: number)
 		part.Transparency = math.clamp(1 - a * 0.6, 0, 1)
 	elseif mode == "alpha" or mode == "filter" then
 		part.Material = Enum.Material.SmoothPlastic
-		part.Transparency = math.clamp(1 - a, 0, 1)
+		part.Transparency = math.clamp(1 - a, ShaderFx.MESH_ALPHA_MIN, 1)
 	else
 		part.Material = Enum.Material.SmoothPlastic
 		part.Transparency = 0
