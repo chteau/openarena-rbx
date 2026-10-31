@@ -40,9 +40,8 @@ LightGrid) to `ReplicatedStorage.OAMap.<map>` and its meshes to
 LightGrid and WorldFx, and the transport (`src/client/sys/Transport.luau`,
 the client side of `docs/formats/net.md`) into the cgame.
 
-The editor has no save tool: `assemble.py` sends Ctrl+S to the editor window
-(titled after the .rbxl) with XSendEvent, which neither moves the pointer
-nor takes focus, and waits for the file's mtime.
+`assemble.py` saves with rbx-native's own MCP tool `save_place` (File >
+Save).
 
 Sizes: all 72 maps with the default player list
 (then `sarge,major,tony,penguin,beret,assassin,liz`; now
@@ -185,8 +184,7 @@ over in the place.
 
 ### rbx-native
 
-- **No save tool** over MCP: saving needs Ctrl+S sent to the editor window
-  (XSendEvent).
+- **No save tool** over MCP (fixed: rbx-native's `save_place`).
 - **`multi_edit` resolves paths case-insensitively** and refuses a script
   whose name differs from a sibling only in case; those go through
   `execute_luau`.

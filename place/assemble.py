@@ -10,7 +10,7 @@ src/, src/first/ and place/boot/, `execute_luau` (Edit) makes folders, remotes, 
 lighting and the generated data modules, `insert_asset` brings in the
 uploaded map Models, and `inspect_instance` / `search_game_tree` check the
 result. Nothing is written into the .rbxl by hand: the editor saves it
-(Ctrl+S, sent to its window with XSendEvent).
+(MCP `save_place`).
 
 Inputs:
   build/                  `oaconv convert` output (maps, md3, SoundIndex, manifest)
@@ -483,50 +483,6 @@ return "ok"''' % (lua_str(name), attrs['Checksum'], lua_value(attrs['LightGrid']
 
 # ----------------------------------------------------------------- the editor
 
-def save(place):
-    """Ctrl+S to the editor window titled after the place, via XSendEvent: the
-    keys go to that window only, whatever has the desktop's focus."""
-    from Xlib import X, XK, display, protocol
-    d = display.Display()
-    root = d.screen().root
-    net_name = d.intern_atom('_NET_WM_NAME')
-    title = os.path.basename(place)
-
-    def walk(w):
-        hits = []
-        try:
-            p = w.get_full_property(net_name, 0)
-            name = p.value.decode('utf-8', 'replace') if p else (w.get_wm_name() or '')
-            if title in str(name):
-                hits.append(w)
-            for c in w.query_tree().children:
-                hits += walk(c)
-        except Exception:
-            pass
-        return hits
-
-    wins = walk(root)
-    if not wins:
-        raise RuntimeError('no editor window titled ' + title)
-    w = wins[-1]
-    ctrl = d.keysym_to_keycode(XK.string_to_keysym('Control_L'))
-    s = d.keysym_to_keycode(XK.string_to_keysym('s'))
-    before = os.path.getmtime(place)
-    for cls, kc, state in ((protocol.event.KeyPress, ctrl, 0), (protocol.event.KeyPress, s, X.ControlMask),
-                           (protocol.event.KeyRelease, s, X.ControlMask),
-                           (protocol.event.KeyRelease, ctrl, X.ControlMask)):
-        w.send_event(cls(time=X.CurrentTime, root=root, window=w, same_screen=1, child=X.NONE, root_x=0,
-                         root_y=0, event_x=0, event_y=0, state=state, detail=kc), propagate=True)
-        d.flush()
-        time.sleep(0.05)
-    for _ in range(600):
-        if os.path.getmtime(place) != before:
-            time.sleep(1)
-            return os.path.getsize(place)
-        time.sleep(0.5)
-    raise RuntimeError('the editor did not save ' + place)
-
-
 EMPTY_PLACE = '''
 local fs = require("@lune/fs")
 local process = require("@lune/process")
@@ -641,7 +597,8 @@ def main():
                                              'head_limit': 5})
         print(tree[0]['text'][:600])
         print(mcp.tool('inspect_instance', {'path': 'ServerScriptService.OA.Boot'})[0]['text'][:600])
-        size = save(place)
+        mcp.tool('save_place', {})
+        size = os.path.getsize(place)
         print(f'saved {place}: {size / 1e6:.1f} MB, {time.time() - t0:.0f}s')
     finally:
         mcp.close()
