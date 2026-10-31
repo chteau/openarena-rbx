@@ -135,7 +135,15 @@ end)
 Cmd.AddCommand("disconnect", function()
 	Client.Disconnect()
 end)
-for _, name in { "vid_restart", "snd_restart", "screenshot", "screenshotJPEG", "quit", "writeconfig", "cinematic", "s_stop" } do
+Cmd.AddCommand("quit", function()
+	-- a game can't close Roblox, so leave the server: the client is left on
+	-- Roblox's disconnect screen, whose Leave button closes the experience
+	local player = game:GetService("Players").LocalPlayer
+	if player then
+		player:Kick("Thanks for playing OpenArena!")
+	end
+end)
+for _, name in { "vid_restart", "snd_restart", "screenshot", "screenshotJPEG", "writeconfig", "cinematic", "s_stop" } do
 	-- no Roblox equivalent: the window, renderer and process belong to Roblox
 	Cmd.AddCommand(name, function() end)
 end
