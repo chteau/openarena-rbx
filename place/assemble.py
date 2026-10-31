@@ -6,7 +6,7 @@
 
 Every instance is made by MCP tool calls against a running rbxstudio editor
 (`rbxstudio --mcp`, stdio JSON-RPC): `multi_edit` creates the scripts from
-src/ and place/boot/, `execute_luau` (Edit) makes folders, remotes, the
+src/, src/first/ and place/boot/, `execute_luau` (Edit) makes folders, remotes, the
 lighting and the generated data modules, `insert_asset` brings in the
 uploaded map Models, and `inspect_instance` / `search_game_tree` check the
 result. Nothing is written into the .rbxl by hand: the editor saves it
@@ -321,7 +321,10 @@ def push_scripts(mcp, push):
     multi_edit(mcp, 'ServerScriptService.OA.Boot', open(os.path.join(ROOT, 'place/boot/Boot.server.luau')).read(), 'Script')
     multi_edit(mcp, 'StarterPlayer.StarterPlayerScripts.OAClient',
                open(os.path.join(ROOT, 'src/client/OAClient.client.luau')).read(), 'LocalScript')
-    return len(targets) + 2
+    # the arriving teleport's loading screen runs before ReplicatedStorage replicates
+    multi_edit(mcp, 'ReplicatedFirst.OALoadingScreen', open(os.path.join(ROOT, 'src/first/LoadingScreen.luau')).read(), 'ModuleScript')
+    multi_edit(mcp, 'ReplicatedFirst.OAArrival', open(os.path.join(ROOT, 'src/first/Arrival.client.luau')).read(), 'LocalScript')
+    return len(targets) + 4
 
 
 def multi_edit(mcp, path, source, cls):
@@ -385,6 +388,8 @@ for _, p in {
 	{ game:GetService("ServerScriptService"), "OA" },
 	{ game:GetService("ServerStorage"), "OABotfiles" },
 	{ game:GetService("StarterPlayer"):FindFirstChildOfClass("StarterPlayerScripts"), "OAClient" },
+	{ game:GetService("ReplicatedFirst"), "OALoadingScreen" },
+	{ game:GetService("ReplicatedFirst"), "OAArrival" },
 } do
 	local o = p[1] and p[1]:FindFirstChild(p[2])
 	if o then o:Destroy() end
@@ -527,7 +532,7 @@ local fs = require("@lune/fs")
 local process = require("@lune/process")
 local roblox = require("@lune/roblox")
 local game = roblox.Instance.new("DataModel")
-for _, s in { "Workspace", "Lighting", "ReplicatedStorage", "ServerScriptService", "ServerStorage",
+for _, s in { "Workspace", "Lighting", "ReplicatedFirst", "ReplicatedStorage", "ServerScriptService", "ServerStorage",
 	"StarterGui", "StarterPack", "StarterPlayer", "SoundService", "Players", "Teams" } do
 	game:GetService(s)
 end

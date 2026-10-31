@@ -23,6 +23,7 @@ JSON-RPC. Every instance comes from an MCP tool call:
 | scripts whose name differs from a sibling only in case (`q/Consts` next to `q/consts`, `shared/BG` next to `shared/bg`, ...) | same | `execute_luau` (see gaps) |
 | server boot `place/boot/Boot.server.luau` | `ServerScriptService.OA.Boot` (Script, attribute `Startup` = console text run once) | `multi_edit` |
 | client boot `src/client/OAClient.client.luau` | `StarterPlayer.StarterPlayerScripts.OAClient` (LocalScript) | `multi_edit` |
+| arrival loading screen `src/first/Arrival.client.luau`, `src/first/LoadingScreen.luau` | `ReplicatedFirst.OAArrival` (LocalScript), `ReplicatedFirst.OALoadingScreen` (ModuleScript) | `multi_edit` |
 | remotes | `ReplicatedStorage.OANet.Reliable` (RemoteEvent), `.Unreliable` (UnreliableRemoteEvent) | `execute_luau` |
 | text files of the pk3s (shaders, menus, arenas, bot scripts...) | `ReplicatedStorage.OA.client.sys.Files` + parts | `execute_luau` (<= 900 KB of source per call) |
 | asset index (image ids, sizes, md3 meshes, static bundles, sky, music, sound atlas id map from `build/SoundIndex.luau`) | `ReplicatedStorage.OA.client.sys.AssetIndex` + parts | `execute_luau` |

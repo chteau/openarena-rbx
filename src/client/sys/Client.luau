@@ -17,6 +17,7 @@ local R3D = require(script.Parent.R3D)
 local Snd = require(script.Parent.Snd)
 local FS = require(script.Parent.FS)
 local LAN = require(script.Parent.LAN)
+local Players = game:GetService("Players")
 local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 local Servers = require(script.Parent.Parent.Parent.shared.net.servers)
 
@@ -164,9 +165,61 @@ LAN.forward = function(text: string)
 		Net.SendClientCommand(text)
 	end
 end
+-- The teleport loading screen (ReplicatedFirst.OALoadingScreen, absent
+-- outside the place): up from the request until the teleport takes the
+-- player away, or the request fails.
+local loadingGui: ScreenGui? = nil
+local function loadingModule(): any
+	local m = game:GetService("ReplicatedFirst"):FindFirstChild("OALoadingScreen")
+	return m and require(m)
+end
+LAN.showLoading = function(map: string?): string?
+	local img = if map then Assets.Image("levelshots/" .. map) else nil
+	local shot = img and img.id
+	local ok, gui = pcall(function()
+		local screen = loadingModule().build(map, shot)
+		-- Roblox shows this one during the teleport and hands it over on arrival
+		game:GetService("TeleportService"):SetTeleportGui(screen)
+		screen.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+		return screen
+	end)
+	if ok then
+		LAN.hideLoading()
+		loadingGui = gui
+		-- never stick if the teleport doesn't happen
+		task.delay(90, function()
+			if loadingGui == gui then
+				LAN.hideLoading()
+			end
+		end)
+	end
+	return shot
+end
+LAN.hideLoading = function()
+	local gui = loadingGui
+	loadingGui = nil
+	if gui then
+		pcall(function()
+			loadingModule().dismiss(gui)
+		end)
+	end
+end
+-- the arriving loading screen (ReplicatedFirst script) waits for this
+local mapReady = false
+function Client.markReady()
+	if not mapReady then
+		mapReady = true
+		pcall(function()
+			Players.LocalPlayer:SetAttribute("OAReady", true)
+		end)
+	end
+end
+
 -- a join or start that didn't happen: the main menu's error box, as a
 -- failed connect shows it
 LAN.fail = function(msg: string)
+	LAN.hideLoading()
+	Client.markReady()
 	Cvar.Set("com_errorMessage", msg)
 	print(msg .. "\n")
 	if U and not Client.cgameActive then
@@ -343,6 +396,7 @@ function drawScreen()
 		G.CG_DrawActiveFrame(Net.serverTime, C.STEREO_CENTER, false)
 	elseif Client.cgameActive and Net.state == C.CA_ACTIVE and not uiFullscreen then
 		G.CG_DrawActiveFrame(Net.serverTime, C.STEREO_CENTER, false)
+		Client.markReady()
 		if bit32.band(Keys.GetCatcher(), bit32.bor(C.KEYCATCH_UI, C.KEYCATCH_CGAME)) == 0 then
 			Chat.Draw(Console.DrawNotify())
 		end
@@ -524,7 +578,6 @@ local function screenChanged()
 end
 function Client.Boot(opts: { root: Instance?, width: number?, height: number?, teleportData: any? }?)
 	opts = opts or {}
-	local Players = game:GetService("Players")
 	local root = opts.root
 	if root == nil then
 		local gui = Instance.new("ScreenGui")

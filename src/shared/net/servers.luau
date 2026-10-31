@@ -224,11 +224,21 @@ function S.startupText(spec: Spec): string
 end
 
 -- TeleportData a client brings: { oa = 1, kind = "join" | "host" | "sp",
--- cvars = { name = value }, team = "red" | "blue" | nil } (its archived
--- cvars, so name, model, colours and single player progress survive the
--- teleport; the team the start server menu picked). Checked: nil if not ours.
+-- cvars = { name = value }, team = "red" | "blue" | nil, map = "oa_dm1" | nil,
+-- shot = "rbxassetid://123" | nil } (its archived cvars, so name, model,
+-- colours and single player progress survive the teleport; the team the
+-- start server menu picked; the map and levelshot the loading screen shows
+-- if the teleport's own can't be carried). Checked: nil if not ours.
 S.MAX_ARRIVAL_CVARS = 512
-function S.validateArrival(raw: any): { kind: string, cvars: { [string]: string }, team: string? }?
+local function arrivalMap(v: any): string?
+	return if type(v) == "string" and #v <= 64 and string.match(v, "^[%w_%-]+$") then string.lower(v) else nil
+end
+
+local function arrivalShot(v: any): string?
+	return if type(v) == "string" and #v <= 40 and string.match(v, "^rbxassetid://%d+$") then v else nil
+end
+
+function S.validateArrival(raw: any): { kind: string, cvars: { [string]: string }, team: string?, map: string?, shot: string? }?
 	if type(raw) ~= "table" or raw.oa ~= 1 then
 		return nil
 	end
@@ -249,7 +259,7 @@ function S.validateArrival(raw: any): { kind: string, cvars: { [string]: string 
 			end
 		end
 	end
-	return { kind = kind, cvars = cvars, team = team(raw.team) }
+	return { kind = kind, cvars = cvars, team = team(raw.team), map = arrivalMap(raw.map), shot = arrivalShot(raw.shot) }
 end
 
 -- A registry entry (servers_registry.luau) as clients see it: the access
