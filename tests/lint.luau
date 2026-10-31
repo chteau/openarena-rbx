@@ -87,7 +87,9 @@ for _, file in process.args do
 		local before = src:sub(prev - 1, prev - 1)
 		local isMember = before == "." or before == ":"
 		local nextChar = src:match("^%s*(.)", p)
-		local isKey = nextChar == "=" and src:sub(p):match("^%s*=[^=]") ~= nil and (src:sub(1, prev - 1):match("[{,]%s*$") ~= nil)
+		-- a table key (`{ Name = v`) or a typed field (`{ Name: T,`)
+		local isKey = (nextChar == "=" and src:sub(p):match("^%s*=[^=]") ~= nil or src:sub(p):match("^:%s") ~= nil)
+			and src:sub(1, prev - 1):match("[{,]%s*$") ~= nil
 		if not isMember and not isKey and not KEYWORDS[name] and not LUAU_GLOBALS[name] and not declared[name] and not seen[name] then
 			local suspicious = name:match("^CG_") or name:match("^BG_") or name:match("^UI_") or name:match("^trap_")
 				or name:match("^Q_") or name:match("^Com_") or name:match("^Vector") or name:match("^Menu")

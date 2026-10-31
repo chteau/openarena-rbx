@@ -159,9 +159,10 @@ local function UI_AddBotsMenu_GetSortedBotNums()
 		list[n + 1] = n
 	end
 
+	-- not in OA: sorted by the name shown (UI_BotDisplayName)
 	local names = {}
 	for _, num in list do
-		names[num] = Q.Info_ValueForKey(U.UI_GetBotInfoByNumber(num), "name")
+		names[num] = U.UI_BotDisplayName(Q.Info_ValueForKey(U.UI_GetBotInfoByNumber(num), "name"))
 	end
 	table.sort(list, function(a, b)
 		return Q.stricmp(names[a], names[b]) < 0
@@ -174,6 +175,13 @@ end
 local function UI_AddBotsMenu_Draw()
 	U.UI_DrawBannerString(320, 16, "ADD BOTS", C.UI_CENTER, Q.colorWhite)
 	U.UI_DrawNamedPic(320 - 233, 240 - 166, 466, 332, ART_BACKGROUND)
+
+	-- not in OA: a roster bot shows its account's username (the names can
+	-- arrive after the menu opened); botnames keep the bots.txt names addbot
+	-- needs
+	for n = 0, 6 do
+		addBotsMenuInfo.bots[n].string = U.UI_BotDisplayName(addBotsMenuInfo.botnames[n])
+	end
 
 	-- standard menu drawing
 	U.Menu_Draw(addBotsMenuInfo.menu)

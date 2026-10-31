@@ -278,6 +278,9 @@ end
 function trap.R_BotHeadShader(name: string): number
 	return mod("Avatar").BotHeadShader(name)
 end
+function trap.BotName(name: string): string?
+	return mod("Avatar").BotName(name)
+end
 function trap.R_LocalHeadShader(): number
 	return mod("Avatar").LocalHeadShader()
 end

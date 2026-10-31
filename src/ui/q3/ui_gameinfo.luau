@@ -314,6 +314,12 @@ function U.UI_GetBotInfoByName(name)
 	return nil
 end
 
+-- not in OA: the name a bot shows in the menus, its roster account's
+-- username once the server has it (server/sv/botroster.luau)
+function U.UI_BotDisplayName(name)
+	return trap.BotName(name) or name
+end
+
 --
 -- single player game info
 --

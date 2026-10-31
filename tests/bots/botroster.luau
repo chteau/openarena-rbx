@@ -80,12 +80,12 @@ end }), "a failing service reports failure")
 check(Roster.Account("Tony") == nil, "no name after a failed lookup")
 check(Roster.Fetch(userService) and #asked == 19, "one lookup for every account")
 check(Roster.Account("tony").name == "Berzappy", "Tony's name")
-check(Roster.Account("Penguin").name == "Viken", "display name")
-check(Roster.Account("Sarge").name == "HeyDepoo", "username when OA can't draw the display name")
+check(Roster.Account("Penguin").name == "Syveric", "the username, not the display name")
+check(Roster.Account("Sarge").name == "HeyDepoo", "Sarge's username")
 check(Roster.Account("Ghost") == nil, "a deleted account has no name")
 check(not Roster.Listed("Kyonshi") and Roster.Account("Kyonshi") == nil, "a bot with no account")
 local accounts = Roster.Accounts()
-check(string.find(accounts, "tony=260342963", 1, true) ~= nil, "the menus' list has Tony's account")
+check(string.find(accounts, "tony=260342963=Berzappy", 1, true) ~= nil, "the menus' list has Tony's account and username")
 check(string.find(accounts, "ghost=", 1, true) == nil, "and not a deleted account")
 
 -- the running server
@@ -126,7 +126,7 @@ h.Game.Command("bot_enable 1")
 -- the single-player arenas: their bots come from the arena info
 h.Game.Command("spmap oa_minia")
 frames(120)
-check(names() == TAG .. "Berzappy," .. TAG .. "Viken", "oa_minia bots: " .. names())
+check(names() == TAG .. "Berzappy," .. TAG .. "Syveric", "oa_minia bots: " .. names())
 local B = bots()
 local tony = B[TAG .. "Berzappy"]
 check(tony and tony[2] == "Tony" and wearing[tony[1] :: number] == 260342963, "Tony wears his account")
@@ -134,8 +134,8 @@ check(tony and QS.Info_ValueForKey(G.trap_GetUserinfo(tony[1] :: number), "chara
 
 h.Game.Command("spmap czest1tourney")
 frames(120)
-check(names() == TAG .. "misaa", "the Final arena's bot: " .. names())
-local boss = bots()[TAG .. "misaa"]
+check(names() == TAG .. "miilkyww", "the Final arena's bot: " .. names())
+local boss = bots()[TAG .. "miilkyww"]
 check(boss and boss[2] == "Jiangshi" and wearing[boss[1] :: number] == 8313172606, "the boss wears its account")
 local ui = boss and G.trap_GetUserinfo(boss[1] :: number) or ""
 check(QS.Info_ValueForKey(ui, "characterfile") == "bots/kyonshi_c.c", "the boss has Kyonshi's character")

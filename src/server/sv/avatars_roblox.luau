@@ -24,8 +24,8 @@ any later version. See COPYING.
 -- Head icons: whatever g_robloxAvatars says, the folder's User<clientNum>
 -- attribute is the account each client wears (a string: ids outgrow
 -- float attributes in some runtimes), and BotRoster lists the
--- roster bots' accounts ("grunt=1274097373 liz=..."), so the client can
--- draw the account's headshot in place of an OA icon.
+-- roster bots' accounts ("grunt=1274097373=MoonRb1x;liz=..."), so the
+-- menus can draw the account's headshot and username in place of OA's.
 --
 -- Bot roster: the accounts' names are fetched once (retried every 30 s
 -- while the service fails); when they arrive and whenever a human joins or

@@ -671,10 +671,12 @@ the scoreboard heads, the attacker's head and the loading screen icons
 (`CG_AvatarHeadShader`), whether the avatar or the OA model is drawn
 (`cg_robloxAvatars`, `g_robloxAvatars`). The server publishes the account
 of each client as the `OAAvatars` folder's `User<clientNum>` attribute (a
-string) and the roster bots' accounts as `BotRoster` (`"grunt=1274097373
-liz=..."`, empty with `g_botRoster 0`), which the single player level menu
-uses for its opponents' faces; the player's own face there is their
-headshot too. A client without an account keeps OA's 3D head or icon.
+string) and the roster bots' accounts as `BotRoster`
+(`"grunt=1274097373=MoonRb1x;liz=..."`, `;` because the oldest usernames
+have spaces; empty with `g_botRoster 0`), which the single player level
+menu uses for its opponents' faces and names (`Avatar.BotName`), and the
+skirmish and add bots menus for their names; the player's own face there
+is their headshot too. A client without an account keeps OA's 3D head or icon.
 
 ### Live run
 

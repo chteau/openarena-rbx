@@ -518,19 +518,33 @@ function Avatar.HeadShader(clientNum: number): number
 	return Avatar.Headshot(folder and folder:GetAttribute("User" .. clientNum))
 end
 
--- A roster bot's account by its bots.txt name (the single player menus).
-function Avatar.BotHeadShader(name: string): number
+-- A roster bot's account id and username by its bots.txt name, as the
+-- server publishes them (server/sv/botroster.luau, Accounts).
+local function rosterAccount(name: string): (string?, string?)
 	local folder = ReplicatedStorage:FindFirstChild("OAAvatars")
 	local list = folder and folder:GetAttribute("BotRoster")
 	if type(list) ~= "string" then
-		return 0
+		return nil, nil
 	end
-	for bot, id in string.gmatch(list, "(%S+)=(%d+)") do
+	for entry in string.gmatch(list, "[^;]+") do
+		local bot, id, username = string.match(entry, "^([^=]+)=(%d+)=(.+)$")
 		if bot == string.lower(name) then
-			return Avatar.Headshot(id)
+			return id, username
 		end
 	end
-	return 0
+	return nil, nil
+end
+
+-- A roster bot's face in the menus.
+function Avatar.BotHeadShader(name: string): number
+	return Avatar.Headshot((rosterAccount(name)))
+end
+
+-- A roster bot's name in the menus: its account's username, nil while
+-- unknown (the menu keeps the OA name).
+function Avatar.BotName(name: string): string?
+	local _, username = rosterAccount(name)
+	return username
 end
 
 function Avatar.LocalHeadShader(): number

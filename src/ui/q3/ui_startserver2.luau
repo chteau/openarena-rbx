@@ -392,7 +392,15 @@ function U.PlayerName_Draw(item)
 	end
 
 	U.UI_DrawString(x - C.SMALLCHAR_WIDTH, y, s.generic.name, bit32.bor(style, C.UI_RIGHT), color)
-	U.UI_DrawString(x + C.SMALLCHAR_WIDTH, y, s.string, bit32.bor(style, C.UI_LEFT), color)
+	-- not in OA: a bot slot shows its roster account's username; the
+	-- buffer keeps the bots.txt name addbot needs
+	local so = U.s_serveroptions
+	local n = s.generic.id
+	local name = so.playerNameBuffers[n]
+	if so.playerType[n].curvalue == 1 then
+		name = U.UI_BotDisplayName(name)
+	end
+	U.UI_DrawString(x + C.SMALLCHAR_WIDTH, y, name, bit32.bor(style, C.UI_LEFT), color)
 end
 
 function U.ServerOptions_MenuInit(multiplayer)
@@ -721,6 +729,11 @@ end
 
 -- BOT SELECT MENU
 
+-- not in OA: a username can outgrow its 64 px cell; narrow it to the gap
+local function BotSelect_DrawName(item)
+	U.UI_DrawStringFit(item.generic.x, item.generic.y, item.string, 64 + 4, item.color)
+end
+
 local function newBotSelectInfo()
 	local info = {
 		menu = newMenu(),
@@ -838,10 +851,11 @@ function U.UI_BotSelectMenu_UpdateGrid()
 			button.generic.flags = bit32.bor(button.generic.flags, C.QMF_INACTIVE)
 			bsi.botnames[i] = ""
 		end
-		bsi.picnames[i].string = bsi.botnames[i]
+		-- not in OA: a roster bot shows its account's username and face
+		bsi.picnames[i].string = if bsi.botnames[i] ~= "" then U.UI_BotDisplayName(bsi.botnames[i]) else ""
 
 		pic.generic.flags = bit32.band(pic.generic.flags, notHighlight)
-		pic.shader = 0
+		pic.shader = if bsi.botnames[i] ~= "" then trap.R_BotHeadShader(bsi.botnames[i]) else 0
 		button.generic.flags = bit32.bor(button.generic.flags, C.QMF_PULSEIFFOCUS)
 		j += 1
 	end
@@ -1028,6 +1042,7 @@ function U.UI_BotSelectMenu_Init(bot)
 			pn.string = bsi.botnames[k]
 			pn.color = U.color_orange
 			pn.style = bit32.bor(C.UI_CENTER, C.UI_SMALLFONT)
+			pn.generic.ownerdraw = BotSelect_DrawName
 
 			x += 64 + 6
 			k += 1

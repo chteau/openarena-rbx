@@ -578,6 +578,13 @@ function U.UI_DrawString(x, y, str, style, color)
 	UI_DrawString2(x, y, str, drawcolor, charw, charh)
 end
 
+-- not in OA: a small-font line centred on x, its letters narrowed to fit
+-- maxw (a Roblox username under a 64 px icon)
+function U.UI_DrawStringFit(x, y, str, maxw, color)
+	local charw = math.min(C.SMALLCHAR_WIDTH, maxw / math.max(#str, 1))
+	UI_DrawString2(x - #str * charw / 2, y, str, color, charw, C.SMALLCHAR_HEIGHT)
+end
+
 function U.UI_DrawChar(x, y, ch, style, color)
 	U.UI_DrawString(x, y, string.char(band(ch, 255)), style, color)
 end
