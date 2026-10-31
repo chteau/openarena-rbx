@@ -50,7 +50,6 @@ lua_str = cda.lua_str
 
 BATCH = 900_000          # characters of Luau per execute_luau call
 LIMIT = 190_000          # characters per generated module
-DEFAULT_PLAYERS = 'sarge,sergei,tony,penguin,beret,assassin,liz'
 
 
 # ---------------------------------------------------------------- generation
@@ -573,7 +572,7 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
     ap.add_argument('--place', default=os.path.join(ROOT, 'place', 'openarena.rbxl'))
     ap.add_argument('--maps', default='all')
-    ap.add_argument('--players', default=DEFAULT_PLAYERS)
+    ap.add_argument('--players', help='player models to ship (default: every kept roster model with a body)')
     ap.add_argument('--startup', default='bot_enable 1; g_gametype 0; fraglimit 20; timelimit 10; map oa_dm1')
     ap.add_argument('--keep-maps', action='store_true', help='keep map folders already in the place')
     ap.add_argument('--no-meshes', action='store_true')
@@ -586,7 +585,11 @@ def main():
     models_json = json.load(open(os.path.join(BUILD, 'models.json')))
     ids = json.load(open(os.path.join(ROOT, 'place', 'asset-ids.json')))
     names = sorted(manifest['maps']) if args.maps == 'all' else args.maps.split(',')
-    players = set(p for p in args.players.split(',') if p)
+    if args.players is None:
+        # the roster's kept models with a converted body: the bots wear them
+        players = {m for m in cda.roster.config()['kept'] if 'models/players/%s/lower.md3' % m in models_json['md3']}
+    else:
+        players = set(p for p in args.players.split(',') if p)
     dropped = sorted(p for p in players if cda.roster.model_excluded(p))
     if dropped:
         sys.exit('--players: %s not in the roster (tools/oaconv/roster.json)' % ','.join(dropped))
