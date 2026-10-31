@@ -152,3 +152,21 @@ H.test("transport.gamestate keeps the executed command count", function()
 	Net.ReceiveGamestate({}, 4, 1)
 	H.eq(Net.lastExecutedServerCommand, 4)
 end)
+
+-- the server's `postgame` (g_arenas UpdateTournamentInfo) reaches the ui
+-- through the command buffer, not the cgame
+H.test("transport.postgame goes to the command buffer", function()
+	local Net = H.require("client/sys/Net")
+	local Cmd = H.require("client/sys/Cmd")
+	Net.ReceiveGamestate({}, 10, 1)
+	Net.ReceiveServerCommand(11, "postgame 4 0 52 1 0 0 20 0 0 0 20 1 1 7")
+	H.eq(Net.GetServerCommand(11), false)
+	local fallback, ran = Cmd.fallback, nil
+	Cmd.fallback = function(name)
+		ran = name .. " " .. Cmd.Args()
+		return true
+	end
+	Cmd.Execute()
+	Cmd.fallback = fallback
+	H.eq(ran, "postgame 4 0 52 1 0 0 20 0 0 0 20 1 1 7")
+end)

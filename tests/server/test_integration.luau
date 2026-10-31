@@ -372,6 +372,65 @@ do
 	check(a2.disconnected == nil and b.disconnected == nil, "no client was ever disconnected")
 end
 
+-- 6. match end: single player sends its player the postgame line the
+-- ui menu reads and waits there; multiplayer shows the scoreboard, then
+-- runs `nextmap` even when nobody presses fire
+local function fragTo(w, fc, n)
+	local ent = w.G.g_entities[fc.clientNum]
+	w.G.AddScore(ent, ent.r.currentOrigin, n)
+end
+local function hasCommand(fc, prefix): string?
+	for _, c in fc.commands do
+		if string.sub(c, 1, #prefix) == prefix then
+			return c
+		end
+	end
+	return nil
+end
+do
+	local w = W.new()
+	w:command("set g_gametype 2")
+	w:command("set g_doWarmup 0")
+	w:command("spmap oa_dm1")
+	w:command("set fraglimit 1") -- after the arena sets its own
+	-- q3 ends no match with fewer than two playing
+	local a = w:connect("Alice")
+	w:connect("Bob")
+	w:run(2)
+	check(active(w) == 2, "SP: players in the game")
+	fragTo(w, a, 1)
+	w:run(3)
+	check(w.G.level.intermissiontime ~= 0, "SP: fraglimit starts the intermission")
+	local pg = hasCommand(a, "postgame ")
+	check(pg ~= nil and string.match(pg, "^postgame 2 " .. a.clientNum .. " ") ~= nil, "SP: the player gets the postgame line (" .. tostring(pg) .. ")")
+	check(not w:printed("[Uu]nknown command"), "SP: no unknown command at match end")
+	w:run(40)
+	check(w.G.level.intermissiontime ~= 0, "SP: stays at the intermission for the menu")
+	w:command("map_restart 0")
+	w:run(2)
+	check(w.G.level.intermissiontime == 0 and active(w) == 2, "SP: Replay restarts the map")
+end
+do
+	local w = W.new()
+	w:command("capturelimit 8") -- the rotation's d1 runs it before the game loads
+	w:command("set g_gametype 0")
+	w:command("set fraglimit 1")
+	w:command("set g_doWarmup 0")
+	w:command("map oa_dm1")
+	w:command("set nextmap \"map oa_dm4\"")
+	local a = w:connect("Alice")
+	w:connect("Bob")
+	w:run(2)
+	fragTo(w, a, 1)
+	w:run(3)
+	check(w.G.level.intermissiontime ~= 0, "FFA: fraglimit starts the intermission")
+	check(hasCommand(a, "postgame") == nil, "FFA: no postgame line")
+	w:run(35)
+	check(string.find(a.configstrings[K.CS_SERVERINFO] or "", "\\mapname\\oa_dm4", 1, true) ~= nil, "FFA: idle intermission moves to nextmap")
+	check(active(w) == 2, "FFA: clients in the next map")
+	check(not w:printed("[Uu]nknown command"), "FFA: no unknown command at match end")
+end
+
 print(string.format("integration: %d failure(s), %.1fs", failures, os.clock() - t0))
 local process = require("@lune/process")
 process.exit(if failures > 0 then 1 else 0)

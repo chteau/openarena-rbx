@@ -221,6 +221,32 @@ local function hostCommand(name: string)
 	end
 end
 
+-- the SP ladder's cvars mirror a per-user DataStore key the same way
+local progressSaveQueued = false
+local progressCvars: { [string]: boolean } = {}
+for _, name in S.PROGRESS_CVARS do
+	progressCvars[name] = true
+end
+local function saveProgress()
+	progressSaveQueued = false
+	local cvars = {}
+	for _, name in S.PROGRESS_CVARS do
+		cvars[name] = Cvar.VariableString(name)
+	end
+	LAN.spawn(function()
+		LAN.invoke("progsave", cvars)
+	end)
+end
+
+-- what a config exec restores before the ui reads it: archived cvars, the
+-- read-only SP scores and awards included
+local function restoreArchived(cvars: { [string]: string })
+	for name, value in cvars do
+		local v = Cvar.Find(name)
+		Cvar.Set(name, value, v ~= nil and bit32.band(v.flags, C.CVAR_ARCHIVE) ~= 0)
+	end
+end
+
 -- favorites (q3_ui keeps them in the server1..16 cvars) mirror a per-user
 -- DataStore key; writing back waits 2 s for the menu to finish
 local loadingFavorites, favSaveQueued = false, false
@@ -310,6 +336,10 @@ function LAN.Register()
 			favSaveQueued = true
 			LAN.delay(2, saveFavorites)
 		end
+		if not loadingFavorites and not progressSaveQueued and progressCvars[v.name] and LAN.server().live then
+			progressSaveQueued = true
+			LAN.delay(2, saveProgress)
+		end
 	end
 end
 
@@ -317,6 +347,7 @@ end
 -- favorites", host powers, saved favorites, and a teleport's settings
 -- (straight into the game when it brought any)
 function LAN.Start(teleportData: any)
+	local a = S.validateArrival(teleportData)
 	LAN.spawn(function()
 		-- the server publishes what it is once it has booted
 		for _ = 1, 100 do
@@ -344,14 +375,20 @@ function LAN.Start(teleportData: any)
 			end
 			loadingFavorites = false
 		end
+		-- a teleport brings the newest ladder; the store is for a new visit
+		if a == nil or a.cvars.g_spScores1 == nil then
+			local p = LAN.invoke("progress")
+			if p.ok and type(p.cvars) == "table" then
+				loadingFavorites = true
+				restoreArchived(p.cvars)
+				loadingFavorites = false
+			end
+		end
 	end)
-	local a = S.validateArrival(teleportData)
 	if a == nil then
 		return
 	end
-	for name, value in a.cvars do
-		Cvar.Set(name, value)
-	end
+	restoreArchived(a.cvars)
 	LAN.connect()
 	LAN.Team(a.team)
 end

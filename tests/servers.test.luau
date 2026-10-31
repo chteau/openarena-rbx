@@ -505,6 +505,29 @@ H.test("servers.favorites_budget", function()
 	H.eq(s:handle(p, "favorites").codes[1], "2BC236")
 end)
 
+H.test("servers.progress", function()
+	local saved = {}
+	local store = {
+		GetAsync = function(_, key)
+			return saved[key]
+		end,
+		SetAsync = function(_, key, v)
+			saved[key] = v
+		end,
+	}
+	local env = stubEnv({})
+	env.progress = store
+	local s = Servers.new(env, fakeGame(), maps)
+	s:Boot({ maps = { "oa_dm1" } })
+	local p = { UserId = 9 }
+	H.eq(s:handle(p, "progsave", "nope").ok, false)
+	H.eq(s:handle(p, "progsave", { g_spScores2 = "\\l3\\1", g_spAwards = "a\nb", sv_cheats = "1" }).saved, true)
+	H.eq(saved.u9.g_spScores2, "\\l3\\1")
+	H.eq(saved.u9.g_spAwards, nil)
+	H.eq(saved.u9.sv_cheats, nil)
+	H.eq(s:handle(p, "progress").cvars.g_spScores2, "\\l3\\1")
+end)
+
 H.test("servers.lan_client", function()
 	local LAN = H.require("client/sys/LAN")
 	local Cmd = H.require("client/sys/Cmd")
@@ -611,6 +634,32 @@ H.test("servers.lan_client", function()
 	H.eq(Cvar.VariableString("name"), "Teleported")
 	H.eq(connected, true)
 	H.eq(Cvar.VariableString("sv_running"), "1")
+	-- the SP ladder: read-only cvars a teleport restores, or the store
+	-- when the teleport brought none
+	Cvar.Get("g_spScores1", "", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_ROM))
+	Cvar.Get("g_spAwards", "", bit32.bor(C.CVAR_ARCHIVE, C.CVAR_ROM))
+	Cvar.Get("sv_cheats", "0", C.CVAR_ROM)
+	LAN.Start({ oa = 1, kind = "sp", cvars = { g_spScores1 = "\\l1\\1", sv_cheats = "1" } })
+	run()
+	H.eq(Cvar.VariableString("g_spScores1"), "\\l1\\1")
+	H.eq(Cvar.VariableString("sv_cheats"), "0")
+	local loads = 0
+	local invoke = LAN.invoke
+	LAN.invoke = function(op, arg, arrival)
+		if op == "progress" then
+			loads += 1
+			return { ok = true, cvars = { g_spAwards = "\\a0\\3" } }
+		end
+		return invoke(op, arg, arrival)
+	end
+	LAN.Start({ oa = 1, kind = "sp", cvars = { g_spScores1 = "\\l2\\1" } })
+	run()
+	H.eq(loads, 0)
+	LAN.Start(nil)
+	run()
+	H.eq(loads, 1)
+	H.eq(Cvar.VariableString("g_spAwards"), "\\a0\\3")
+	LAN.invoke = invoke
 	-- Studio: no capture, the caller keeps the old vote path
 	LAN.server = function()
 		return { live = false, kind = "studio", code = "2HERE2", host = 0 }

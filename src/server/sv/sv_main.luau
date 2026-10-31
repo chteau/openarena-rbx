@@ -2147,6 +2147,9 @@ function SV.SV_Init()
 	Cvar.Get("dmflags", "0", SI)
 	Cvar.Get("fraglimit", "20", SI)
 	Cvar.Get("timelimit", "0", SI)
+	-- registered by the game in OA, but the rotation's `vstr d1` names it
+	-- before the game module loads
+	Cvar.Get("capturelimit", "8", SI)
 	cv.sv_gametype = Cvar.Get("g_gametype", "0", bor(SI, LATCH))
 	Cvar.Get("sv_keywords", "", SI)
 	cv.sv_mapname = Cvar.Get("mapname", "nomap", bor(SI, ROM))
@@ -2205,6 +2208,15 @@ function SV.SV_Init()
 	Cmd.Cmd_AddCommand("play", function()
 		for i = 1, Cmd.Cmd_Argc() - 1 do
 			SV.play(Cmd.Cmd_Argv(i))
+		end
+	end)
+	-- postgame (g_arenas UpdateTournamentInfo): a Q3 listen server runs it
+	-- in the command buffer it shares with its own UI; here it goes to the
+	-- player it names, whose client hands it to the UI
+	Cmd.Cmd_AddCommand("postgame", function()
+		local cl = svs.clients[tonumber(Cmd.Cmd_Argv(2)) or -1]
+		if cl and cl.state >= SV.CS_CONNECTED then
+			SV.SV_SendServerCommand(cl, "postgame " .. Cmd.Cmd_Args())
 		end
 	end)
 	Cmd.Cmd_AddCommand("sectorlist", function()

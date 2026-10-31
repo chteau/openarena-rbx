@@ -108,6 +108,24 @@ S.SP_CVARS = {
 	g_spSkill = { 1, 5 },
 }
 
+-- the single player ladder q3config.cfg keeps (ui_main.luau's g_spScores1-5,
+-- g_spAwards, g_spVideos), saved per user like the favorites
+S.PROGRESS_CVARS = { "g_spScores1", "g_spScores2", "g_spScores3", "g_spScores4", "g_spScores5", "g_spAwards", "g_spVideos" }
+
+function S.validateProgress(raw: any): { [string]: string }?
+	if type(raw) ~= "table" then
+		return nil
+	end
+	local out = {}
+	for _, name in S.PROGRESS_CVARS do
+		local v = raw[name]
+		if type(v) == "string" and #v <= 256 and not string.find(v, "[%c]") then
+			out[name] = v
+		end
+	end
+	return out
+end
+
 export type Bot = { name: string, skill: number, team: string? }
 export type Spec = {
 	kind: string, -- "host" (Start Server) or "sp" (a single player arena)
