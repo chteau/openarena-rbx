@@ -211,3 +211,40 @@ H.test("md3.oam3", function()
 	H.near(m.tags[0].tag_flash.origin[0], 7)
 	H.near(m.tags[0].tag_flash.axis[0][0], 1)
 end)
+
+H.test("worldfx.stand_in", function()
+	local A = H.require("client/sys/Assets")
+	local W = H.require("client/sys/WorldFx")
+	local P = H.require("client/sys/ShaderParse")
+	local Instance = H.roblox.Instance
+	A.index.shaders = A.index.shaders or {}
+	P.parse("textures/test/beam\n{\n\t{\n\t\tmap textures/test/beam.tga\n\t\tblendfunc add\n\t}\n}\n"
+		.. "textures/test/glow\n{\n\t{\n\t\tmap textures/test/base.tga\n\t}\n"
+		.. "\t{\n\t\tmap textures/test/glow.tga\n\t\tblendfunc add\n\t\ttcMod scroll 0 1\n\t}\n}\n", A.index.shaders)
+	A.RegisterImage("textures/test/beam", "rbxassetid://11", 64, 64)
+	A.RegisterImage("textures/test/beam~1_1", "rbxassetid://12", 64, 64)
+	A.RegisterImage("textures/test/base", "rbxassetid://13", 64, 64)
+	A.RegisterImage("textures/test/glow", "rbxassetid://14", 64, 64)
+	local root = Instance.new("Folder")
+	local function part(shader: string, tex: string)
+		local p = Instance.new("MeshPart")
+		p.TextureID = tex
+		p:SetAttribute("OAShader", shader)
+		p.Parent = root
+		return p
+	end
+	local beam = part("textures/test/beam", "rbxassetid://11")
+	-- an overlay wears its animated stage's image: that stage is the one drawn
+	local glow = part("textures/test/glow", "rbxassetid://14")
+	W.mapRoot = root
+	W.Load("maps/test.bsp")
+	W.Update({ vieworg = { [0] = 0, 0, 0 } }, 0)
+	-- the additive beam draws its alpha stand-in, opaque where the image is
+	H.eq(beam.TextureID, "rbxassetid://12")
+	H.eq(beam.Transparency, 0)
+	H.eq(beam.Material == H.roblox.Enum.Material.Neon, false)
+	-- no stand-in uploaded: the image and the Neon fallback, as before
+	H.eq(glow.TextureID, "rbxassetid://14")
+	H.eq(glow.Material == H.roblox.Enum.Material.Neon, true)
+	W.mapRoot = nil
+end)

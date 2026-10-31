@@ -136,9 +136,11 @@ non-opaque shaders or by a non-baked map mesh: 1,704 of them. With the
 
 Blend stand-ins: Roblox only alpha-blends (Decal, ImageLabel, BillboardGui,
 MeshPart textures), so an effect drawn with `blendFunc add` or `filter` shows
-its black (or white) background. For the stage the client draws (the first
-with an image) of every shader outside `textures/` and `models/mapobjects/`
-whose blendFunc isn't opaque or plain `blend`, the converter also writes
+its black (or white) background. For the stage the client draws of every
+effect shader (the first with an image) and of every map shader a converted
+map leaves unbaked (the stage whose image textures the mesh: the first, or
+an overlay's first animated one; every animMap frame), when its blendFunc
+isn't opaque or plain `blend`, the converter also writes
 `images/<stem>~<src>_<dst>.png` (`~1_1` for add, `~dc_0` for filter, `~0_isc`
 for `gl_zero gl_one_minus_src_color`, ...; `texture::blend_suffix`) and lists
 it for upload. `texture::blend_to_alpha` rewrites `src * F_src + dst * F_dst`
@@ -148,7 +150,9 @@ over black, and exact as a `LightEmission = 1` Beam); multiplicative is
 black (plus its tint matched over mid-grey) with `a = 1 - luminance(d)`;
 `gl_dst_color gl_src_color` brightening becomes white matched over
 mid-grey. 178 stand-ins (122 add, 17 2x modulate, 16 `gl_src_alpha gl_one`,
-13 `gl_one gl_src_alpha`, 5 inverse filter, 3 filter, 2 other).
+13 `gl_one gl_src_alpha`, 5 inverse filter, 3 filter, 2 other) for effects,
+145 more for map surfaces (light beams, flames, glows, map decals). A held
+image (`upload-hold.txt`) holds its stand-ins too.
 `docs/parity/fx-alpha/blend_compare.png`: per row OA's real blend, the
 opaque image as Roblox drew it before, and the stand-in, over a wall and a
 sky.

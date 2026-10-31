@@ -28,13 +28,25 @@ pub struct Options {
     pub pace: Duration,
 }
 
+/// Whether `path` starts with a held prefix, or is the blend stand-in
+/// (`<stem>~<src>_<dst>.png`) of an image that does.
+fn held(hold: &[String], path: &str) -> bool {
+    let source = path
+        .rsplit_once('/')
+        .and_then(|(dir, file)| Some(format!("{dir}/{}.png", file.split_once('~')?.0)));
+    [Some(path.to_string()), source]
+        .iter()
+        .flatten()
+        .any(|p| hold.iter().any(|h| p.starts_with(h.as_str())))
+}
+
 /// Uploads still to do: manifest order, filtered by kind, minus those the
 /// lock holds with the same hash.
 fn pending<'a>(m: &'a Manifest, lock: &AssetLock, opts: &Options) -> Vec<&'a Upload> {
     m.uploads
         .iter()
         .filter(|u| opts.only.is_none_or(|k| k == u.kind))
-        .filter(|u| !opts.hold.iter().any(|h| u.path.starts_with(h.as_str())))
+        .filter(|u| !held(&opts.hold, &u.path))
         // an older build's outputs for models the roster dropped never go up
         .filter(|u| !crate::roster::Roster::get().excludes_output(&u.path))
         .filter(|u| lock.get(&u.path).is_none_or(|l| l.sha256 != u.sha256))
@@ -365,6 +377,19 @@ mod tests {
     }
 
     #[test]
+    fn held_covers_stand_ins_of_held_images() {
+        let hold = vec![
+            "images/textures/cosmo_sfx/blood1.png".to_string(),
+            "images/models/gibs/".into(),
+        ];
+        assert!(held(&hold, "images/textures/cosmo_sfx/blood1.png"));
+        assert!(held(&hold, "images/textures/cosmo_sfx/blood1~sa_1.png"));
+        assert!(held(&hold, "images/models/gibs/skull~1_1.png"));
+        assert!(!held(&hold, "images/textures/cosmo_sfx/blood10~sa_1.png"));
+        assert!(!held(&hold, "images/textures/sfx/beam~1_1.png"));
+    }
+
+    #[test]
     fn pending_skips_locked_and_reuploads_changed() {
         let m = fake();
         let mut lock = AssetLock::new();
@@ -391,7 +416,11 @@ mod tests {
     #[test]
     fn pending_skips_excluded_models() {
         let mut m = fake();
-        m.uploads.push(up("images/models/players/neko/neko.png", UploadKind::Image, "5"));
+        m.uploads.push(up(
+            "images/models/players/neko/neko.png",
+            UploadKind::Image,
+            "5",
+        ));
         let p = pending(&m, &AssetLock::new(), &opts(None, None));
         assert!(p.iter().all(|u| !u.path.contains("neko")));
     }

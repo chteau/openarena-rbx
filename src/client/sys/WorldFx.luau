@@ -13,6 +13,9 @@
 --       Transparency (additive stages, where brightness is opacity)
 --   deformVertexes wave/move/bulge -> vertex positions on the EditableMesh
 --   blendFunc add -> Neon material + transparency (no additive blend on Roblox)
+--   blendFunc add/filter/... with the converter's alpha stand-in for the
+--       stage's image (Assets.StageImage) -> that image, so the black (or
+--       white) background is see-through
 -- Sky: the map's sky shader (Map attribute OASky, or index.maps[name].sky)
 -- feeds a Lighting.Sky from its skyparms box (env/<name>_rt/_lf/...).
 -- Fog: index.maps[name].fogs = { {mins={x,y,z}, maxs=..., shader=""} };
@@ -53,8 +56,26 @@ local function stageOf(part: Instance)
 		return nil, nil
 	end
 	local idx = part:GetAttribute("OAStage")
-	local st = def.stages[if type(idx) == "number" then idx else 1]
-	return def, st
+	if type(idx) == "number" then
+		return def, def.stages[idx]
+	end
+	-- the stage whose image the part wears: the converter textures a mesh
+	-- with the shader's first image, an overlay with its first animated one
+	if part:IsA("MeshPart") then
+		for _, st in def.stages do
+			local path = st.map or (st.animMap and st.animMap.images[1])
+			local img, alt = Assets.Image(path), Assets.StageImage(st, path)
+			if (img and img.id == part.TextureID) or (alt and alt.id == part.TextureID) then
+				return def, st
+			end
+		end
+	end
+	return def, def.stages[1]
+end
+
+-- The stage's image at `timeSec`, and whether it's an alpha stand-in.
+local function stageTexture(st, timeSec: number)
+	return Assets.StageImage(st, ShaderFx.stageImage(st, timeSec))
 end
 
 local function needsMesh(def, st): boolean
@@ -141,6 +162,13 @@ function WorldFx.Load(mapName: string)
 					rec.def, rec.st = def, st
 					rec.mode = ShaderFx.blendMode(st)
 					rec.baseTransparency = rec.part.Transparency
+					local img, standIn = stageTexture(st, 0)
+					if standIn then
+						-- the blend is in the image's alpha now, like an effect's
+						-- (R3D): drawn as a plain alpha-blended texture
+						rec.part.TextureID = img.id
+						rec.mode = "standin"
+					end
 					if rec.mode == "add" then
 						rec.part.Material = Enum.Material.Neon
 					end
@@ -243,7 +271,7 @@ function WorldFx.Update(refdef, timeSec: number)
 		local st = rec.st
 		local part = rec.part
 		if st.animMap then
-			local img = Assets.Image(ShaderFx.stageImage(st, timeSec))
+			local img = stageTexture(st, timeSec)
 			if img and img.id and part.TextureID ~= img.id then
 				part.TextureID = img.id
 			end
@@ -254,6 +282,9 @@ function WorldFx.Update(refdef, timeSec: number)
 			local lum = math.max(r, g, b) * a
 			part.Transparency = math.clamp(1 - lum, 0, 0.95)
 		elseif rec.mode == "alpha" then
+			part.Transparency = math.clamp(1 - a, 0, 1)
+		elseif rec.mode == "standin" then
+			r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
 			part.Transparency = math.clamp(1 - a, 0, 1)
 		end
 		if rec.em then
