@@ -213,7 +213,7 @@ H.test("servers.dead_favorite", function()
 end)
 
 local function maps(name)
-	return name == "oa_dm1" or name == "oa_ctf2"
+	return name == "oa_dm1" or name == "oa_ctf2" or name == "pul1duel-oa"
 end
 
 H.test("servers.validate_spec", function()
@@ -247,6 +247,11 @@ H.test("servers.validate_spec", function()
 	H.eq(#sp.bots, 0)
 	H.eq(sp.cvars.fraglimit, nil)
 	H.eq(S.startupText(sp), "set g_spSkill 3\nspmap oa_dm1")
+	-- the one shipped arena with a hyphen
+	local duel = S.validateSpec({ kind = "sp", map = "pul1duel-oa" }, maps)
+	assert(duel)
+	H.eq(duel.map, "pul1duel-oa")
+	H.eq(S.validateSpec({ kind = "sp", map = "oa_dm1;quit" }, maps), nil)
 end)
 
 H.test("servers.player_name", function()
@@ -570,6 +575,7 @@ H.test("servers.rcon_and_apply", function()
 	H.eq(g.commands[#g.commands], "set g_gametype 4\nset bot_enable 1\nmap oa_ctf2")
 	H.eq(s.public, true)
 	H.eq(s:handle(guest, "apply", { kind = "host", map = "oa_ctf2", gametype = 4 }).ok, false)
+	H.eq(s:handle(host, "apply", { kind = "host", map = "oa_dm9", gametype = 0 }).err, "unknown map")
 end)
 
 H.test("servers.favorites_budget", function()
