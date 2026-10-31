@@ -179,7 +179,8 @@ What uses it:
   -> `beret`), and a `model`/`headmodel` with no shipped skin file into
   `sarge`, OA's default, the model the cgame falls back to. The team defaults are `sarge` in this port; `sergei` (0.8.8's) is
   kept too.
-- `place/assemble.py --players` refuses a dropped model.
+- `place/assemble.py --players` refuses a dropped model; left out, every
+  kept model with a converted body ships (the bots wear all of them).
 
 ## Multiplayer on Roblox servers
 
