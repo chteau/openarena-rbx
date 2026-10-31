@@ -47,6 +47,9 @@ return {
 	-- reserved server's join code: read by the server on every start (which
 	-- renews them), and how `connect <code>` restarts an empty private server
 	reserved = { map = "OAReserved", expiry = 3600, arrivalWait = 30 },
+	-- a teleport that fails to start (Flooded, Failure) is tried again this
+	-- many times, waiting backoff * 2^n seconds before try n
+	teleport = { retries = 3, backoff = 2 },
 	-- Favorites: one DataStore key per user, written at most every
 	-- `minInterval` s and only while the write budget is above `minBudget`
 	favorites = { store = "OAFavorites", max = 16, minInterval = 30, minBudget = 10 },

@@ -23,6 +23,10 @@ local UIAS_LOCAL, UIAS_FAVORITES = 0, 6
 -- hooks (Client.luau sets them; the tests replace invoke/spawn/delay)
 LAN.connect = function() end -- Client.Connect
 LAN.fail = function(_msg: string) end -- back to the main menu with an error
+-- the teleport loading screen (sys/Client.luau): shown when a teleport is
+-- requested, returns the map's levelshot id for the screen it carries
+LAN.showLoading = function(_map: string?): string? end
+LAN.hideLoading = function() end
 LAN.spawn = function(fn: () -> ())
 	task.spawn(fn)
 end
@@ -101,9 +105,23 @@ local function query(slot: number, op: string, arg: any, words: { string }?)
 	end)
 end
 
--- the archived cvars a teleport carries (name, model, SP progress, ...)
-local function arrival(team: string?): any
-	return { oa = 1, kind = "join", cvars = Cvar.Archived(), team = team }
+-- the archived cvars a teleport carries (name, model, SP progress, ...);
+-- leaving: it is a teleport, so the loading screen goes up and travels too
+local function arrival(team: string?, map: string?, leaving: boolean?): any
+	local shot = if leaving then LAN.showLoading(map) else nil
+	return { oa = 1, kind = "join", cvars = Cvar.Archived(), team = team, map = map, shot = shot }
+end
+
+-- the map of a server the browser listed
+local function mapOf(code: string): string?
+	for _, list in lists do
+		for _, e in list do
+			if e.code == code then
+				return e.map
+			end
+		end
+	end
+	return nil
 end
 
 function LAN.Join(code: string)
@@ -120,10 +138,12 @@ function LAN.Join(code: string)
 	end
 	print(("Joining %s...\n"):format(code))
 	LAN.spawn(function()
-		local res = LAN.invoke("join", code, arrival())
+		local res = LAN.invoke("join", code, arrival(nil, mapOf(code), true))
 		if res.ok and res.err == "here" then
+			LAN.hideLoading()
 			LAN.connect()
 		elseif not res.ok then
+			LAN.hideLoading()
 			LAN.fail(res.err or "Couldn't join " .. code)
 		end
 	end)
@@ -168,8 +188,9 @@ function LAN.Flush()
 	local here = LAN.isHost() and (if spec.kind == "sp" then s.kind == "sp" else s.kind == "host")
 	local op = if here then "apply" else spec.kind
 	LAN.spawn(function()
-		local res = LAN.invoke(op, spec, arrival(c.team))
+		local res = LAN.invoke(op, spec, arrival(c.team, spec.map, not here))
 		if not res.ok then
+			LAN.hideLoading()
 			LAN.fail(res.err or "Couldn't start the server")
 		elseif here then
 			LAN.Team(c.team)

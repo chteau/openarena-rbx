@@ -63,6 +63,9 @@ function Servers.fromGame()
 			return DataStoreService:GetRequestBudgetForRequestType(Enum.DataStoreRequestType.SetIncrementAsync)
 		end
 		env.ascending = Enum.SortDirection.Ascending
+		env.retryable = function(result: any): boolean
+			return result == Enum.TeleportResult.Flooded or result == Enum.TeleportResult.Failure
+		end
 		env.newTeleportOptions = function()
 			return Instance.new("TeleportOptions")
 		end
@@ -94,6 +97,7 @@ function Servers.new(env: any, Game: any, mapExists: (string) -> boolean)
 		access = nil :: string?,
 		buckets = {},
 		favPending = {},
+		pending = {},
 		favLast = {},
 		hostnameSource = nil :: string?,
 	}, Servers)
@@ -281,7 +285,14 @@ end
 
 local function arrivalData(kind: string, raw: any): any
 	local a = S.validateArrival(raw)
-	return { oa = 1, kind = kind, cvars = if a then a.cvars else {}, team = if a then a.team else nil }
+	return {
+		oa = 1,
+		kind = kind,
+		cvars = if a then a.cvars else {},
+		team = if a then a.team else nil,
+		map = if a then a.map else nil,
+		shot = if a then a.shot else nil,
+	}
 end
 
 function Servers:teleport(player: any, placeId: number, data: any, set: (any) -> ()): (boolean, string?)
@@ -292,7 +303,36 @@ function Servers:teleport(player: any, placeId: number, data: any, set: (any) ->
 	local ok, err = pcall(function()
 		env.TeleportService:TeleportAsync(placeId, { player }, opts)
 	end)
+	-- kept so TeleportInitFailed can send the very same teleport again
+	self.pending[player.UserId] = if ok then { placeId = placeId, opts = opts, tries = 0 } else nil
 	return ok, if ok then nil else tostring(err)
+end
+
+-- TeleportInitFailed: a retryable result is sent again (after a growing
+-- pause) up to Config.teleport.retries times; anything else, or the last
+-- failure, goes to the player (notify) so its loading screen can go.
+function Servers:teleportFailed(player: any, result: any, message: any, notify: (any, string) -> ())
+	local env = self.env
+	local uid = player.UserId
+	local p = self.pending[uid]
+	if p == nil or p.tries >= Config.teleport.retries or not env.retryable(result) then
+		self.pending[uid] = nil
+		notify(player, tostring(message))
+		return
+	end
+	p.tries += 1
+	env.delay(Config.teleport.backoff * 2 ^ (p.tries - 1), function()
+		if self.pending[uid] ~= p then
+			return
+		end
+		local ok, err = pcall(function()
+			env.TeleportService:TeleportAsync(p.placeId, { player }, p.opts)
+		end)
+		if not ok then
+			self.pending[uid] = nil
+			notify(player, tostring(err))
+		end
+	end)
 end
 
 function Servers:selfEntry(): any
@@ -363,7 +403,7 @@ function Servers:reserve(player: any, raw: any, arrival: any): (boolean, string?
 		self.reservedMap:SetAsync(S.code(psid), { spec = spec, host = player.UserId, access = access }, Config.reserved.expiry)
 	end)
 	local data = arrivalData(spec.kind, arrival)
-	data.spec, data.access = spec, access
+	data.spec, data.access, data.map = spec, access, spec.map
 	local sent, err = self:teleport(player, env.placeId, data, function(o)
 		o.ReservedServerAccessCode = access
 	end)
@@ -389,7 +429,7 @@ function Servers:join(player: any, raw: any, arrival: any): (boolean, string?)
 			return self.reservedMap:GetAsync(code)
 		end)
 		if ok and type(rec) == "table" and type(rec.spec) == "table" and rec.spec.kind == "host" and type(rec.access) == "string" then
-			e = { reserved = true, access = rec.access, place = self.env.placeId }
+			e = { reserved = true, access = rec.access, place = self.env.placeId, map = rec.spec.map }
 		end
 	end
 	if type(e) ~= "table" or e.kind == "sp" then
@@ -398,7 +438,11 @@ function Servers:join(player: any, raw: any, arrival: any): (boolean, string?)
 	if e.reserved and type(e.access) ~= "string" then
 		return false, "Server not found"
 	end
-	return self:teleport(player, e.place, arrivalData("join", arrival), function(o)
+	local data = arrivalData("join", arrival)
+	if type(e.map) == "string" and S.validateArrival({ oa = 1, kind = "join", map = e.map }).map then
+		data.map = string.lower(e.map)
+	end
+	return self:teleport(player, e.place, data, function(o)
 		if e.reserved then
 			o.ReservedServerAccessCode = e.access
 		else
@@ -557,13 +601,16 @@ function Servers:Start(remotes: Instance)
 	note.Parent = remotes
 	env.Players.PlayerRemoving:Connect(function(player)
 		self.buckets[player.UserId] = nil
+		self.pending[player.UserId] = nil
 		self:flushFavorites(player.UserId, true)
 	end)
 	if not env.live then
 		return
 	end
 	env.TeleportService.TeleportInitFailed:Connect(function(player, result, message)
-		note:FireClient(player, "teleportfailed", tostring(message))
+		self:teleportFailed(player, result, message, function(who, msg)
+			note:FireClient(who, "teleportfailed", msg)
+		end)
 	end)
 	env.spawn(function()
 		while true do

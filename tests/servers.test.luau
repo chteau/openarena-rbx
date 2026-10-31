@@ -339,6 +339,9 @@ local function stubEnv(opts)
 				table.insert(teleports, { placeId = placeId, players = players, options = options })
 			end,
 		},
+		retryable = function(result)
+			return result == "Flooded" or result == "Failure"
+		end,
 		newTeleportOptions = function()
 			local o = {}
 			function o:SetTeleportData(d)
@@ -445,6 +448,101 @@ H.test("servers.join_and_host", function()
 	H.eq(s:handle(p, "join", res.code).ok, true)
 	H.eq(teleports[4].options.ReservedServerAccessCode, "ACCESS-1")
 	H.eq(s:handle(p, "host", { kind = "sp", map = "oa_dm1" }).ok, false)
+end)
+
+H.test("servers.teleport_retries", function()
+	local env, _, _, teleports = stubEnv({})
+	local delays = {}
+	env.delay = function(s, fn)
+		table.insert(delays, { s = s, fn = fn })
+	end
+	local s = Servers.new(env, fakeGame(), maps)
+	s:Boot({ maps = { "oa_dm1" } })
+	local p = { UserId = 7 }
+	local told = {}
+	local function notify(_, msg)
+		table.insert(told, msg)
+	end
+	H.eq(s:teleport(p, 1234, { oa = 1 }, function(o)
+		o.ReservedServerAccessCode = "ACCESS-1"
+	end), true)
+	-- a retryable result sends the same options again after a growing pause
+	for try = 1, Servers.Config.teleport.retries do
+		s:teleportFailed(p, "Flooded", "busy", notify)
+		H.eq(#told, 0)
+		H.eq(delays[try].s, Servers.Config.teleport.backoff * 2 ^ (try - 1))
+		delays[try].fn()
+		H.eq(#teleports, 1 + try)
+		H.eq(teleports[1 + try].options, teleports[1].options)
+	end
+	-- out of tries: the player hears of it, once, and nothing more is sent
+	s:teleportFailed(p, "Flooded", "busy", notify)
+	H.eq(table.concat(told, ","), "busy")
+	H.eq(#delays, Servers.Config.teleport.retries)
+	-- a result that retrying can't fix goes straight to the player
+	s:teleport(p, 1234, { oa = 1 }, function() end)
+	s:teleportFailed(p, "Unauthorized", "no", notify)
+	H.eq(table.concat(told, ","), "busy,no")
+	H.eq(#delays, Servers.Config.teleport.retries)
+	-- a teleport that gave up (player left) is not sent late
+	s:teleport(p, 1234, { oa = 1 }, function() end)
+	s:teleportFailed(p, "Failure", "x", notify)
+	local n = #teleports
+	s.pending[7] = nil
+	delays[#delays].fn()
+	H.eq(#teleports, n)
+	-- a retry that throws is a final failure
+	s:teleport(p, 1234, { oa = 1 }, function() end)
+	s:teleportFailed(p, "Failure", "x", notify)
+	env.TeleportService.TeleportAsync = function()
+		error("boom")
+	end
+	delays[#delays].fn()
+	H.eq(#told, 3)
+	H.eq(s.pending[7], nil)
+end)
+
+H.test("servers.arrival_screen_data", function()
+	local a = S.validateArrival({ oa = 1, kind = "host", map = "OA_DM1", shot = "rbxassetid://123" })
+	assert(a)
+	H.eq(a.map, "oa_dm1")
+	H.eq(a.shot, "rbxassetid://123")
+	a = S.validateArrival({ oa = 1, kind = "host", map = "../x", shot = "https://evil/1" })
+	assert(a)
+	H.eq(a.map, nil)
+	H.eq(a.shot, nil)
+	H.eq(S.validateArrival({ oa = 1, kind = "join", map = string.rep("a", 65), shot = 5 }).map, nil)
+	H.eq(S.validateArrival({ oa = 1, kind = "sp", map = "pul1duel-oa" }).map, "pul1duel-oa")
+	-- the server's own spec decides the map of a hosted game
+	local env, _, _, teleports = stubEnv({})
+	local s = Servers.new(env, fakeGame(), maps)
+	s:Boot({ maps = { "oa_dm1" } })
+	s:handle({ UserId = 5 }, "host", { kind = "host", map = "oa_ctf2", gametype = 4, hostname = "x", public = true }, { oa = 1, kind = "host", map = "oa_dm1", shot = "rbxassetid://9" })
+	H.eq(teleports[1].options.data.map, "oa_ctf2")
+	H.eq(teleports[1].options.data.shot, "rbxassetid://9")
+end)
+
+H.test("servers.loading_screen", function()
+	local L = H.require("first/LoadingScreen")
+	local ours, map, shot = L.fromData({ oa = 1, kind = "join", map = "oa_dm1", shot = "rbxassetid://5" })
+	H.eq(`{ours} {map} {shot}`, "true oa_dm1 rbxassetid://5")
+	ours, map, shot = L.fromData({ oa = 1, map = "a b", shot = "x" })
+	H.eq(`{ours} {map} {shot}`, "true nil nil")
+	H.eq((L.fromData(nil)), false)
+	H.eq((L.fromData({ map = "oa_dm1" })), false)
+	H.eq(select(2, L.fromData({ oa = 1, map = "pul1duel-oa" })), "pul1duel-oa")
+	-- centred 4:3 stage, full-bleed picture
+	local gui = L.build("oa_dm1", "rbxassetid://5")
+	local stage = gui.Root.Stage
+	H.eq(stage.AnchorPoint.X, 0.5)
+	H.eq(stage.AnchorPoint.Y, 0.5)
+	H.eq(stage.Position.X.Scale, 0.5)
+	H.eq(stage.Position.Y.Scale, 0.5)
+	H.eq(gui.Root.Levelshot.Size.X.Scale, 1)
+	H.eq(gui.IgnoreGuiInset, true)
+	H.eq(#stage:GetChildren(), 3)
+	H.eq(#L.build(nil, nil).Root.Stage:GetChildren(), 2)
+	H.eq(L.build(nil, nil).Root:FindFirstChild("Levelshot"), nil)
 end)
 
 H.test("servers.rcon_and_apply", function()
