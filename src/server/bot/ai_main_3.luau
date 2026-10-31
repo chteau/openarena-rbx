@@ -622,6 +622,11 @@ function G.BotAIShutdown(restart)
 		-- would hold botlib's frames, so AAS stays uninitialised while the
 		-- bots reconnect and every one of them is dropped
 		local_time, botlib_residual, lastbotthink_time = 0, 0, 0
+		-- the same for the game-wide AI clocks: a kept regularupdate_time
+		-- holds trap_BotUpdateEntityItems until the new map's clock passes
+		-- the old one, and until then no level item has an entity, so the
+		-- bots find no goal and stand still
+		G.regularupdate_time, G.lastteleport_time = 0, 0
 	end
 	return 1
 end
