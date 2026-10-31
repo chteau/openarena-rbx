@@ -485,8 +485,8 @@ it again. A failure (a test player with a negative id, the avatar service
 down) leaves the player on their OA model. `Players.CharacterAutoLoads`
 stays false: these are never characters.
 
-`g_robloxAvatars` (serverinfo, archived, default 1) is polled once a
-second; 0 empties the folder and everyone is drawn with OA models again.
+Avatars are always on. `g_robloxAvatars` and `cg_robloxAvatars`, which
+could turn them off, are gone, and an old saved value of either is ignored.
 
 ### Local copies and scale
 
@@ -651,15 +651,16 @@ are the same either way, since the motors get `AvatarAnim.sample`'s mix.
 
 ### Settings
 
-- Server: `g_robloxAvatars 0/1` (default 1).
-- Client: `cg_robloxAvatars 0/1` (archived, default 1), the player setup
-  menu's "Show players as: Roblox avatars / OA models" line. With OA
-  models, `cg_forceModel` behaves as in OA.
+- None: every player with an account is drawn as their Roblox avatar. The
+  player settings menu says "Show players as: Roblox avatars" on a line
+  that can't be changed, shows the player's own avatar (the
+  `rbxthumb://type=Avatar` picture, `Avatar.LocalBodyShader`) where OA drew
+  the model preview, and has no "model" button.
 - A bot wears its OA model from the kept roster (`tools/oaconv/roster.json`)
   unless it is a friend-bot, which gets its friend's avatar through the same
-  path (`docs/bots-notes.md`, "Friend-bots"). The player's own `model` still matters for
-  the OA-model view and for anyone with `cg_robloxAvatars 0`, and a
-  dropped model is still refused by the server as before.
+  path (`docs/bots-notes.md`, "Friend-bots"). The player's own `model` only
+  matters while their avatar loads or if it fails, and a dropped model is
+  still refused by the server as before.
 
 ### Head icon
 

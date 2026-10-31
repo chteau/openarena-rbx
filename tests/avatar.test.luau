@@ -351,5 +351,7 @@ H.test("avatar.headshots", function()
 	H.eq(Avatar.BotName("Tony"), "Berzappy")
 	H.eq(Avatar.BotName("beret"), "Jane Doe") -- the oldest usernames have spaces
 	H.eq(Avatar.BotName("sarge"), nil)
+	-- the player settings preview: nothing drawn without a local account
+	H.eq(Avatar.LocalBodyShader(), 0)
 	folder:Destroy()
 end)

@@ -29,8 +29,6 @@ local trap = require(script.Parent.Parent.Parent.client.sys.Trap)
 
 local ART_FRAMEL = "menu/art_blueish/frame2_l"
 local ART_FRAMER = "menu/art_blueish/frame1_r"
-local ART_MODEL0 = "menu/art_blueish/model_0"
-local ART_MODEL1 = "menu/art_blueish/model_1"
 local ART_BACK0 = "menu/art_blueish/back_0"
 local ART_BACK1 = "menu/art_blueish/back_1"
 local ART_FX_BASE = "menu/art/fx_base"
@@ -47,8 +45,6 @@ local ID_HANDICAP = 11
 local ID_EFFECTS = 12
 local ID_EFFECTS2 = 13
 local ID_BACK = 14
-local ID_MODEL = 15
-local ID_AVATARS = 16 -- not in OA: cg_robloxAvatars (docs/client-notes.md, "Roblox avatars")
 
 local MAX_NAMELENGTH = 20
 
@@ -56,7 +52,6 @@ local s_playersettings = {
 	fxBasePic = 0,
 	fxPic = { [0] = 0, 0, 0, 0, 0, 0, 0 },
 	current_fx = 0,
-	playerModel = "",
 }
 
 local gamecodetoui = { [0] = 4, 2, 3, 0, 5, 1, 6 }
@@ -176,34 +171,20 @@ local function PlayerSettings_DrawEffects2(self)
 	U.UI_DrawHandlePic(item.generic.x + 64 + item.curvalue * 16 + 8, item.generic.y + 6, 16, 12, s_playersettings.fxPic[item.curvalue])
 end
 
-local avatar_items = { [0] = "Roblox avatars", "OA models" }
-
+-- not in OA: players are always drawn as their Roblox avatar
+-- (docs/client-notes.md, "Roblox avatars"); the line says so and can't be
+-- changed
 local function PlayerSettings_DrawAvatars(self)
-	local item = self
-	local focus = (item.generic.parent.cursor == item.generic.menuPosition)
-
-	local style = bit32.bor(C.UI_LEFT, C.UI_SMALLFONT)
-	local color = U.text_color_normal
-	if focus then
-		style = bit32.bor(style, C.UI_PULSE)
-		color = U.text_color_highlight
-	end
-
-	U.UI_DrawString(item.generic.x, item.generic.y, "Show players as: " .. avatar_items[item.curvalue], style, color)
+	U.UI_DrawString(self.generic.x, self.generic.y, "Show players as: Roblox avatars", bit32.bor(C.UI_LEFT, C.UI_SMALLFONT), U.text_color_normal)
 end
 
+-- not in OA: the player's own Roblox avatar in place of OA's model preview
+-- (nothing without an account)
 local function PlayerSettings_DrawPlayer(self)
-	local buf = trap.Cvar_VariableStringBuffer("model")
-	if buf ~= s_playersettings.playerModel then
-		U.UI_PlayerInfo_SetModel(s_playersettings.playerinfo, buf)
-		s_playersettings.playerModel = buf
-
-		local viewangles = Q.vec3(0, 180 - 30, 0)
-		U.UI_PlayerInfo_SetInfo(s_playersettings.playerinfo, C.LEGS_IDLE, C.TORSO_STAND, viewangles, Q.vec3_origin, C.WP_MACHINEGUN, false)
+	local pic = trap.R_LocalBodyShader()
+	if pic ~= 0 then
+		U.UI_DrawHandlePic(self.generic.x, self.generic.y, self.width, self.height, pic)
 	end
-
-	local b = self
-	U.UI_DrawPlayer(b.generic.x, b.generic.y, b.width, b.height, s_playersettings.playerinfo, Q.int(U.uis.realtime / 2))
 end
 
 local function PlayerSettings_SaveChanges()
@@ -235,17 +216,8 @@ local function PlayerSettings_SetMenuItems()
 	end
 	s_playersettings.effects2.curvalue = gamecodetoui[c]
 
-	s_playersettings.playerinfo = T.playerInfo_t()
-
-	local viewangles = Q.vec3(0, 180 - 30, 0)
-
-	U.UI_PlayerInfo_SetModel(s_playersettings.playerinfo, U.UI_Cvar_VariableString("model"))
-	U.UI_PlayerInfo_SetInfo(s_playersettings.playerinfo, C.LEGS_IDLE, C.TORSO_STAND, viewangles, Q.vec3_origin, C.WP_MACHINEGUN, false)
-
 	local h = Q.int(Q.Com_Clamp(5, 100, trap.Cvar_VariableValue("handicap")))
 	s_playersettings.handicap.curvalue = 20 - Q.idiv(h, 5)
-
-	s_playersettings.avatars.curvalue = if trap.Cvar_VariableValue("cg_robloxAvatars") ~= 0 then 0 else 1
 end
 
 local function PlayerSettings_MenuEvent(ptr, event)
@@ -256,11 +228,6 @@ local function PlayerSettings_MenuEvent(ptr, event)
 	local id = ptr.generic.id
 	if id == ID_HANDICAP then
 		trap.Cvar_Set("handicap", Q.va("%i", 100 - 25 * s_playersettings.handicap.curvalue))
-	elseif id == ID_AVATARS then
-		trap.Cvar_SetValue("cg_robloxAvatars", if s_playersettings.avatars.curvalue == 0 then 1 else 0)
-	elseif id == ID_MODEL then
-		PlayerSettings_SaveChanges()
-		U.UI_PlayerModelMenu()
 	elseif id == ID_BACK then
 		PlayerSettings_SaveChanges()
 		U.UI_PopMenu()
@@ -275,8 +242,6 @@ end
 local function PlayerSettings_Cache()
 	trap.R_RegisterShaderNoMip(ART_FRAMEL)
 	trap.R_RegisterShaderNoMip(ART_FRAMER)
-	trap.R_RegisterShaderNoMip(ART_MODEL0)
-	trap.R_RegisterShaderNoMip(ART_MODEL1)
 	trap.R_RegisterShaderNoMip(ART_BACK0)
 	trap.R_RegisterShaderNoMip(ART_BACK1)
 
@@ -299,15 +264,12 @@ local function PlayerSettings_MenuInit()
 	s.player = T.menubitmap_s()
 	s.name = T.menufield_s()
 	s.handicap = T.menulist_s()
-	s.avatars = T.menulist_s()
+	s.avatars = T.menutext_s()
 	s.effects = T.menulist_s()
 	s.effects2 = T.menulist_s()
 	s.back = T.menubitmap_s()
-	s.model = T.menubitmap_s()
 	s.item_null = T.menubitmap_s()
-	s.playerinfo = T.playerInfo_t()
 	s.current_fx = 0
-	s.playerModel = ""
 
 	PlayerSettings_Cache()
 
@@ -392,39 +354,22 @@ local function PlayerSettings_MenuInit()
 	s.effects2.numitems = 7
 
 	-- one line in the small fixed font, between the effects and the name
-	-- drawn under the model
+	-- drawn at the bottom
 	y += 2 * C.PROP_HEIGHT + 4
-	s.avatars.generic.type = C.MTYPE_SPINCONTROL
-	s.avatars.generic.flags = C.QMF_NODEFAULTINIT
-	s.avatars.generic.id = ID_AVATARS
-	s.avatars.generic.callback = PlayerSettings_MenuEvent
+	s.avatars.generic.type = C.MTYPE_TEXT
+	s.avatars.generic.flags = C.QMF_INACTIVE
 	s.avatars.generic.ownerdraw = PlayerSettings_DrawAvatars
 	s.avatars.generic.x = 192
 	s.avatars.generic.y = y
-	s.avatars.generic.left = 192 - 8
-	s.avatars.generic.top = y - 4
-	s.avatars.generic.right = 192 + 31 * C.SMALLCHAR_WIDTH
-	s.avatars.generic.bottom = y + C.SMALLCHAR_HEIGHT
-	s.avatars.numitems = 2
 
-	s.model.generic.type = C.MTYPE_BITMAP
-	s.model.generic.name = ART_MODEL0
-	s.model.generic.flags = bit32.bor(C.QMF_RIGHT_JUSTIFY, C.QMF_PULSEIFFOCUS)
-	s.model.generic.id = ID_MODEL
-	s.model.generic.callback = PlayerSettings_MenuEvent
-	s.model.generic.x = 640
-	s.model.generic.y = 480 - 64
-	s.model.width = 128
-	s.model.height = 64
-	s.model.focuspic = ART_MODEL1
-
+	-- square, centred in the right frame
 	s.player.generic.type = C.MTYPE_BITMAP
 	s.player.generic.flags = C.QMF_INACTIVE
 	s.player.generic.ownerdraw = PlayerSettings_DrawPlayer
-	s.player.generic.x = 400
-	s.player.generic.y = -40
-	s.player.width = 32 * 10
-	s.player.height = 56 * 10
+	s.player.width = 240
+	s.player.height = 240
+	s.player.generic.x = 376 + Q.idiv(256 - 240, 2)
+	s.player.generic.y = 76 + Q.idiv(334 - 240, 2)
 
 	s.back.generic.type = C.MTYPE_BITMAP
 	s.back.generic.name = ART_BACK0
@@ -453,7 +398,6 @@ local function PlayerSettings_MenuInit()
 	U.Menu_AddItem(s.menu, s.effects)
 	U.Menu_AddItem(s.menu, s.effects2)
 	U.Menu_AddItem(s.menu, s.avatars)
-	U.Menu_AddItem(s.menu, s.model)
 	U.Menu_AddItem(s.menu, s.back)
 
 	U.Menu_AddItem(s.menu, s.player)

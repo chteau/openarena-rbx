@@ -9,9 +9,9 @@ Software Foundation; either version 2 of the License, or (at your option)
 any later version. See COPYING.
 ]]
 -- Not a port: players drawn as their Roblox avatar (docs/client-notes.md,
--- "Roblox avatars"). CG_Player hands a player over here when the server
--- built an avatar for them (g_robloxAvatars) and cg_robloxAvatars is on;
--- bots and everyone else keep their OA model. The avatar is visual only:
+-- "Roblox avatars"). CG_Player hands a player over here whenever the server
+-- built an avatar for them; there is no setting to turn it off. Bots without
+-- an account keep their OA model. The avatar is visual only:
 -- the entity's origin, CG_PlayerAngles and OA's own lerp frames drive it,
 -- and the weapon, flags and effects hang off it like they would off the md3.
 
@@ -35,7 +35,7 @@ local function info()
 end
 
 function G.CG_AvatarActive(clientNum)
-	return G.cg_robloxAvatars.integer ~= 0 and trap.R_AvatarReady(clientNum)
+	return trap.R_AvatarReady(clientNum)
 end
 
 -- One half's lerp frame, remembering which animation oldFrame came from

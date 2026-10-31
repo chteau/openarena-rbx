@@ -19,9 +19,10 @@ any later version. See COPYING.
 -- authoritative. A bot wearing an account (botroster.luau, friendbots.luau)
 -- gets that account's avatar the same way; other bots keep their OA model.
 --
--- g_robloxAvatars (serverinfo, default 1): 0 removes them all.
+-- Always on: g_robloxAvatars, which could turn them off, is gone, and an
+-- old saved value of it is ignored.
 --
--- Head icons: whatever g_robloxAvatars says, the folder's User<clientNum>
+-- Head icons: the folder's User<clientNum>
 -- attribute is the account each client wears (a string: ids outgrow
 -- float attributes in some runtimes), and BotRoster lists the
 -- roster bots' accounts ("grunt=1274097373=MoonRb1x;liz=..."), so the
@@ -49,7 +50,6 @@ local Avatars = {}
 
 local wanted: { [number]: number } = {} -- UserId by clientNum
 local built: { [number]: Model } = {} -- by UserId: the copy every map change clones again
-local enabled = false
 local rosterDirty = false
 
 local function folder(): Folder
@@ -103,7 +103,7 @@ local function build(clientNum: number, userId: number)
 			end
 		end
 		built[userId] = m
-		if enabled and wanted[clientNum] == userId then
+		if wanted[clientNum] == userId then
 			place(clientNum, userId, m)
 		end
 	end)
@@ -112,9 +112,7 @@ end
 function Avatars.Set(clientNum: number, userId: number)
 	wanted[clientNum] = userId
 	folder():SetAttribute("User" .. clientNum, tostring(userId))
-	if enabled then
-		build(clientNum, userId)
-	end
+	build(clientNum, userId)
 end
 
 function Avatars.Clear(clientNum: number)
@@ -140,22 +138,7 @@ local function joined(player: Player)
 end
 
 function Avatars.Start(Game: any)
-	Game.Cvar.Get("g_robloxAvatars", "1", bit32.bor(Game.C.CVAR_SERVERINFO, Game.C.CVAR_ARCHIVE))
 	local since = math.huge
-	local function update()
-		local on = Game.Cvar.VariableIntegerValue("g_robloxAvatars") ~= 0
-		if on == enabled then
-			return
-		end
-		enabled = on
-		if on then
-			for n, player in wanted do
-				build(n, player)
-			end
-		else
-			folder():ClearAllChildren()
-		end
-	end
 	local function preview()
 		local on = Game.Cvar.VariableIntegerValue("g_friendBots") ~= 0
 		for _, side in { "", "red", "blue" } do
@@ -177,12 +160,10 @@ function Avatars.Start(Game: any)
 		end
 		rosterDirty = true
 	end)
-	update()
 	RunService.Heartbeat:Connect(function(dt: number)
 		since += dt
 		if since >= 1 then
 			since = 0
-			update()
 			preview()
 			if rosterDirty then
 				rosterDirty = false

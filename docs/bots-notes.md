@@ -220,8 +220,8 @@ In 0.8.8 the Final arena (czest1tourney) was Kyonshi's, whose model is
 dropped (female); the roster used to put Sarge there, who already plays in
 Tiers 4, 5 and 7. Jiangshi (Kyonshi's name in Mandarin) takes the arena:
 a `bots.txt` entry added by `tools/oaconv/roster.json` (`bots`) on
-Kyonshi's text-only botfiles (character, chat, items, weapons), drawn with
-`g_robloxAvatars 0` as beret's chrome Cooldude skin, which ships and no
+Kyonshi's text-only botfiles (character, chat, items, weapons), drawn
+without an account as beret's chrome Cooldude skin, which ships and no
 other bot wears.
 
 Its character (`assets/botfiles/bots/kyonshi_c.c`) is tuned like Q3A's
@@ -329,9 +329,7 @@ kicks by client number.
 
 Look: the friend's `HumanoidDescription` becomes an R15 model in
 `OAAvatars` as `c<clientNum>`, exactly as for a player (`docs/client-notes.md`,
-"Roblox avatars"), so the client draws it, the headshot included. With
-`g_robloxAvatars 0` the bot is drawn with its OA model and keeps the
-friend's tagged name.
+"Roblox avatars"), so the client draws it, the headshot included.
 
 Chat: `bot_friendChat` (default 0) keeps friend-bots out of OA's chat
 (`BotChat_*` and the reply chats): insults "from" a real person's friend
