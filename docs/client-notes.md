@@ -231,7 +231,11 @@ the axis is converted, never the Euler angles.
   stand-in is a true additive blend. Over black a stand-in matches OA; over
   bright surfaces additive effects come out dimmer than OA's (alpha blending
   can't brighten past the effect's colour) and coloured filters lose part of
-  their tint. Unbaked map surfaces (light beams, flames, glows, map decals)
+  their tint. A MeshPart (md3 surfaces, map parts) drawing an alpha
+  texture keeps a Transparency of at least 0.02
+  (`ShaderFx.MESH_ALPHA_MIN`): at 0 Roblox ignores the texture's alpha and
+  a stand-in's see-through texels draw black (muzzle flashes, impact
+  rings, explosions showed black squares). Unbaked map surfaces (light beams, flames, glows, map decals)
   do the same in `WorldFx`: the part draws the stand-in of the stage whose
   image it wears, as a plain texture (no Neon), its brightness as opacity.
 - Map surfaces: conv bakes opaque static shaders into atlas meshes. A

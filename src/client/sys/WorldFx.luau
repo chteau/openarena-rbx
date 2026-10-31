@@ -282,10 +282,10 @@ function WorldFx.Update(refdef, timeSec: number)
 			local lum = math.max(r, g, b) * a
 			part.Transparency = math.clamp(1 - lum, 0, 0.95)
 		elseif rec.mode == "alpha" then
-			part.Transparency = math.clamp(1 - a, 0, 1)
+			part.Transparency = math.clamp(1 - a, ShaderFx.MESH_ALPHA_MIN, 1)
 		elseif rec.mode == "standin" then
 			r, g, b, a = ShaderFx.foldBrightness(r, g, b, a)
-			part.Transparency = math.clamp(1 - a, 0, 1)
+			part.Transparency = math.clamp(1 - a, ShaderFx.MESH_ALPHA_MIN, 1)
 		end
 		if rec.em then
 			if st.tcMod and #st.tcMod > 0 then

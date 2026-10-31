@@ -239,9 +239,10 @@ H.test("worldfx.stand_in", function()
 	W.mapRoot = root
 	W.Load("maps/test.bsp")
 	W.Update({ vieworg = { [0] = 0, 0, 0 } }, 0)
-	-- the additive beam draws its alpha stand-in, opaque where the image is
+	-- the additive beam draws its alpha stand-in, opaque where the image is,
+	-- off Transparency 0 so Roblox uses the texture's alpha
 	H.eq(beam.TextureID, "rbxassetid://12")
-	H.eq(beam.Transparency, 0)
+	H.near(beam.Transparency, H.require("client/sys/ShaderFx").MESH_ALPHA_MIN)
 	H.eq(beam.Material == H.roblox.Enum.Material.Neon, false)
 	-- no stand-in uploaded: the image and the Neon fallback, as before
 	H.eq(glow.TextureID, "rbxassetid://14")

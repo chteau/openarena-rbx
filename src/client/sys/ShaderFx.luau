@@ -54,6 +54,12 @@ local function clamp01(x: number): number
 	return if x < 0 then 0 elseif x > 1 then 1 else x
 end
 
+-- A MeshPart ignores its texture's alpha while its Transparency is 0 (the
+-- see-through texels draw as their colour, black for a stand-in), so an
+-- alpha-blended MeshPart is never fully opaque. Seen live in Roblox: a
+-- muzzle flash stand-in drew a black square at 0 and its flash alone at 0.02.
+ShaderFx.MESH_ALPHA_MIN = 0.02
+
 -- How a stage blends: "opaque", "alpha", "add" or "filter" (multiply).
 function ShaderFx.blendMode(st): string
 	local bf = st.blendFunc
