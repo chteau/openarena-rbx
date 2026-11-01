@@ -652,7 +652,12 @@ local function fillTarget(t, refdef, timeSec: number)
 		local fx = e.renderfx
 		-- RF_THIRD_PERSON: only in mirrors/portals, never the main view
 		if bit32.band(fx, C.RF_THIRD_PERSON) == 0 or bit32.band(refdef.rdflags, C.RDF_NOWORLDMODEL) ~= 0 then
-			if ty == C.RT_MODEL then
+			local inline = ty == C.RT_MODEL and Assets.Model(e.hModel)
+			if inline and inline.inline then
+				if t.root == R3D.worldRoot then
+					require(script.Parent.WorldFx).PlaceInline(inline.inline, e.origin, e.axis)
+				end
+			elseif ty == C.RT_MODEL then
 				drawModel(t, e, timeSec, firstPerson)
 			elseif ty == C.RT_SPRITE then
 				drawSprite(t, e, timeSec)
