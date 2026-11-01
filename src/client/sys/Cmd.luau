@@ -89,6 +89,12 @@ function Cmd.ArgsFrom(n: number): string
 end
 
 function Cmd.AddCommand(name: string, fn: (() -> ())?)
+	-- as ioq3: a completion-only add (cgame's forward-to-server list) never
+	-- replaces a command the engine handles (LAN's addbot, team)
+	local old = commands[string.lower(name)]
+	if fn == nil and old and old.fn then
+		return
+	end
 	commands[string.lower(name)] = { name = name, fn = fn }
 end
 

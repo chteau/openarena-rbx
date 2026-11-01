@@ -68,7 +68,7 @@ do
 		bots = { { name = "sarge", skill = 3, team = "red" }, { name = "tony", skill = 3, team = "blue" }, { name = "penguin", skill = 2, team = "blue" } },
 	}, mapExists))
 	local game = host.Game
-	local s = Servers.new({ live = false, jobId = "", placeId = 0, privateServerId = "" }, game, mapExists)
+	local s = Servers.new({ live = false, jobId = "", placeId = 0, privateServerId = "", now = os.clock }, game, mapExists)
 	game.Command(S.startupText(spec))
 	for _ = 1, 40 do
 		host.frame(50)
@@ -104,6 +104,14 @@ do
 	end
 	eq(red, 1, "red bots")
 	eq(blue, 2, "blue bots")
+	-- in game, the host's ADD BOTS (rcon) adds one; a guest's is refused
+	s.host = 77
+	eq(s:handle({ UserId = 5 }, "rcon", "addbot gargoyle 3 red 0").err, "Not the host", "guest addbot")
+	eq(s:handle({ UserId = 77 }, "rcon", "addbot gargoyle 3 red 0").ok, true, "host addbot")
+	for _ = 1, 10 do
+		host.frame(50)
+	end
+	eq(s:entry().bots, 4, "bots after host addbot")
 end
 
 print(("servers: passed %d, failed %d"):format(passes, failures))

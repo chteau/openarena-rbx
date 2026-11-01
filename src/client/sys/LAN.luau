@@ -239,8 +239,10 @@ local function hostCommand(name: string)
 					print(("rcon: %s\n"):format(res.err or "failed"))
 				end
 			end)
-		elseif name == "rcon" then
-			print("rcon: only the host of this server can use it\n")
+		elseif name == "rcon" or LAN.server().live then
+			-- the game has no client command for these: OA keeps them to
+			-- rcon, and public servers (no host) fill with bot_minplayers
+			print(("%s: only the host of this server can use it\n"):format(name))
 		else
 			LAN.forward(text)
 		end
