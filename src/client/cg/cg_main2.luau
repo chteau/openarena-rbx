@@ -280,6 +280,7 @@ function G.CG_RegisterGraphics()
 	for i = 0, C.MAX_ITEMS - 1 do
 		T.reset(G.cg_items[i], T.itemInfo_t)
 	end
+	G.CG_ResetLoadingIcons()
 	for i = 0, C.MAX_WEAPONS - 1 do
 		T.reset(G.cg_weapons[i], T.weaponInfo_t)
 	end

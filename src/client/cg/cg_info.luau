@@ -42,6 +42,15 @@ local function atoi(s: string): number
 	return tonumber(m) or 0
 end
 
+-- CG_Init calls this: in Q3 the cgame VM reloads per level, zeroing these
+-- statics; here the module lives on, so the icons would pile up every map
+function G.CG_ResetLoadingIcons()
+	loadingPlayerIconCount = 0
+	loadingItemIconCount = 0
+	table.clear(loadingPlayerIcons)
+	table.clear(loadingItemIcons)
+end
+
 local function CG_DrawLoadingIcons()
 	for n = 0, loadingPlayerIconCount - 1 do
 		local x = 16 + n * 78
