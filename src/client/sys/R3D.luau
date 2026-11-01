@@ -289,6 +289,37 @@ local function buildSurface(model, s, parent: Instance)
 	return surf
 end
 
+-- Building a model yields (CreateEditableMeshAsync, CreateMeshPartAsync
+-- downloading a baked mesh), for a few frames up to seconds. Done inside the
+-- frame it held the whole screen still until it finished, every time a model
+-- was drawn more times at once than ever before. One background worker builds
+-- them in order instead (concurrent builds would race the shared surface
+-- templates); a model is left out of the frames until it is built.
+local buildQueue: { any } = {}
+local building = false
+local function requestBuild(inst)
+	table.insert(buildQueue, inst)
+	if building then
+		return
+	end
+	building = true
+	task.spawn(function()
+		while #buildQueue > 0 do
+			local it = table.remove(buildQueue, 1)
+			for i, s in it.model.surfaces do
+				local ok, surf = pcall(buildSurface, it.model, s, it.folder)
+				if ok then
+					it.surfaces[i] = surf
+				else
+					warn(("R3D: %s#%s not drawn: %s"):format(it.model.name, s.name, tostring(surf)))
+				end
+			end
+			it.pending = nil
+		end
+		building = false
+	end)
+end
+
 local function modelInstance(t, hModel: number)
 	local list = t.models[hModel]
 	if list == nil then
@@ -303,15 +334,16 @@ local function modelInstance(t, hModel: number)
 		if model == nil then
 			return nil
 		end
-		-- parented by hideUnused once drawn: building yields, and its parts
-		-- would show untextured at the origin meanwhile
+		-- parented by hideUnused once drawn: its parts would show untextured
+		-- at the origin while they build
 		local folder = Instance.new("Model")
 		folder.Name = model.name:match("[^/]+$") or "md3"
-		inst = { model = model, folder = folder, surfaces = {} }
-		for i, s in model.surfaces do
-			inst.surfaces[i] = buildSurface(model, s, folder)
-		end
+		inst = { model = model, folder = folder, surfaces = {}, pending = true }
 		list[n] = inst
+		requestBuild(inst)
+	end
+	if inst.pending then
+		return nil
 	end
 	inst.used = true
 	return inst

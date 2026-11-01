@@ -1434,6 +1434,9 @@ function SV.SV_Frame(msec: number)
 	hitch:stop(threshold, nil, if frames then string.format("(%d game frames)", frames) else nil)
 end
 function SV_FrameBody(msec: number, prof: Hitch.Hitch?): number?
+	-- Com_ModifyMsec: a dedicated server clamps a long host frame, so a
+	-- stalled host catches up at most 5 s of game frames in one go
+	msec = math.min(msec, 5000)
 	SV.com_frameTime += msec
 
 	-- run queued console commands first (map changes land here)
