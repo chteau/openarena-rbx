@@ -313,6 +313,7 @@ Cvar.onChange = function(v)
 end
 
 -- CL_InitCGame
+local cgameLoading = false
 local function initCGame()
 	local n = Net.GetCurrentSnapshotNumber()
 	-- the commands the old cgame already ran are not run again; from 0 the
@@ -349,8 +350,15 @@ function Client.Frame(dtSec: number)
 		Net.SendUserCmds({ cmd })
 	end
 
-	if Net.state == C.CA_PRIMED and not Client.cgameActive and Client.connectRequested then
-		initCGame()
+	if Net.state == C.CA_PRIMED and not Client.cgameActive and not cgameLoading and Client.connectRequested then
+		-- CG_Init yields while it loads media, and the render step keeps
+		-- calling this function meanwhile: only the first frame starts it
+		cgameLoading = true
+		local ok, err = pcall(initCGame)
+		cgameLoading = false
+		if not ok then
+			error(err, 0)
+		end
 	end
 	if pendingMap and Net.state == C.CA_ACTIVE then
 		pendingSince = pendingSince or now
@@ -359,7 +367,15 @@ function Client.Frame(dtSec: number)
 			pendingMap = nil
 		end
 	end
-	Net.SetCGameTime(now, cl_timeNudge.integer)
+	-- CL_SetCGameTime, once the cgame is up (it stays CA_PRIMED while
+	-- loading), with the clock as it is now rather than at the top of the
+	-- frame: snapshots that came in while the frame yielded in CG_Init
+	-- would otherwise put the client's server time ahead by the length of
+	-- the yield, and the server, which keeps the newest usercmd time it
+	-- ran, would drop every usercmd until its own clock caught up
+	if not cgameLoading then
+		Net.SetCGameTime(Clock.Milliseconds(), cl_timeNudge.integer)
+	end
 	Client.UpdateScreen()
 	Snd.Update()
 end
