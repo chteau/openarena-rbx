@@ -6,6 +6,8 @@ use crate::shader::ShaderClass;
 
 /// Roblox's per-MeshPart triangle limit.
 pub const MAX_TRIS: usize = 20_000;
+/// Roblox's largest part Size on any axis, in Quake units (2048 studs).
+pub const MAX_EXTENT: f32 = 2048.0 * 8.0;
 
 #[derive(Clone, Debug, Default)]
 pub struct Mesh {
@@ -68,30 +70,75 @@ impl Mesh {
         self.indices
             .chunks(max_tris * 3)
             .enumerate()
-            .map(|(n, tris)| {
-                let mut remap = vec![u32::MAX; self.positions.len()];
-                let mut piece = Mesh {
-                    name: format!("{}_{n}", self.name),
-                    class: self.class,
-                    shader: self.shader.clone(),
-                    texture: self.texture.clone(),
-                    overlay: self.overlay,
-                    ..Default::default()
-                };
-                for &i in tris {
-                    let i = i as usize;
-                    if remap[i] == u32::MAX {
-                        remap[i] = piece.positions.len() as u32;
-                        piece.positions.push(self.positions[i]);
-                        piece.normals.push(self.normals[i]);
-                        piece.uvs.push(self.uvs[i]);
-                        piece.colors.push(self.colors[i]);
-                    }
-                    piece.indices.push(remap[i]);
-                }
-                piece
-            })
+            .map(|(n, tris)| self.piece(n, tris.iter().copied()))
             .collect()
+    }
+
+    /// Splits into pieces no wider than `max` (Quake units) on any axis,
+    /// named like `split`: triangles go to grid cells of `max / 2` by their
+    /// centroid, so a piece stays within `max` unless one triangle alone is
+    /// wider than half of it. Roblox clamps a part's Size to MAX_EXTENT
+    /// studs, which squashes a bigger mesh.
+    pub fn split_extent(self, max: f32) -> Vec<Mesh> {
+        let (lo, hi) = self.bounds();
+        if (0..3).all(|a| hi[a] - lo[a] <= max) {
+            return vec![self];
+        }
+        let cell = max / 2.0;
+        let mut cells: std::collections::BTreeMap<[i32; 3], Vec<u32>> = Default::default();
+        for t in self.indices.chunks(3) {
+            let key = std::array::from_fn(|a| {
+                let c = t
+                    .iter()
+                    .map(|&i| self.positions[i as usize][a])
+                    .sum::<f32>()
+                    / 3.0;
+                ((c - lo[a]) / cell).floor() as i32
+            });
+            cells.entry(key).or_default().extend_from_slice(t);
+        }
+        cells
+            .values()
+            .enumerate()
+            .map(|(n, tris)| self.piece(n, tris.iter().copied()))
+            .collect()
+    }
+
+    fn bounds(&self) -> ([f32; 3], [f32; 3]) {
+        let mut lo = [f32::MAX; 3];
+        let mut hi = [f32::MIN; 3];
+        for p in &self.positions {
+            for a in 0..3 {
+                lo[a] = lo[a].min(p[a]);
+                hi[a] = hi[a].max(p[a]);
+            }
+        }
+        (lo, hi)
+    }
+
+    /// Piece `n` holding the triangles `indices` (re-indexed).
+    fn piece(&self, n: usize, indices: impl Iterator<Item = u32>) -> Mesh {
+        let mut remap = vec![u32::MAX; self.positions.len()];
+        let mut piece = Mesh {
+            name: format!("{}_{n}", self.name),
+            class: self.class,
+            shader: self.shader.clone(),
+            texture: self.texture.clone(),
+            overlay: self.overlay,
+            ..Default::default()
+        };
+        for i in indices {
+            let i = i as usize;
+            if remap[i] == u32::MAX {
+                remap[i] = piece.positions.len() as u32;
+                piece.positions.push(self.positions[i]);
+                piece.normals.push(self.normals[i]);
+                piece.uvs.push(self.uvs[i]);
+                piece.colors.push(self.colors[i]);
+            }
+            piece.indices.push(remap[i]);
+        }
+        piece
     }
 }
 
@@ -140,5 +187,19 @@ mod tests {
         assert!(pieces
             .iter()
             .all(|p| p.indices.iter().all(|&i| (i as usize) < p.positions.len())));
+    }
+
+    #[test]
+    fn split_extent_keeps_every_piece_within_the_limit() {
+        let m = quad_strip(40);
+        let total = m.tri_count();
+        let pieces = m.split_extent(10.0);
+        assert!(pieces.len() > 1);
+        assert_eq!(pieces.iter().map(Mesh::tri_count).sum::<usize>(), total);
+        for p in &pieces {
+            let (lo, hi) = p.bounds();
+            assert!((0..3).all(|a| hi[a] - lo[a] <= 10.0), "{}", p.name);
+        }
+        assert_eq!(quad_strip(5).split_extent(10.0).len(), 1);
     }
 }

@@ -17,7 +17,7 @@ use serde_json::{json, Value};
 
 use crate::bsp::curve::{subdivide_patch, R_SUBDIVISIONS};
 use crate::bsp::{Bsp, DrawVert, MST_PATCH, MST_PLANAR, MST_TRIANGLE_SOUP};
-use crate::mesh::{Mesh, MAX_TRIS};
+use crate::mesh::{Mesh, MAX_EXTENT, MAX_TRIS};
 use crate::shader::{stage_animated, Shader, ShaderClass, ShaderSet};
 use crate::vfs::Vfs;
 
@@ -380,7 +380,12 @@ pub fn bake_map(map: &str, bsp: &Bsp, shaders: &ShaderSet, vfs: &Vfs, s: &Settin
 
     let mut meshes: Vec<Mesh> = Vec::new();
     for m in baked.into_values().chain(loose.into_values()) {
-        meshes.extend(weld(m).split(MAX_TRIS));
+        meshes.extend(
+            weld(m)
+                .split(MAX_TRIS)
+                .into_iter()
+                .flat_map(|p| p.split_extent(MAX_EXTENT)),
+        );
     }
     let mut seen = BTreeSet::new();
     for m in &mut meshes {

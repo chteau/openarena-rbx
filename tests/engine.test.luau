@@ -249,3 +249,52 @@ H.test("worldfx.stand_in", function()
 	H.eq(glow.Material == H.roblox.Enum.Material.Neon, true)
 	W.mapRoot = nil
 end)
+
+H.test("worldfx.overlays_and_brush_models", function()
+	local A = H.require("client/sys/Assets")
+	local W = H.require("client/sys/WorldFx")
+	local P = H.require("client/sys/ShaderParse")
+	local Instance, Vector3, CFrame = H.roblox.Instance, H.roblox.Vector3, H.roblox.CFrame
+	A.index.shaders = A.index.shaders or {}
+	P.parse("textures/test/chrome\n{\n\t{\n\t\tmap textures/test/metal.tga\n\t}\n"
+		.. "\t{\n\t\tmap textures/test/env.tga\n\t\ttcGen environment\n\t}\n}\n"
+		.. "textures/test/pulse\n{\n\t{\n\t\tmap textures/test/lamp.tga\n\t}\n"
+		.. "\t{\n\t\tmap textures/test/lamp.tga\n\t\tblendfunc add\n\t\trgbGen wave sin 0.5 0.5 0 1\n\t}\n}\n", A.index.shaders)
+	A.RegisterImage("textures/test/env", "rbxassetid://21", 64, 64)
+	A.RegisterImage("textures/test/lamp", "rbxassetid://22", 64, 64)
+	A.index.maps = A.index.maps or {}
+	A.index.maps.overlays = { meshes = {
+		{ name = "world_chrome", shader = "textures/test/chrome", class = "animated", overlay = true },
+		{ name = "world_pulse", shader = "textures/test/pulse", class = "animated", overlay = true },
+	} }
+	local root = Instance.new("Folder")
+	local function part(name: string, tex: string, at: Vector3)
+		local p = Instance.new("MeshPart")
+		p.Name, p.TextureID, p.CFrame, p.Size = name, tex, CFrame.new(at), Vector3.new(4, 4, 4)
+		p.Parent = root
+		return p
+	end
+	local chrome = part("world_chrome", "rbxassetid://21", Vector3.new(0, 0, -10))
+	-- the overlay wears the base's image too: its add stage is the one drawn
+	local pulse = part("world_pulse", "rbxassetid://22", Vector3.new(0, 0, -10))
+	local door = part("model3_atlas0", "rbxassetid://23", Vector3.new(10, 0, 0))
+	local trigger = part("model4_atlas0", "rbxassetid://23", Vector3.new(0, 5, 0))
+	W.mapRoot = root
+	W.Load("maps/overlays.bsp")
+	-- an env-map overlay would cover its baked copy with the raw image
+	H.eq(chrome.Transparency, 1)
+	H.eq(pulse.Material == H.roblox.Enum.Material.Neon, true)
+	-- brush model 3 drawn one stud (8 units) further along +x; 4 not drawn
+	W.PlaceInline(3, { [0] = 8, 0, 0 }, { [0] = { [0] = 1, 0, 0 }, { [0] = 0, 1, 0 }, { [0] = 0, 0, 1 } })
+	W.Update({ vieworg = { [0] = 0, 0, 0 } }, 0)
+	H.eq(door.Parent, root)
+	H.near(door.CFrame.Position.X, 11)
+	H.eq(trigger.Parent, nil)
+	-- the overlay is pulled toward the eye (at the origin) by OFFSET: same
+	-- place on screen, a hair in front of the wall
+	H.near(pulse.CFrame.Position.Z, -10 * 0.998, 1e-4)
+	H.near(pulse.Size.X, 4 * 0.998, 1e-4)
+	W.Update({ vieworg = { [0] = 0, 0, 0 } }, 0)
+	H.eq(door.Parent, nil)
+	W.mapRoot = nil
+end)

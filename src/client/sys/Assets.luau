@@ -217,8 +217,10 @@ function Assets.RegisterModel(name: string): number
 	if modelByName[key] then
 		return modelByName[key]
 	end
+	-- "*N": the map's brush model N, drawn from the map's own parts (WorldFx)
+	local inline = tonumber(string.match(key, "^%*(%d+)$"))
 	local Md3 = require(script.Parent.Md3)
-	local model = Md3.Load(key, index.models[key])
+	local model = if inline then { name = key, inline = inline, numFrames = 0 } else Md3.Load(key, index.models[key])
 	if model == nil then
 		return 0
 	end
