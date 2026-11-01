@@ -52,6 +52,7 @@ local QS = require("../../shared/q_shared")
 local S = require("../../shared/structs")
 local Q = require("../../shared/q_math")
 local C = require("../g_defs")
+local Hitch = require("../../shared/Hitch")
 
 local band, bor, bxor, bnot = bit32.band, bit32.bor, bit32.bxor, bit32.bnot
 
@@ -1420,11 +1421,29 @@ SV.com_frameTime = math.random(1, 0x3FFFFFF)
 
 -- Player movement occurs as a result of packet events, which happen
 -- before SV_Frame is called
+local hitch = Hitch.new("sv")
+local SV_FrameBody
 function SV.SV_Frame(msec: number)
+	local threshold = cv.sv_hitchlog.integer
+	if threshold <= 0 then
+		SV_FrameBody(msec, nil)
+		return
+	end
+	hitch:start()
+	local frames = SV_FrameBody(msec, hitch)
+	hitch:stop(threshold, nil, if frames then string.format("(%d game frames)", frames) else nil)
+end
+function SV_FrameBody(msec: number, prof: Hitch.Hitch?): number?
+	-- Com_ModifyMsec: a dedicated server clamps a long host frame, so a
+	-- stalled host catches up at most 5 s of game frames in one go
+	msec = math.min(msec, 5000)
 	SV.com_frameTime += msec
 
 	-- run queued console commands first (map changes land here)
 	Cmd.Cbuf_Execute()
+	if prof then
+		prof:lap("cmds")
+	end
 
 	if cv.sv_killserver.integer ~= 0 then
 		SV.SV_Shutdown("Server was killed")
@@ -1476,19 +1495,30 @@ function SV.SV_Frame(msec: number)
 	SV_CalcPings()
 
 	-- the bots think once per host frame (dedicated server)
+	if prof then
+		prof:lap("misc")
+	end
 	SV.Bots.Frame(sv.time)
+	if prof then
+		prof:lap("bots")
+	end
 
 	-- run the game simulation in chunks
+	local frames = 0
 	while sv.timeResidual >= frameMsec do
 		sv.timeResidual -= frameMsec
 		svs.time += frameMsec
 		sv.time += frameMsec
+		frames += 1
 
 		-- let everything in the world think and move
 		G.vmMain(C.GAME_RUN_FRAME, sv.time)
 		if sv.state ~= SV.SS_GAME then
-			return -- the frame changed the map
+			return frames -- the frame changed the map
 		end
+	end
+	if prof then
+		prof:lap("game")
 	end
 
 	-- check timeouts
@@ -1496,6 +1526,10 @@ function SV.SV_Frame(msec: number)
 
 	-- send messages back to the clients
 	SV.SV_SendClientMessages()
+	if prof then
+		prof:lap("snapshots")
+	end
+	return frames
 end
 
 --
@@ -2178,6 +2212,8 @@ function SV.SV_Init()
 	cv.sv_fps = Cvar.Get("sv_fps", "20", TEMP)
 	cv.sv_timeout = Cvar.Get("sv_timeout", "200", TEMP)
 	cv.sv_zombietime = Cvar.Get("sv_zombietime", "2", TEMP)
+	-- frame times over this many ms are printed with their split (0: off)
+	cv.sv_hitchlog = Cvar.Get("sv_hitchlog", "0", TEMP)
 	Cvar.Get("nextmap", "", TEMP)
 	Cvar.Get("sv_allowDownload", "0", SI)
 	cv.sv_killserver = Cvar.Get("sv_killserver", "0", 0)

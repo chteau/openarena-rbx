@@ -20,6 +20,7 @@ local LAN = require(script.Parent.LAN)
 local Players = game:GetService("Players")
 local Screen = require(script.Parent.Parent.Parent.ui.Screen)
 local Servers = require(script.Parent.Parent.Parent.shared.net.servers)
+local Hitch = require(script.Parent.Parent.Parent.shared.Hitch)
 
 local Client = {}
 
@@ -30,6 +31,22 @@ Client.realtime = 0
 local lastFrame = 0
 
 local cl_timeNudge = Cvar.Get("cl_timeNudge", "0", C.CVAR_TEMP)
+-- frame times over this many ms are printed with their split (0: off)
+local cl_hitchlog = Cvar.Get("cl_hitchlog", "0", C.CVAR_TEMP)
+local hitch = Hitch.new("cl")
+-- the profile of the frame being drawn, while cl_hitchlog is on
+local prof: Hitch.Hitch? = nil
+local blocked = 0
+local renderScene = R3D.RenderScene
+R3D.RenderScene = function(refdef)
+	if prof then
+		prof:lap("cgame")
+	end
+	renderScene(refdef)
+	if prof then
+		prof:lap("scene")
+	end
+end
 Cvar.Get("protocol", "71", C.CVAR_ROM)
 Cvar.Get("version", "OA 0.8.8 Roblox", C.CVAR_ROM)
 Cvar.Get("name", "UnnamedPlayer", bit32.bor(C.CVAR_USERINFO, C.CVAR_ARCHIVE))
@@ -334,6 +351,18 @@ function Client.Frame(dtSec: number)
 	local msec = now - lastFrame
 	lastFrame = now
 	Client.realtime = now
+	-- a frame still drawing (yielded) keeps the profile; this one only counts
+	local threshold = cl_hitchlog.integer
+	local p = nil
+	if threshold > 0 then
+		if drawing then
+			blocked += 1
+		else
+			p = hitch
+			p:start()
+			prof = p
+		end
+	end
 
 	Cmd.Execute()
 	if Client.cgameActive then
@@ -376,8 +405,20 @@ function Client.Frame(dtSec: number)
 	if not cgameLoading then
 		Net.SetCGameTime(Clock.Milliseconds(), cl_timeNudge.integer)
 	end
+	if p then
+		p:lap("input")
+	end
 	Client.UpdateScreen()
+	if p then
+		p:lap("present")
+	end
 	Snd.Update()
+	if p then
+		p:lap("sound")
+		prof = nil
+		p:stop(threshold, nil, string.format("(interval %d ms, %d frames blocked)", msec, blocked))
+		blocked = 0
+	end
 end
 
 -- SCR_UpdateScreen. The cgame also calls it while loading (trap_UpdateScreen):
@@ -432,6 +473,9 @@ function drawScreen()
 	end
 	if Console.open then
 		Console.DrawConsole(R2D.width, R2D.height)
+	end
+	if prof then
+		prof:lap("cgame")
 	end
 	R2D.EndFrame()
 	R3D.EndFrame()
