@@ -692,6 +692,10 @@ H.test("servers.lan_client", function()
 		LAN.ClearPing(i)
 	end
 	H.eq(LAN.GetPingQueueCount(), 0)
+	-- a game played before: cgame's forward-to-server `addbot` and `team`
+	-- (completions) must not replace these
+	Cmd.AddCommand("addbot", nil)
+	Cmd.AddCommand("team", nil)
 	-- Start Server: map + the addbot/team lines become one host request
 	Cvar.Set("g_gametype", "4")
 	Cvar.Set("fraglimit", "0")
@@ -742,6 +746,22 @@ H.test("servers.lan_client", function()
 	run()
 	H.eq(calls[1].op, "rcon")
 	H.eq(calls[1].arg, "addbot sarge 3 red 0")
+	-- a guest's is refused here, not sent to the game
+	LAN.server = function()
+		return { live = true, kind = "host", code = "2HERE2", host = 9 }
+	end
+	local forwarded = {}
+	LAN.forward = function(text)
+		table.insert(forwarded, text)
+	end
+	calls = {}
+	Cmd.ExecuteText(C.EXEC_NOW, "addbot sarge 3 red 0")
+	run()
+	H.eq(#calls, 0)
+	H.eq(#forwarded, 0)
+	LAN.server = function()
+		return { live = true, kind = "host", code = "2HERE2", host = 5 }
+	end
 	-- a teleport's settings are applied, then the client connects
 	local connected = false
 	LAN.connect = function()
